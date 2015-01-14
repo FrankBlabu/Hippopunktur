@@ -27,6 +27,10 @@ namespace HIP {
       Point (const Point& toCopy);
       virtual ~Point ();
 
+      const QString& getId () const { return _id; }
+      const QString& getDescription () const { return _description; }
+      const QList<QString>& getTags () const { return _tags; }
+
     private:
       QString _id;
       QString _description;

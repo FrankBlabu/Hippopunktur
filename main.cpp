@@ -11,8 +11,9 @@
 
 #include "core/HIPException.h"
 #include "database/HIPDatabase.h"
+#include "database/HIPDatabaseModel.h"
 
-int main (int argc, char *argv[])
+int main (int argc, char* argv[])
 {
   bool ok = true;
 
@@ -29,6 +30,7 @@ int main (int argc, char *argv[])
   try
   {
     HIP::Database::Database database (":/data/points.xml");
+    HIP::Database::DatabaseModel model (&database);
 
     QQmlApplicationEngine engine (QUrl ("qrc:/main.qml"));
     ok = app.exec ();
