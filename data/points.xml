@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database version="1.0">
-  <points name="Pferd">
+  <points name="Horse">
     <point id="BI1">
       <tag name="Hip"/>
       <tag name="Leg"/>
       <tag name="Hoof"/>
       <tag name="Snout"/>
       <position x="0.0" y="1.0"/>
-      <description>Pain in left ear; Front to back connection</description>
+      <description>Pain in left ear; Nervus nervoesus</description>
     </point>
     <point id="BI2">
       <tag name="Hoof"/>
@@ -19,7 +19,17 @@
       <tag name="Leg"/>
       <tag name="Back"/>
       <position x="3.0" y="4.0"/>
-      <description>Mystic soul point</description>
+      <description>Mystic soul healing point</description>
+    </point>
+    <point id="CI1">
+      <tag name="Head"/>
+      <position x="3.0" y="4.0"/>
+      <description>Do not touch this point, horse will explode !</description>
+    </point>
+    <point id="CI2">
+      <tag name="Head"/>
+      <position x="4.0" y="5.0"/>
+      <description>Horse gear shift</description>
     </point>
   </points>
 </database>

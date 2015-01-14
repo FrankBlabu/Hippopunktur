@@ -11,7 +11,8 @@ SOURCES += \
     main.cpp \
     database/hip_database.cpp \
     core/hip_exception.cpp \
-    database/hip_database_model.cpp
+    database/hip_database_model.cpp \
+    explorer/hip_sort_filter_proxy_model.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -24,5 +25,6 @@ OTHER_FILES += \
 HEADERS += \
     database/HIPDatabase.h \
     core/HIPException.h \
-    database/HIPDatabaseModel.h
+    database/HIPDatabaseModel.h \
+    explorer/HIPSortFilterProxyModel.h
 
