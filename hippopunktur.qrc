@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>explorer/Explorer.qml</file>
         <file>core/AboutDialog.qml</file>
+        <file>data/points.xml</file>
     </qresource>
 </RCC>
