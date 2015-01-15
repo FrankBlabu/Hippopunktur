@@ -4,6 +4,7 @@ TARGET = hippopunktur
 QT += quick
 QT += widgets
 QT += xml
+QT += quickwidgets
 
 INCLUDEPATH += $$PWD
 
@@ -14,7 +15,8 @@ SOURCES += \
     database/hip_database_model.cpp \
     explorer/hip_sort_filter_proxy_model.cpp \
     gui/hip_main_window.cpp \
-    explorer/hip_explorer.cpp
+    explorer/hip_explorer.cpp \
+    core/hip_tools.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -30,7 +32,8 @@ HEADERS += \
     database/HIPDatabaseModel.h \
     explorer/HIPSortFilterProxyModel.h \
     gui/HIPMainWindow.h \
-    explorer/HIPExplorer.h
+    explorer/HIPExplorer.h \
+    core/HIPTools.h
 
 FORMS += \
     gui/hip_main_window.ui
