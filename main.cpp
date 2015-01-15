@@ -5,10 +5,12 @@
 ****************************************************************************/
 
 #include <QApplication>
+#include <QtQml>
 
 #include "core/HIPException.h"
 #include "database/HIPDatabase.h"
 #include "database/HIPDatabaseModel.h"
+#include "explorer/HIPSortFilterProxyModel.h"
 #include "gui/HIPMainWindow.h"
 
 int main (int argc, char* argv[])
@@ -16,6 +18,8 @@ int main (int argc, char* argv[])
   bool ok = true;
 
   QApplication app (argc, argv);
+
+  qmlRegisterType<HIP::Explorer::SortFilterProxyModel> ("com.blankenburg.hippopunktur", 1, 0, "SortFilterProxyModel");
 
   try
   {

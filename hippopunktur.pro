@@ -5,6 +5,7 @@ QT += quick
 QT += widgets
 QT += xml
 QT += quickwidgets
+QT += qml
 
 INCLUDEPATH += $$PWD
 

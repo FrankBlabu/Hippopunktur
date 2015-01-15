@@ -5,27 +5,48 @@
 ****************************************************************************/
 
 import QtQuick 2.2
+import QtQuick.Controls 1.2
+import QtQuick.Layouts 1.1
+import com.blankenburg.hippopunktur 1.0
 
 Rectangle {
     id: root
 
-    Rectangle {
+    TableView {
+        id: tableView
 
-        property int d: 100
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
-        id: square
-        width: d
-        height: d
-        anchors.centerIn: parent
-        color: "red"
+        frameVisible: false
+        sortIndicatorVisible: true
 
-        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+        TableViewColumn {
+            id: titleColumn
+            title: "Points"
+            role: "point"
+            movable: false
+            resizable: false
+            width: tableView.viewport.width
+        }
+
+        model: sourceModel
+
+        ListModel {
+            id: sourceModel
+
+            ListElement {
+                point: "BI1"
+            }
+            ListElement {
+                point: "BI2"
+            }
+            ListElement {
+                point: "BI3"
+            }
+        }
     }
-
-
-    Text {
-        anchors.centerIn: parent
-        text: "Qt Quick running in a widget"
-    }
-
 }
+
