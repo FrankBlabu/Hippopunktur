@@ -13,7 +13,8 @@ SOURCES += \
     core/hip_exception.cpp \
     database/hip_database_model.cpp \
     explorer/hip_sort_filter_proxy_model.cpp \
-    gui/hip_main_window.cpp
+    gui/hip_main_window.cpp \
+    explorer/hip_explorer.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -28,7 +29,8 @@ HEADERS += \
     core/HIPException.h \
     database/HIPDatabaseModel.h \
     explorer/HIPSortFilterProxyModel.h \
-    gui/HIPMainWindow.h
+    gui/HIPMainWindow.h \
+    explorer/HIPExplorer.h
 
 FORMS += \
     gui/hip_main_window.ui

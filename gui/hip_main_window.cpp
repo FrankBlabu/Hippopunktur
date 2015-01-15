@@ -5,7 +5,10 @@
  */
 
 #include "HIPMainWindow.h"
+#include "explorer/HIPExplorer.h"
 #include "ui_hip_main_window.h"
+
+#include <QHBoxLayout>
 
 namespace HIP {
   namespace Gui {
@@ -20,6 +23,12 @@ namespace HIP {
       _ui (new Ui::HIP_Gui_MainWindow)
     {
       _ui->setupUi (this);
+
+      Explorer::Explorer* explorer = new Explorer::Explorer (_ui->_main_window_w);
+      QBoxLayout* main_window_layout = new QHBoxLayout (_ui->_main_window_w);
+      main_window_layout->setMargin (0);
+      main_window_layout->setSpacing (0);
+      main_window_layout->addWidget (explorer);
     }
 
     /*! Destructor */
