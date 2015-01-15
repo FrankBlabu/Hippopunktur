@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HIP_Gui_MainWindow</class>
+ <widget class="QMainWindow" name="HIP_Gui_MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>627</width>
+    <height>378</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="_main_window_w"/>
+  <widget class="QMenuBar" name="_menu_bar_w">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>627</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="_menu_file_w">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="_action_exit"/>
+   </widget>
+   <widget class="QMenu" name="_menu_help_w">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="_action_about"/>
+   </widget>
+   <addaction name="_menu_file_w"/>
+   <addaction name="_menu_help_w"/>
+  </widget>
+  <widget class="QStatusBar" name="_status_bar_w"/>
+  <widget class="QToolBar" name="_toolbar_w">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="_action_exit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>X</string>
+   </property>
+  </action>
+  <action name="_action_about">
+   <property name="text">
+    <string>About</string>
+   </property>
+   <property name="shortcut">
+    <string>A</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

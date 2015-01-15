@@ -4,35 +4,28 @@
 ** Frank Blankenburg, Jan. 2014
 ****************************************************************************/
 
-#include <QtGui/QGuiApplication>
-
-#include <QtQml/QQmlApplicationEngine>
-#include <QtGui/QSurfaceFormat>
+#include <QApplication>
 
 #include "core/HIPException.h"
 #include "database/HIPDatabase.h"
 #include "database/HIPDatabaseModel.h"
+#include "gui/HIPMainWindow.h"
 
 int main (int argc, char* argv[])
 {
   bool ok = true;
 
-  QGuiApplication app (argc, argv);
-
-  if (QCoreApplication::arguments ().contains (QLatin1String ("--coreprofile")))
-  {
-    QSurfaceFormat fmt;
-    fmt.setVersion (4, 4);
-    fmt.setProfile (QSurfaceFormat::CoreProfile);
-    QSurfaceFormat::setDefaultFormat (fmt);
-  }
+  QApplication app (argc, argv);
 
   try
   {
     HIP::Database::Database database (":/data/points.xml");
     HIP::Database::DatabaseModel model (&database);
 
-    QQmlApplicationEngine engine (QUrl ("qrc:/main.qml"));
+    HIP::Gui::MainWindow main_win;
+    main_win.resize (800, 600);
+    main_win.show ();
+
     ok = app.exec ();
   }
   catch (const HIP::Exception& exception)
