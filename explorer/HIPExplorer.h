@@ -23,9 +23,14 @@ namespace HIP {
      */
     class Explorer : public QWidget
     {
+      Q_OBJECT
+
     public:
       Explorer (Database::Database* database, QWidget* parent);
       virtual ~Explorer ();
+
+    public slots:
+      void onTagChanged (const QString& tag);
 
     private:
       Database::DatabaseModel* _model;

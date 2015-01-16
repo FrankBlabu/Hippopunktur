@@ -43,7 +43,14 @@ namespace HIP {
     Explorer::~Explorer ()
     {
       delete _model;
-    }    
+    }
+
+    /*! Called when the filter tag changed */
+    void Explorer::onTagChanged (const QString& tag)
+    {
+      qDebug () << "Tag: " << tag;
+    }
+
 
   } // namespace Explorer
 } // namespace HIP

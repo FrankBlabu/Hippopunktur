@@ -32,8 +32,15 @@ namespace HIP {
       explicit TagSelector (Database::Database* database, QWidget* parent);
       virtual ~TagSelector ();
 
+    signals:
+      void tagChanged (const QString& tag);
+
+    private slots:
+      void onActivated (int index);
+
     private:
       Ui::HIP_Explorer_TagSelector* _ui;
+      Database::Database* _database;
     };
 
 

@@ -9,7 +9,14 @@
 
 #include "database/HIPDatabase.h"
 
+#include <QAbstractItemDelegate>
 #include <QAbstractItemModel>
+#include <QDebug>
+#include <QFontMetrics>
+#include <QPainter>
+#include <QPalette>
+#include <QRectF>
+#include <QStyleOptionViewItem>
 
 namespace HIP {
   namespace Explorer {
@@ -102,6 +109,80 @@ namespace HIP {
       return result;
     }
 
+    //#**********************************************************************
+    // CLASS HIP::Explorer::TagSelectorDelegate
+    //#**********************************************************************
+
+    /*!
+     * Delegate for the tag selector
+     */
+    class TagSelectorDelegate : public QAbstractItemDelegate
+    {
+    public:
+      TagSelectorDelegate (QObject* parent);
+      virtual ~TagSelectorDelegate ();
+
+      virtual void paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+      virtual QSize	sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const;
+
+    private:
+      static const int MARGIN = 2;
+      static const int SPACING = 2;
+    };
+
+    TagSelectorDelegate::TagSelectorDelegate (QObject* parent)
+      : QAbstractItemDelegate (parent)
+    {
+    }
+
+    TagSelectorDelegate::~TagSelectorDelegate ()
+    {
+    }
+
+    void TagSelectorDelegate::paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+      QString tag = index.model ()->data (index, Qt::DisplayRole).toString ();
+
+      if (option.state.testFlag (QStyle::State_Selected))
+        {
+          painter->setPen (QPen ());
+          painter->setBrush (option.palette.highlight ());
+          painter->drawRect (option.rect);
+        }
+
+      QFontMetrics metrics (QApplication::font ());
+      QRect metrics_rect = metrics.boundingRect (tag);
+
+      QRect rect = option.rect;
+      rect.setWidth (metrics_rect.width () + 4 * MARGIN);
+
+      QRect background_rect (rect.left (), rect.top () + SPACING / 2,
+                             rect.width (), rect.height () - SPACING);
+
+      painter->setPen (QColor (0x70, 0xc0, 0xd0));
+      painter->setBrush (QColor (0x70, 0xc0, 0xd0));
+      painter->drawRoundedRect (background_rect, MARGIN, MARGIN);
+
+      if (option.state.testFlag (QStyle::State_Selected))
+        painter->setPen (option.palette.highlightedText ().color ());
+      else
+        painter->setPen (option.palette.text ().color ());
+
+      painter->drawText (rect, tag, Qt::AlignHCenter | Qt::AlignVCenter);
+    }
+
+    QSize	TagSelectorDelegate::sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+      Q_UNUSED (option);
+
+      QFontMetrics metrics (QApplication::font ());
+      QRect rect = metrics.boundingRect (index.model ()->data (index, Qt::DisplayRole).toString ());
+
+      rect.setWidth (rect.width () + 2 * MARGIN);
+      rect.setHeight (rect.height () + 2 * MARGIN + SPACING);
+
+      return rect.size ();
+    }
 
 
     //#**********************************************************************
@@ -111,18 +192,29 @@ namespace HIP {
     /* Constructor */
     TagSelector::TagSelector (Database::Database* database, QWidget* parent)
       : QWidget(parent),
-      _ui (new Ui::HIP_Explorer_TagSelector)
+      _ui       (new Ui::HIP_Explorer_TagSelector),
+      _database (database)
     {
       Q_UNUSED (database);
       _ui->setupUi (this);
 
       _ui->_input->setModel (new TagSelectorModel (database, this));
+      _ui->_input->setItemDelegate (new TagSelectorDelegate (this));
+
+      connect (_ui->_input, SIGNAL (currentTextChanged (const QString&)), SIGNAL (tagChanged (const QString&)));
+      connect (_ui->_input, SIGNAL (activated (int)), SLOT (onActivated (int)));
     }
 
     /*! Destructor */
     TagSelector::~TagSelector ()
     {
       delete _ui;
+    }
+
+    void TagSelector::onActivated (int index)
+    {
+      Q_ASSERT (index >= 0 && index < _database->getTags ().size ());
+      _ui->_input->setCurrentText (_database->getTags ()[index]);
     }
 
   }

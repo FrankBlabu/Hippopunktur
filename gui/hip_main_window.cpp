@@ -33,9 +33,7 @@ namespace HIP {
       Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-      Q_UNUSED (explorer);
-      Q_UNUSED (selector);
-
+      connect (selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
     }
