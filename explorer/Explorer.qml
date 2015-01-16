@@ -25,11 +25,13 @@ Rectangle {
 
             Rectangle {
                 id: wrapper
-                height: upper_text.height + lower_text.height + separator.height
+                height: upper_text.height +
+                        (lower_text.visible ? lower_text.height : 0) +
+                        top_separator.height
                 width: parent.width
 
                 Rectangle {
-                    id: separator
+                    id: top_separator
                     width: parent.width
                     height: 1
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -47,12 +49,23 @@ Rectangle {
                         id: lower_text
                         text: description
                         color: selected ? "red" : "black"
+                        visible: selected
                     }
+                }
+
+                Rectangle {
+                    id: bottom_separator
+                    width: parent.width
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    color: "lightgray"
+                    visible: index + 1 === explorer.count
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: { selected = !selected; }
+                    onClicked: selected = !selected
                 }
             }
         }
