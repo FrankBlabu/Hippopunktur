@@ -25,54 +25,53 @@ Rectangle {
 
             Rectangle {
                 id: wrapper
-                height: upper_text.height +
-                        (lower_text.visible ? lower_text.height : 0) +
-                        top_separator.height
+
+                height: text.height + 10
                 width: parent.width
 
                 Rectangle {
-                    id: top_separator
-                    width: parent.width
-                    height: 1
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    color: "lightgray"
+                    id: background
+                    anchors.fill: parent
+                    color: selected ? "lightgray" : "gray"
+                    radius: 3
                 }
 
                 Column {
+                    id: text
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.margins: 5
+
                     Text {
                         id: upper_text
+                        width: parent.width
                         text: name
-                        color: selected ? "red" : "black"
+                        color: selected ? "gray" : "lightgray"
+                        wrapMode: Text.Wrap
                     }
                     Text {
                         id: lower_text
+                        width: parent.width
                         text: description
-                        color: selected ? "red" : "black"
+                        color: selected ? "gray" : "lightgray"
+                        wrapMode: Text.Wrap
                         visible: selected
                     }
                 }
 
-                Rectangle {
-                    id: bottom_separator
-                    width: parent.width
-                    height: 1
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    color: "lightgray"
-                    visible: index + 1 === explorer.count
-                }
-
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: selected = !selected
+                    onClicked: {
+                        selected = !selected
+                        explorer.currentIndex = index
+                    }
                 }
             }
         }
 
         model: explorer_model
         delegate: point_delegate
-        highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
         focus: true
     }
 
