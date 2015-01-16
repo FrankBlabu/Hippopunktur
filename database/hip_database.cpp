@@ -141,8 +141,6 @@ namespace HIP {
 
       QDomDocument doc;
 
-      qDebug () << QString (data);
-
       QString error_message;
       int error_line = -1;
       int error_column = 1;
@@ -225,6 +223,8 @@ namespace HIP {
         tags.unite (point.getTags ().toSet ());
 
       _tags = tags.toList ();
+
+      std::sort (_tags.begin (), _tags.end ());
     }
 
   }

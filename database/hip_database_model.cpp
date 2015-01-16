@@ -86,6 +86,7 @@ namespace HIP {
 
             case Role::SELECTED:
               result = qVariantFromValue (point.getSelected ());
+              break;
             }
         }
 
