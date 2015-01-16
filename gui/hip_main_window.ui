@@ -13,7 +13,46 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="_main_window_w"/>
+  <widget class="QWidget" name="_main_window_w">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>10</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QSplitter" name="_splitter_w">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="_left_layout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QWidget" name="_selector_w" native="true"/>
+        </item>
+        <item>
+         <widget class="QWidget" name="_explorer_w" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="_view_w" native="true"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="_menu_bar_w">
    <property name="geometry">
     <rect>

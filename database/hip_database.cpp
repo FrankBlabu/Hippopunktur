@@ -40,6 +40,39 @@ namespace HIP {
     }
 
     //#**********************************************************************
+    // CLASS HIP::Database::PointComparator
+    //#**********************************************************************
+
+    namespace {
+
+      /*! Comparator class for point sorting */
+      class PointComparator
+      {
+      public:
+        inline PointComparator () {}
+        inline bool operator () (const Point& p1, const Point& p2) const
+        {
+          return splitId (p1) < splitId (p2);
+        }
+
+      private:
+        inline QPair<QString, QString> splitId (const Point& p) const
+        {
+          QString id = p.getId ();
+
+          int index = id.length () - 1;
+          while (index > 0 && id[index].isNumber ())
+            --index;
+
+          index = qMax (index, 0);
+
+          return qMakePair (id.left (index), id.mid (index));
+        }
+      };
+
+    }
+
+    //#**********************************************************************
     // CLASS HIP::Database::Point
     //#**********************************************************************
 
@@ -164,6 +197,10 @@ namespace HIP {
         }
       else
         throw Exception (tr ("Error parsing points database in line %1: %2").arg (error_line).arg (error_message));
+
+      std::sort (_points.begin (), _points.end (), PointComparator ());
+
+      computeTags ();
     }
 
     /*! Destructor */
@@ -171,19 +208,24 @@ namespace HIP {
     {
     }
 
-    /*! Return list of sorted points */
-    const QList<Point>& Database::getPoints () const
-    {
-      return _points;
-    }
-
     /*! Set point value */
     void Database::setPoint (int index, const Point& point)
     {
       Q_ASSERT (index >= 0 && index < _points.size ());
       _points[index] = point;
+
+      computeTags ();
     }
 
+    /*! Compute list of all existing tags */
+    void Database::computeTags ()
+    {
+      QSet<QString> tags;
+      foreach (const Point& point, _points)
+        tags.unite (point.getTags ().toSet ());
+
+      _tags = tags.toList ();
+    }
 
   }
 }

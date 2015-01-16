@@ -17,7 +17,8 @@ SOURCES += \
     explorer/hip_sort_filter_proxy_model.cpp \
     gui/hip_main_window.cpp \
     explorer/hip_explorer.cpp \
-    core/hip_tools.cpp
+    core/hip_tools.cpp \
+    explorer/hip_explorer_tagselector.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -34,10 +35,12 @@ HEADERS += \
     explorer/HIPSortFilterProxyModel.h \
     gui/HIPMainWindow.h \
     explorer/HIPExplorer.h \
-    core/HIPTools.h
+    core/HIPTools.h \
+    explorer/HIPExplorerTagSelector.h
 
 FORMS += \
-    gui/hip_main_window.ui
+    gui/hip_main_window.ui \
+    explorer/hip_explorer_tagselector.ui
 
 DISTFILES += \
     assets/about.html

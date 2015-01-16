@@ -7,6 +7,7 @@
 #include "HIPMainWindow.h"
 #include "core/HIPTools.h"
 #include "explorer/HIPExplorer.h"
+#include "explorer/HIPExplorerTagSelector.h"
 #include "ui_hip_main_window.h"
 
 #include <QApplication>
@@ -28,11 +29,12 @@ namespace HIP {
     {
       _ui->setupUi (this);
 
-      Explorer::Explorer* explorer = new Explorer::Explorer (database, _ui->_main_window_w);
-      QBoxLayout* main_window_layout = new QHBoxLayout (_ui->_main_window_w);
-      main_window_layout->setMargin (0);
-      main_window_layout->setSpacing (0);
-      main_window_layout->addWidget (explorer);
+      Explorer::TagSelector* selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
+      Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
+      explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+      Q_UNUSED (explorer);
+      Q_UNUSED (selector);
 
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));

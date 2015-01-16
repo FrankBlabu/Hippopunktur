@@ -54,12 +54,17 @@ namespace HIP {
       Database (const QString& path);
       virtual ~Database ();
 
-      const QList<Point>& getPoints () const;
+      const QList<Point>& getPoints () const { return _points; }
+      const QList<QString>& getTags () const { return _tags; }
 
       void setPoint (int index, const Point& point);
 
     private:
+      void computeTags ();
+
+    private:
       QList<Point> _points;
+      QList<QString> _tags;
     };
   }
 }
