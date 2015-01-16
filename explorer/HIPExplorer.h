@@ -10,6 +10,12 @@
 #include <QWidget>
 
 namespace HIP {
+
+  namespace Database {
+    class Database;
+    class DatabaseModel;
+  }
+
   namespace Explorer {
 
     /*
@@ -18,8 +24,13 @@ namespace HIP {
     class Explorer : public QWidget
     {
     public:
-      Explorer (QWidget* parent);
+      Explorer (Database::Database* database, QWidget* parent);
       virtual ~Explorer ();
+
+    private:
+      Database::DatabaseModel* _model;
+
+      static const char* const QML_MODEL_NAME;
     };
 
   }

@@ -12,27 +12,16 @@ import com.blankenburg.hippopunktur 1.0
 Rectangle {
     id: root
 
-    TableView {
-        id: tableView
+    ListView {
+        id: explorer
 
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
 
-        frameVisible: false
-        sortIndicatorVisible: true
-
-        TableViewColumn {
-            id: titleColumn
-            title: "Points"
-            role: "point"
-            movable: false
-            resizable: false
-            width: tableView.viewport.width
-        }
-
-        model: sourceModel
+        model: explorer_model
+        delegate: Text { text: name + " - " + description }
 
         ListModel {
             id: sourceModel

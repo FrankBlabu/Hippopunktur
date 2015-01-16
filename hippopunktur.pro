@@ -39,3 +39,6 @@ HEADERS += \
 FORMS += \
     gui/hip_main_window.ui
 
+DISTFILES += \
+    assets/about.html
+

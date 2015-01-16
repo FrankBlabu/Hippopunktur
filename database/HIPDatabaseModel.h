@@ -17,8 +17,18 @@ namespace HIP {
     class DatabaseModel : public QAbstractItemModel
     {
     public:
+      struct Role { enum Type_t {
+          NAME = Qt::UserRole + 1,
+          DESCRIPTION,
+          SELECTED
+        }; };
+      typedef Role::Type_t Role_t;
+
+    public:
       DatabaseModel (Database* database);
       virtual ~DatabaseModel ();
+
+      virtual QHash<int, QByteArray> roleNames () const;
 
       virtual int columnCount (const QModelIndex& parent) const;
       virtual int rowCount (const QModelIndex& parent) const;

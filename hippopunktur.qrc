@@ -4,5 +4,6 @@
         <file>explorer/Explorer.qml</file>
         <file>core/AboutDialog.qml</file>
         <file>data/points.xml</file>
+        <file>assets/about.html</file>
     </qresource>
 </RCC>

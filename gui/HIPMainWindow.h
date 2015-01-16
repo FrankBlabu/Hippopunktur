@@ -14,6 +14,11 @@ namespace Ui {
 }
 
 namespace HIP {
+
+  namespace Database {
+    class Database;
+  }
+
   namespace Gui {
 
     /*
@@ -24,8 +29,11 @@ namespace HIP {
       Q_OBJECT
 
     public:
-      explicit MainWindow (QWidget* parent=0);
+      explicit MainWindow (Database::Database* database, QWidget* parent=0);
       virtual ~MainWindow ();
+
+    private slots:
+      void onAbout ();
 
     private:
       Ui::HIP_Gui_MainWindow* _ui;

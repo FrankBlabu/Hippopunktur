@@ -9,7 +9,6 @@
 
 #include "core/HIPException.h"
 #include "database/HIPDatabase.h"
-#include "database/HIPDatabaseModel.h"
 #include "explorer/HIPSortFilterProxyModel.h"
 #include "gui/HIPMainWindow.h"
 
@@ -24,9 +23,8 @@ int main (int argc, char* argv[])
   try
   {
     HIP::Database::Database database (":/data/points.xml");
-    HIP::Database::DatabaseModel model (&database);
 
-    HIP::Gui::MainWindow main_win;
+    HIP::Gui::MainWindow main_win (&database);
     main_win.resize (800, 600);
     main_win.show ();
 

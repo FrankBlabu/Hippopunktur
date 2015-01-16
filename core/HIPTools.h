@@ -13,6 +13,10 @@
 namespace HIP {
   namespace Tools {
 
+    //#**********************************************************************
+    // Layout functions
+    //#**********************************************************************
+
     template<class T>
     T* addToParent (T* widget)
     {
@@ -23,6 +27,10 @@ namespace HIP {
 
       return widget;
     }
+
+    //#**********************************************************************
+    // String conversion
+    //#**********************************************************************
 
     QString toString (const QQmlError& error);
 
@@ -41,6 +49,18 @@ namespace HIP {
       return text;
     }
 
+    //#**********************************************************************
+    // Resources
+    //#**********************************************************************
+
+    template<class T>
+    T loadResource (const QString& name)
+    {
+      Q_ASSERT (false && "Not implemented.");
+    }
+
+    template<>
+    QString loadResource (const QString& name);
   }
 }
 

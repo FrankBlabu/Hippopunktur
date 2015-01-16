@@ -21,6 +21,17 @@ namespace HIP {
     {
     }
 
+    /*! Custom role names for QML interaction */
+    QHash<int, QByteArray> DatabaseModel::roleNames () const
+    {
+      QHash<int, QByteArray> roles;
+      roles[Role::NAME]        = "name";
+      roles[Role::DESCRIPTION] = "description";
+      roles[Role::SELECTED]    = "selected";
+
+      return roles;
+    }
+
     int DatabaseModel::columnCount (const QModelIndex& parent) const
     {
       Q_UNUSED (parent);
@@ -63,10 +74,11 @@ namespace HIP {
           switch (role)
             {
             case Qt::DisplayRole:
+            case Role::NAME:
               result = qVariantFromValue (point.getId ());
               break;
 
-            case Qt::UserRole:
+            case Role::DESCRIPTION:
               result = qVariantFromValue (point.getDescription ());
               break;
             }
