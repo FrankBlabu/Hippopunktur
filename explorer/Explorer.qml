@@ -20,22 +20,48 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
 
-        model: explorer_model
-        delegate: Text { text: name + " - " + description }
+        Component {
+            id: point_delegate
 
-        ListModel {
-            id: sourceModel
+            Rectangle {
+                id: wrapper
+                height: upper_text.height + lower_text.height + separator.height
+                width: parent.width
 
-            ListElement {
-                point: "BI1"
-            }
-            ListElement {
-                point: "BI2"
-            }
-            ListElement {
-                point: "BI3"
+                Rectangle {
+                    id: separator
+                    width: parent.width
+                    height: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    color: "lightgray"
+                }
+
+                Column {
+                    Text {
+                        id: upper_text
+                        text: name
+                        color: selected ? "red" : "black"
+                    }
+                    Text {
+                        id: lower_text
+                        text: description
+                        color: selected ? "red" : "black"
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: { selected = !selected; }
+                }
             }
         }
+
+        model: explorer_model
+        delegate: point_delegate
+        highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+        focus: true
     }
+
 }
 

@@ -47,7 +47,8 @@ namespace HIP {
     Point::Point (const QString& id, const QString& description, const QList<QString>& tags)
       : _id          (id),
         _description (description),
-        _tags        (tags)
+        _tags        (tags),
+        _selected    (false)
     {
     }
 
@@ -56,13 +57,34 @@ namespace HIP {
       : QObject (),
         _id          (toCopy._id),
         _description (toCopy._description),
-        _tags        (toCopy._tags)
+        _tags        (toCopy._tags),
+        _selected    (toCopy._selected)
     {
     }
 
     /*! Destructor */
     Point::~Point ()
     {
+    }
+
+    bool Point::getSelected () const
+    {
+      return _selected;
+    }
+
+    void Point::setSelected (bool state)
+    {
+      _selected = state;
+    }
+
+    Point& Point::operator= (const Point& toCopy)
+    {
+      _id = toCopy._id;
+      _description = toCopy._description;
+      _tags = toCopy._tags;
+      _selected = toCopy._selected;
+
+      return *this;
     }
 
 
@@ -154,6 +176,14 @@ namespace HIP {
     {
       return _points;
     }
+
+    /*! Set point value */
+    void Database::setPoint (int index, const Point& point)
+    {
+      Q_ASSERT (index >= 0 && index < _points.size ());
+      _points[index] = point;
+    }
+
 
   }
 }

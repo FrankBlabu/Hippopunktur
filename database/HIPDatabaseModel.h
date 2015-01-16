@@ -38,6 +38,7 @@ namespace HIP {
       virtual Qt::ItemFlags flags (const QModelIndex& index) const;
 
       virtual QVariant data (const QModelIndex& index, int role) const;
+      virtual bool setData (const QModelIndex& index, const QVariant& value, int role);
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
 
     private:

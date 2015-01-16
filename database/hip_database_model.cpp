@@ -7,6 +7,8 @@
 #include "HIPDatabaseModel.h"
 #include "HIPDatabase.h"
 
+#include <QDebug>
+
 namespace HIP {
   namespace Database {
 
@@ -81,10 +83,43 @@ namespace HIP {
             case Role::DESCRIPTION:
               result = qVariantFromValue (point.getDescription ());
               break;
+
+            case Role::SELECTED:
+              result = qVariantFromValue (point.getSelected ());
             }
         }
 
       return result;
+    }
+
+    bool DatabaseModel::setData (const QModelIndex& index, const QVariant& value, int role)
+    {
+      bool modified = false;
+
+      const QList<Point>& points = _database->getPoints ();
+
+      if (index.isValid () && index.row () < points.size ())
+        {
+          const Point& point = points[index.row ()];
+
+          switch (role)
+            {
+            case Role::SELECTED:
+              {
+                Point edited = point;
+                edited.setSelected (value.toBool ());
+                _database->setPoint (index.row (), edited);
+                emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
+              }
+              break;
+
+            default:
+              qWarning ("Setting role not allowed: " + roleNames ().value (role));
+              break;
+            }
+        }
+
+      return modified;
     }
 
     QVariant DatabaseModel::headerData (int section, Qt::Orientation orientation, int role) const

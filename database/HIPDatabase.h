@@ -31,10 +31,17 @@ namespace HIP {
       const QString& getDescription () const { return _description; }
       const QList<QString>& getTags () const { return _tags; }
 
+      bool getSelected () const;
+      void setSelected (bool state);
+
+      Point& operator= (const Point& toCopy);
+
     private:
       QString _id;
       QString _description;
       QList<QString> _tags;
+
+      bool _selected;
     };
 
 
@@ -48,6 +55,8 @@ namespace HIP {
       virtual ~Database ();
 
       const QList<Point>& getPoints () const;
+
+      void setPoint (int index, const Point& point);
 
     private:
       QList<Point> _points;
