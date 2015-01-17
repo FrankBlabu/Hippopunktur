@@ -15,21 +15,6 @@
   </property>
   <widget class="QWidget" name="_main_window_w">
    <layout class="QGridLayout" name="gridLayout">
-    <property name="leftMargin">
-     <number>0</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <property name="bottomMargin">
-     <number>0</number>
-    </property>
-    <property name="spacing">
-     <number>10</number>
-    </property>
     <item row="0" column="0">
      <widget class="QSplitter" name="_splitter_w">
       <property name="orientation">
@@ -55,7 +40,25 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="_view_w" native="true"/>
+      <widget class="QTabWidget" name="_tab_w">
+       <property name="tabPosition">
+        <enum>QTabWidget::West</enum>
+       </property>
+       <property name="tabShape">
+        <enum>QTabWidget::Rounded</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="documentMode">
+        <bool>false</bool>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Tab 1</string>
+        </attribute>
+       </widget>
+      </widget>
      </widget>
     </item>
    </layout>

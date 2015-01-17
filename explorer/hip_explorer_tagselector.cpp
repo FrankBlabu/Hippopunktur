@@ -198,11 +198,12 @@ namespace HIP {
       Q_UNUSED (database);
       _ui->setupUi (this);
 
-      _ui->_input->setModel (new TagSelectorModel (database, this));
-      _ui->_input->setItemDelegate (new TagSelectorDelegate (this));
+      _ui->_input_w->setModel (new TagSelectorModel (database, this));
+      //_ui->_input_w->setItemDelegate (new TagSelectorDelegate (this));
 
-      connect (_ui->_input, SIGNAL (currentTextChanged (const QString&)), SIGNAL (tagChanged (const QString&)));
-      connect (_ui->_input, SIGNAL (activated (int)), SLOT (onActivated (int)));
+      connect (_ui->_clear_w, SIGNAL (clicked ()), SLOT (onClear ()));
+      connect (_ui->_input_w, SIGNAL (currentTextChanged (const QString&)), SIGNAL (tagChanged (const QString&)));
+      connect (_ui->_input_w, SIGNAL (activated (int)), SLOT (onActivated (int)));
     }
 
     /*! Destructor */
@@ -211,10 +212,17 @@ namespace HIP {
       delete _ui;
     }
 
+    /* Item has been selected */
     void TagSelector::onActivated (int index)
     {
       Q_ASSERT (index >= 0 && index < _database->getTags ().size ());
-      _ui->_input->setCurrentText (_database->getTags ()[index]);
+      _ui->_input_w->setCurrentText (_database->getTags ()[index]);
+    }
+
+    /* Clear tag selector */
+    void TagSelector::onClear ()
+    {
+      _ui->_input_w->setCurrentText (QString ());
     }
 
   }

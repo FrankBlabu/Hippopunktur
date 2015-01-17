@@ -24,17 +24,24 @@ namespace HIP {
       {
         static const char* const DATABASE    = "database";
         static const char* const POINTS      = "points";
+        static const char* const POINT       = "point";
         static const char* const TAG         = "tag";
+        static const char* const POSITIONS   = "positions";
         static const char* const POSITION    = "position";
         static const char* const DESCRIPTION = "description";
+        static const char* const IMAGES      = "images";
+        static const char* const IMAGE       = "image";
       };
 
       namespace Attributes
       {
-        static const char* const ID   = "id";
-        static const char* const NAME = "name";
-        static const char* const X    = "x";
-        static const char* const Y    = "y";
+        static const char* const ID    = "id";
+        static const char* const NAME  = "name";
+        static const char* const X     = "x";
+        static const char* const Y     = "y";
+        static const char* const TITLE = "title";
+        static const char* const PATH  = "path";
+        static const char* const IMAGE = "image";
       }
 
     }
@@ -73,6 +80,45 @@ namespace HIP {
     }
 
     //#**********************************************************************
+    // CLASS HIP::Database::Position
+    //#**********************************************************************
+
+    Position::Position ()
+      : _image      (),
+        _coordinate ()
+    {
+    }
+
+    Position::Position (const Position& toCopy)
+      : _image      (toCopy._image),
+        _coordinate (toCopy._coordinate)
+    {
+    }
+
+    Position::~Position ()
+    {
+    }
+
+    void Position::setImage (const QString& image)
+    {
+      _image = image;
+    }
+
+    void Position::setCoordinate (const QVector2D& coordinate)
+    {
+      _coordinate = coordinate;
+    }
+
+    Position& Position::operator= (const Position& toCopy)
+    {
+      _image = toCopy._image;
+      _coordinate = toCopy._coordinate;
+
+      return *this;
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::Database::Point
     //#**********************************************************************
 
@@ -81,15 +127,7 @@ namespace HIP {
       : _id          (),
         _description (),
         _tags        (),
-        _selected    (false)
-    {
-    }
-
-    /*! Constructor */
-    Point::Point (const QString& id, const QString& description, const QList<QString>& tags)
-      : _id          (id),
-        _description (description),
-        _tags        (tags),
+        _positions   (),
         _selected    (false)
     {
     }
@@ -100,6 +138,7 @@ namespace HIP {
         _id          (toCopy._id),
         _description (toCopy._description),
         _tags        (toCopy._tags),
+        _positions   (toCopy._positions),
         _selected    (toCopy._selected)
     {
     }
@@ -109,9 +148,24 @@ namespace HIP {
     {
     }
 
-    bool Point::getSelected () const
+    void Point::setId (const QString& id)
     {
-      return _selected;
+      _id = id;
+    }
+
+    void Point::setDescription (const QString& description)
+    {
+      _description = description;
+    }
+
+    void Point::setTags (const QList<QString>& tags)
+    {
+      _tags = tags;
+    }
+
+    void Point::setPositions (const QList<Position>& positions)
+    {
+      _positions = positions;
     }
 
     void Point::setSelected (bool state)
@@ -124,7 +178,55 @@ namespace HIP {
       _id = toCopy._id;
       _description = toCopy._description;
       _tags = toCopy._tags;
+      _positions = toCopy._positions;
       _selected = toCopy._selected;
+
+      return *this;
+    }
+
+
+    //#**********************************************************************
+    // CLASS HIP::Database::Image
+    //#**********************************************************************
+
+    Image::Image ()
+      : _id    (),
+        _title (),
+        _path  ()
+    {
+    }
+
+    Image::Image (const Image& toCopy)
+      : _id    (toCopy._id),
+        _title (toCopy._title),
+        _path  (toCopy._path)
+    {
+    }
+
+    Image::~Image ()
+    {
+    }
+
+    void Image::setId (const QString& id)
+    {
+      _id = id;
+    }
+
+    void Image::setTitle (const QString& title)
+    {
+      _title = title;
+    }
+
+    void Image::setPath (const QString& path)
+    {
+      _path = path;
+    }
+
+    Image& Image::operator= (const Image& toCopy)
+    {
+      _id    = toCopy._id;
+      _title = toCopy._title;
+      _path  = toCopy._path;
 
       return *this;
     }
@@ -158,21 +260,28 @@ namespace HIP {
           if (doc.documentElement ().tagName () != Tags::DATABASE)
             throw Exception (tr ("Illegal points database format"));
 
-          for ( QDomNode points_n = doc.documentElement ().firstChild (); !points_n.isNull ();
-                points_n = points_n.nextSibling () )
+          for ( QDomNode top_n = doc.documentElement ().firstChild (); !top_n.isNull ();
+                top_n = top_n.nextSibling () )
             {
-              QDomElement points_e = points_n.toElement ();
+              QDomElement top_e = top_n.toElement ();
 
-              if (points_e.tagName () == Tags::POINTS)
+              //
+              // Load points database
+              //
+              if (top_e.tagName () == Tags::POINTS)
                 {
-                  for ( QDomNode point_n = points_e.firstChild (); !point_n.isNull ();
+                  for ( QDomNode point_n = top_e.firstChild (); !point_n.isNull ();
                         point_n = point_n.nextSibling () )
                     {
                       QDomElement point_e = point_n.toElement ();
+                      if (point_e.tagName () != Tags::POINT)
+                        throw Exception (tr ("Point element expected, but got %1").arg (point_e.tagName ()));
                       if (!point_e.hasAttribute (Attributes::ID))
                         throw Exception (tr ("Point entry does not have an id"));
 
-                      QString id = point_e.attribute (Attributes::ID);
+                      Point point;
+                      point.setId (point_e.attribute (Attributes::ID));
+
                       QList<QString> tags;
 
                       QDomNodeList tags_l = point_e.elementsByTagName (Tags::TAG);
@@ -185,9 +294,16 @@ namespace HIP {
                           tags.push_back (tag_e.attribute (Attributes::NAME));
                         }
 
-                      QDomElement position_e = point_e.namedItem (Tags::POSITION).toElement ();
-                      if (position_e.isNull ())
+                      QDomNodeList positions_l = point_e.elementsByTagName (Tags::POSITION);
+                      if (positions_l.isEmpty ())
                         throw Exception (tr ("Point entry does not have a position"));
+
+                      for (int i=0; i < positions_l.count (); ++i)
+                        {
+                          QDomElement position_e = positions_l.at (i).toElement ();
+                        }
+
+                      point.setTags (tags);
 
                       QDomElement description_e = point_e.namedItem (Tags::DESCRIPTION).toElement ();
                       if (description_e.isNull ())
@@ -195,9 +311,36 @@ namespace HIP {
                       if (!description_e.firstChild ().isCharacterData ())
                         throw Exception (tr ("Character data expected for point description"));
 
-                      QString description = description_e.firstChild ().toCharacterData ().data ();
+                      point.setDescription (description_e.firstChild ().toCharacterData ().data ());
 
-                      _points.push_back (Point (id, description, tags));
+                      _points.push_back (point);
+                    }
+                }
+
+              //
+              // Load image database
+              //
+              else if (top_e.tagName () == Tags::IMAGES)
+                {
+                  for ( QDomNode image_n = top_e.firstChild (); !image_n.isNull ();
+                        image_n = image_n.nextSibling () )
+                    {
+                      QDomElement image_e = image_n.toElement ();
+                      if (image_e.tagName () != Tags::IMAGE)
+                        throw Exception (tr ("Image element expected, but got %1").arg (image_e.tagName ()));
+                      if (!image_e.hasAttribute (Attributes::ID))
+                        throw Exception (tr ("Image entry does not have an id"));
+                      if (!image_e.hasAttribute (Attributes::TITLE))
+                        throw Exception (tr ("Image entry does not have a title"));
+                      if (!image_e.hasAttribute (Attributes::PATH))
+                        throw Exception (tr ("Image entry does not have a path"));
+
+                      Image image;
+                      image.setId (image_e.attribute (Attributes::ID));
+                      image.setTitle (image_e.attribute (Attributes::TITLE));
+                      image.setPath (image_e.attribute (Attributes::PATH));
+
+                      _images.append (image);
                     }
                 }
             }

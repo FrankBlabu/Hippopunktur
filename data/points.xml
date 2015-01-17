@@ -1,35 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database version="1.0">
+
+  <!-- List of points -->
   <points name="Horse">
     <point id="BI1">
-      <tag name="Hip"/>
-      <tag name="Leg"/>
-      <tag name="Hoof"/>
-      <tag name="Snout"/>
-      <position x="0.0" y="1.0"/>
+      <tags>
+        <tag name="Hip"/>
+        <tag name="Leg"/>
+        <tag name="Hoof"/>
+        <tag name="Snout"/>
+      </tags>
+      <positions>
+        <position image="main" x="100" y="100"/>
+        <position image="left" x="80" y="70"/>
+        <position image="top" x="50" y="20"/>
+      </positions>
       <description>Pain in left ear; Nervus nervoesus</description>
     </point>
     <point id="BI2">
-      <tag name="Hoof"/>
-      <tag name="Snout"/>
-      <position x="1.0" y="2.0"/>
+      <tags>
+        <tag name="Hoof"/>
+        <tag name="Snout"/>
+      </tags>
+      <positions>
+        <position image="main" x="30" y="40"/>
+        <position image="left" x="50" y="60"/>
+      </positions>
       <description>Pain in right ear</description>
     </point>
     <point id="BI3">
-      <tag name="Leg"/>
-      <tag name="Back"/>
-      <position x="3.0" y="4.0"/>
+      <tags>
+        <tag name="Leg"/>
+        <tag name="Back"/>
+      </tags>
+      <positions>
+        <position image="main" x="50" y="60"/>
+        <position image="right" x="20" y="80"/>
+      </positions>
       <description>Mystic soul healing point</description>
     </point>
     <point id="CI1">
-      <tag name="Head"/>
-      <position x="3.0" y="4.0"/>
+      <tags>
+        <tag name="Head"/>
+      </tags>
+      <positions>
+        <position image="main" x="70" y="40"/>
+        <position image="top" x="80" y="50"/>
+      </positions>
       <description>Do not touch this point, horse will explode !</description>
     </point>
     <point id="CI2">
-      <tag name="Head"/>
-      <position x="4.0" y="5.0"/>
+      <tags>
+        <tag name="Head"/>
+      </tags>
+      <positions>
+        <position image="main" x="100" y="80"/>
+        <position image="left" x="60" y="60"/>
+        <position image="bottom" x="20" y="10"/>
+      </positions>
       <description>Horse gear shift</description>
     </point>
   </points>
+
+  <!-- List of images -->
+  <images>
+    <image id="main"   title="Global" path=":/assets/image_horse_main.png"/>
+    <image id="left"   title="Left"   path=":/assets/image_horse_left.png"/>
+    <image id="right"  title="Right"  path=":/assets/image_horse_right.png"/>
+    <image id="top"    title="Top"    path=":/assets/image_horse_top.png"/>
+    <image id="bottom" title="Bottom" path=":/assets/image_horse_bottom.png"/>
+  </images>
+
 </database>

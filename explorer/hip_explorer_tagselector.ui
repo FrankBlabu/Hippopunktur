@@ -30,7 +30,7 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <widget class="QComboBox" name="_input">
+    <widget class="QComboBox" name="_input_w">
      <property name="editable">
       <bool>true</bool>
      </property>
@@ -39,6 +39,16 @@
      </property>
      <property name="maxCount">
       <number>2147483646</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QToolButton" name="_clear_w">
+     <property name="toolTip">
+      <string>Clear</string>
+     </property>
+     <property name="text">
+      <string>...</string>
      </property>
     </widget>
    </item>

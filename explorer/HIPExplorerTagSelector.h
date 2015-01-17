@@ -37,6 +37,7 @@ namespace HIP {
 
     private slots:
       void onActivated (int index);
+      void onClear ();
 
     private:
       Ui::HIP_Explorer_TagSelector* _ui;
