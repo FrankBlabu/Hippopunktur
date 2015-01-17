@@ -116,7 +116,6 @@ namespace HIP {
 
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
-
       const QList<Image>& getImages () const { return _images; }
 
       void setPoint (const QString& id, const Point& point);

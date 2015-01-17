@@ -18,7 +18,8 @@ SOURCES += \
     gui/hip_main_window.cpp \
     explorer/hip_explorer.cpp \
     core/hip_tools.cpp \
-    explorer/hip_explorer_tagselector.cpp
+    explorer/hip_explorer_tagselector.cpp \
+    image/hip_image_imageview.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -36,11 +37,13 @@ HEADERS += \
     gui/HIPMainWindow.h \
     explorer/HIPExplorer.h \
     core/HIPTools.h \
-    explorer/HIPExplorerTagSelector.h
+    explorer/HIPExplorerTagSelector.h \
+    image/HIPImageImageView.h
 
 FORMS += \
     gui/hip_main_window.ui \
-    explorer/hip_explorer_tagselector.ui
+    explorer/hip_explorer_tagselector.ui \
+    image/hip_image_imageview.ui
 
 DISTFILES += \
     assets/*
