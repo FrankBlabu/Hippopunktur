@@ -14,6 +14,7 @@ namespace HIP {
   namespace Database {
     class Database;
     class DatabaseModel;
+    class DatabaseFilterProxyModel;
   }
 
   namespace Explorer {
@@ -33,7 +34,9 @@ namespace HIP {
       void onTagChanged (const QString& tag);
 
     private:
+      Database::Database* _database;
       Database::DatabaseModel* _model;
+      Database::DatabaseFilterProxyModel* _filter;
 
       static const char* const QML_MODEL_NAME;
     };

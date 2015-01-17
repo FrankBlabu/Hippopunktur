@@ -77,6 +77,15 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
+    Point::Point ()
+      : _id          (),
+        _description (),
+        _tags        (),
+        _selected    (false)
+    {
+    }
+
+    /*! Constructor */
     Point::Point (const QString& id, const QString& description, const QList<QString>& tags)
       : _id          (id),
         _description (description),
@@ -207,12 +216,23 @@ namespace HIP {
     }
 
     /*! Set point value */
-    void Database::setPoint (int index, const Point& point)
+    void Database::setPoint (const QString& id, const Point& point)
     {
+      int index = findIndex (id);
+
       Q_ASSERT (index >= 0 && index < _points.size ());
       _points[index] = point;
 
       computeTags ();
+    }
+
+    /*! Set point selection status */
+    void Database::setSelected (const QString &id, bool selected)
+    {
+      int index = findIndex (id);
+
+      Q_ASSERT (index >= 0 && index < _points.size ());
+      _points[index].setSelected (selected);
     }
 
     /*! Compute list of all existing tags */
@@ -225,6 +245,18 @@ namespace HIP {
       _tags = tags.toList ();
 
       std::sort (_tags.begin (), _tags.end ());
+    }
+
+    /*! Find index of the point matching a given id */
+    int Database::findIndex (const QString &id) const
+    {
+      int index = -1;
+
+      for (int i=0; i < _points.size () && index == -1; ++i)
+        if (_points[i].getId () == id)
+          index = i;
+
+      return index;
     }
 
   }

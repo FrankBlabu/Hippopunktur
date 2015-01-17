@@ -23,6 +23,7 @@ namespace HIP {
     class Point : public QObject
     {
     public:
+      Point ();
       Point (const QString& id, const QString& description, const QList<QString>& tags);
       Point (const Point& toCopy);
       virtual ~Point ();
@@ -57,10 +58,12 @@ namespace HIP {
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
 
-      void setPoint (int index, const Point& point);
+      void setPoint (const QString& id, const Point& point);
+      void setSelected (const QString& id, bool selected);
 
     private:
       void computeTags ();
+      int findIndex (const QString& id) const;
 
     private:
       QList<Point> _points;
@@ -68,5 +71,7 @@ namespace HIP {
     };
   }
 }
+
+Q_DECLARE_METATYPE (HIP::Database::Point);
 
 #endif

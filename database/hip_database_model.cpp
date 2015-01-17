@@ -12,9 +12,64 @@
 namespace HIP {
   namespace Database {
 
+    //#**********************************************************************
+    // CLASS HIP::Database::DatabaseFilterProxyModel
+    //#**********************************************************************
+
     /* Constructor */
-    DatabaseModel::DatabaseModel (Database* database)
-      : _database (database)
+    DatabaseFilterProxyModel::DatabaseFilterProxyModel (QObject* parent)
+      : QSortFilterProxyModel (parent),
+        _tag ()
+    {
+    }
+
+    /* Destructor */
+    DatabaseFilterProxyModel::~DatabaseFilterProxyModel ()
+    {
+    }
+
+    /*! Set filter tag */
+    void DatabaseFilterProxyModel::setTag (const QString& tag)
+    {
+      beginResetModel ();
+      _tag = tag;
+      endResetModel ();
+    }
+
+    /* Check if row is filtered */
+    bool DatabaseFilterProxyModel::filterAcceptsRow (int source_row, const QModelIndex& source_parent) const
+    {
+      bool accepted = false;
+
+      if (!_tag.isEmpty ())
+        {
+          QModelIndex index = sourceModel ()->index (source_row, 0, source_parent);
+          Point point = sourceModel ()->data (index, DatabaseModel::Role::POINT).value<Point> ();
+
+          if (point.getId ().startsWith (_tag, Qt::CaseInsensitive))
+            accepted = true;
+          else
+            {
+              foreach (const QString& tag, point.getTags ())
+                if (tag.startsWith (_tag, Qt::CaseInsensitive))
+                  accepted = true;
+            }
+        }
+      else
+        accepted = true;
+
+      return accepted;
+    }
+
+
+    //#**********************************************************************
+    // CLASS HIP::Database::DatabaseModel
+    //#**********************************************************************
+
+    /* Constructor */
+    DatabaseModel::DatabaseModel (Database* database, QObject* parent)
+      : QAbstractItemModel (parent),
+        _database (database)
     {
     }
 
@@ -30,6 +85,7 @@ namespace HIP {
       roles[Role::NAME]        = "name";
       roles[Role::DESCRIPTION] = "description";
       roles[Role::SELECTED]    = "selected";
+      roles[Role::POINT]       = "point";
 
       return roles;
     }
@@ -87,6 +143,10 @@ namespace HIP {
             case Role::SELECTED:
               result = qVariantFromValue (point.getSelected ());
               break;
+
+            case Role::POINT:
+              result = qVariantFromValue (point);
+              break;
             }
         }
 
@@ -107,9 +167,15 @@ namespace HIP {
             {
             case Role::SELECTED:
               {
-                Point edited = point;
-                edited.setSelected (value.toBool ());
-                _database->setPoint (index.row (), edited);
+                _database->setSelected (point.getId (), value.toBool ());
+                emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
+              }
+              break;
+
+            case Role::POINT:
+              {
+                Point p = value.value<Point> ();
+                _database->setPoint (p.getId (), p);
                 emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
               }
               break;

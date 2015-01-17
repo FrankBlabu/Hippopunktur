@@ -7,6 +7,7 @@
 #include "HIPExplorer.h"
 #include "core/HIPTools.h"
 #include "core/HIPException.h"
+#include "database/HIPDatabase.h"
 #include "database/HIPDatabaseModel.h"
 
 #include <QQuickWidget>
@@ -28,11 +29,15 @@ namespace HIP {
     /*! Constructor */
     Explorer::Explorer (Database::Database* database, QWidget* parent)
       : QWidget (parent),
-        _model (new Database::DatabaseModel (database))
+        _database (database),
+        _model    (new Database::DatabaseModel (database, this)),
+        _filter   (new Database::DatabaseFilterProxyModel (this))
     {
+      _filter->setSourceModel (_model);
+
       QQuickWidget* view = Tools::addToParent (new QQuickWidget (this));
       view->setResizeMode (QQuickWidget::SizeRootObjectToView);
-      view->rootContext ()->setContextProperty (QString (QML_MODEL_NAME), _model);
+      view->rootContext ()->setContextProperty (QString (QML_MODEL_NAME), _filter);
       view->setSource (QUrl ("qrc:/explorer/Explorer.qml"));
 
       if (view->status () != QQuickWidget::Ready)
@@ -42,13 +47,15 @@ namespace HIP {
     /*! Destructor */
     Explorer::~Explorer ()
     {
-      delete _model;
     }
 
     /*! Called when the filter tag changed */
     void Explorer::onTagChanged (const QString& tag)
     {
-      qDebug () << "Tag: " << tag;
+      foreach (const Database::Point& point, _database->getPoints ())
+        _database->setSelected (point.getId (), false);
+
+      _filter->setTag (tag);
     }
 
 

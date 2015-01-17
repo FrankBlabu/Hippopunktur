@@ -8,24 +8,48 @@
 #define __HIPDatabaseModel_h__
 
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
 
 namespace HIP {
   namespace Database {
 
     class Database;
 
+    /*
+     * Proxy model for filtered database access
+     */
+    class DatabaseFilterProxyModel : public QSortFilterProxyModel
+    {
+    public:
+      DatabaseFilterProxyModel (QObject* parent);
+      virtual ~DatabaseFilterProxyModel ();
+
+      void setTag (const QString& tag);
+
+    protected:
+      virtual bool	filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
+
+    private:
+      QString _tag;
+    };
+
+
+    /*
+     * Model for database access
+     */
     class DatabaseModel : public QAbstractItemModel
     {
     public:
       struct Role { enum Type_t {
           NAME = Qt::UserRole + 1,
           DESCRIPTION,
-          SELECTED
+          SELECTED,
+          POINT
         }; };
       typedef Role::Type_t Role_t;
 
     public:
-      DatabaseModel (Database* database);
+      DatabaseModel (Database* database, QObject* parent);
       virtual ~DatabaseModel ();
 
       virtual QHash<int, QByteArray> roleNames () const;
