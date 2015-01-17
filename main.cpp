@@ -8,6 +8,7 @@
 #include <QtQml>
 
 #include "core/HIPException.h"
+#include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 #include "explorer/HIPSortFilterProxyModel.h"
 #include "gui/HIPMainWindow.h"
@@ -17,6 +18,8 @@ int main (int argc, char* argv[])
   bool ok = true;
 
   QApplication app (argc, argv);
+
+  app.setStyleSheet (HIP::Tools::loadResource<QString> (":/assets/hippopunktur.css"));
 
   qmlRegisterType<HIP::Explorer::SortFilterProxyModel> ("com.blankenburg.hippopunktur", 1, 0, "SortFilterProxyModel");
 

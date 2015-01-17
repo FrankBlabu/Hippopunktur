@@ -35,7 +35,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="_left_layout">
         <property name="spacing">
          <number>10</number>
@@ -44,7 +44,14 @@
          <widget class="QWidget" name="_selector_w" native="true"/>
         </item>
         <item>
-         <widget class="QWidget" name="_explorer_w" native="true"/>
+         <widget class="QWidget" name="_explorer_w" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

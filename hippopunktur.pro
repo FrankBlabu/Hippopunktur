@@ -43,5 +43,5 @@ FORMS += \
     explorer/hip_explorer_tagselector.ui
 
 DISTFILES += \
-    assets/about.html
+    assets/*
 
