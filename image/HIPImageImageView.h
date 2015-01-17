@@ -8,6 +8,7 @@
 #define __HIPImageImageView_h__
 
 #include <QLabel>
+#include <QPixmap>
 #include <QWidget>
 
 namespace Ui {
@@ -33,9 +34,17 @@ namespace HIP {
       ImageView (const Database::Image& image, QWidget* parent);
       virtual ~ImageView ();
 
+      void setScaling (double factor);
+
+    protected:
+      virtual bool eventFilter (QObject* obj, QEvent* event);
+
     private:
       Ui::HIP_Image_ImageView* _ui;
       QLabel* _image;
+
+      QPixmap _pixmap;
+      double _scaling;
     };
 
   }
