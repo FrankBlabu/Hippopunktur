@@ -64,12 +64,12 @@
 
   <!-- List of images -->
   <images>
-    <image id="main"   title="Global" path=":/assets/images/main.jpg"/>
-    <image id="front"  title="Front"  path=":/assets/images/front.jpg"/>
+    <image id="main"   title="Overview" path=":/assets/images/main.jpg"/>
+    <image id="front"  title="Front"    path=":/assets/images/front.jpg"/>
     <!--
-    <image id="back"   title="Back"   path=":/assets/images/back.jpg"/>
-    <image id="top"    title="Top"    path=":/assets/images/top.jpg"/>
-    <image id="bottom" title="Bottom" path=":/assets/images/bottom.jpg"/>
+    <image id="back"   title="Back"     path=":/assets/images/back.jpg"/>
+    <image id="top"    title="Top"      path=":/assets/images/top.jpg"/>
+    <image id="bottom" title="Bottom"   path=":/assets/images/bottom.jpg"/>
     -->
   </images>
 
