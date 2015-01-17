@@ -361,21 +361,22 @@ namespace HIP {
                         image_n = image_n.nextSibling () )
                     {
                       QDomElement image_e = image_n.toElement ();
-                      if (image_e.tagName () != Tags::IMAGE)
-                        throw Exception (tr ("Image element expected, but got %1").arg (image_e.tagName ()));
-                      if (!image_e.hasAttribute (Attributes::ID))
-                        throw Exception (tr ("Image entry does not have an id"));
-                      if (!image_e.hasAttribute (Attributes::TITLE))
-                        throw Exception (tr ("Image entry does not have a title"));
-                      if (!image_e.hasAttribute (Attributes::PATH))
-                        throw Exception (tr ("Image entry does not have a path"));
+                      if (image_e.tagName () == Tags::IMAGE)
+                        {
+                          if (!image_e.hasAttribute (Attributes::ID))
+                            throw Exception (tr ("Image entry does not have an id"));
+                          if (!image_e.hasAttribute (Attributes::TITLE))
+                            throw Exception (tr ("Image entry does not have a title"));
+                          if (!image_e.hasAttribute (Attributes::PATH))
+                            throw Exception (tr ("Image entry does not have a path"));
 
-                      Image image;
-                      image.setId (image_e.attribute (Attributes::ID));
-                      image.setTitle (image_e.attribute (Attributes::TITLE));
-                      image.setPath (image_e.attribute (Attributes::PATH));
+                          Image image;
+                          image.setId (image_e.attribute (Attributes::ID));
+                          image.setTitle (image_e.attribute (Attributes::TITLE));
+                          image.setPath (image_e.attribute (Attributes::PATH));
 
-                      _images.append (image);
+                          _images.append (image);
+                        }
                     }
                 }
             }

@@ -8,9 +8,11 @@
 #include "ui_hip_image_imageview.h"
 
 #include "core/HIPException.h"
+#include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 
 #include <QImage>
+#include <QPainter>
 #include <QScrollArea>
 #include <QWheelEvent>
 #include <QDebug>
@@ -22,38 +24,84 @@ namespace HIP {
     // CLASS HIP::Image::ImageView
     //#**********************************************************************
 
+    /*!
+     * Image drawing widget
+     */
+    class ImageWidget : public QWidget
+    {
+    public:
+      ImageWidget (const Database::Image& image, QWidget* parent);
+      virtual ~ImageWidget ();
+
+    protected:
+      virtual void paintEvent (QPaintEvent* event);
+
+    private:
+      QPixmap _pixmap;
+    };
+
+    /*! Constructor */
+    ImageWidget::ImageWidget (const Database::Image& image, QWidget* parent)
+      : QWidget (parent),
+        _pixmap (image.getPath ())
+    {
+      if (_pixmap.isNull ())
+        throw Exception (tr ("Unable to load image '%1'").arg (image.getPath ()));
+
+      qDebug () << _pixmap.size ();
+    }
+
+    /*! Destructor */
+    ImageWidget::~ImageWidget ()
+    {
+    }
+
+    /* Paint widget */
+    void ImageWidget::paintEvent (QPaintEvent* event)
+    {
+      Q_UNUSED (event);
+
+      QRectF source_rect = _pixmap.rect ();
+      QRectF target_rect = rect ();
+
+      //
+      // Aspect ratio > 1 --> Fit width
+      //
+      if ( source_rect.width () / source_rect.height () >
+           target_rect.width () / target_rect.height () )
+        {
+          double height = target_rect.width () * (source_rect.height () / source_rect.width ());
+          target_rect = QRectF (target_rect.left (), target_rect.center ().y () - height / 2.0,
+                                target_rect.width (), height);
+        }
+
+      //
+      // Aspect ratio < 1 --> Fit height
+      //
+      else
+        {
+          double width = target_rect.height () * (source_rect.width () / source_rect.height ());
+          target_rect = QRectF (target_rect.center ().x () - width / 2.0, target_rect.top (),
+                                width, target_rect.height ());
+        }
+
+      QPainter painter (this);
+      painter.drawPixmap (target_rect, _pixmap, source_rect);
+    }
+
+
+    //#**********************************************************************
+    // CLASS HIP::Image::ImageView
+    //#**********************************************************************
+
     /*! Constructor */
     ImageView::ImageView (const Database::Image& image, QWidget* parent)
       : QWidget(parent),
-      _ui      (new Ui::HIP_Image_ImageView),
-      _image   (new QLabel (this)),
-      _pixmap  (),
-      _scaling (1.0)
+      _ui     (new Ui::HIP_Image_ImageView),
+      _widget (0)
     {
       _ui->setupUi (this);
-
-      QImage content (image.getPath ());
-      if (content.isNull ())
-        throw Exception (tr ("Unable to load image from path '%1'").arg (image.getPath ()));
-
-      qDebug () << image.getPath () << ", " << content.size ();
-
-      _pixmap = QPixmap::fromImage (content);
-
-      _image->setBackgroundRole (QPalette::Base);
-      _image->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Ignored);
-      _image->setScaledContents (true);
-      _image->setPixmap (_pixmap);
-      _image->adjustSize ();
-
-      _ui->_view_w->setBackgroundRole (QPalette::Dark);
-      _ui->_view_w->setWidgetResizable (false);
-      _ui->_view_w->setWidget (_image);
-
-      installEventFilter (this);
-      _ui->_view_w->installEventFilter (this);
-      _ui->_view_w->viewport ()->installEventFilter (this);
-      _image->installEventFilter (this);
+      _widget = Tools::addToParent (new ImageWidget (image, _ui->_view_w));
     }
 
     /*! Destructor */
@@ -62,14 +110,7 @@ namespace HIP {
       delete _ui;
     }
 
-    /*! Set image scaling factor */
-    void ImageView::setScaling (double factor)
-    {
-      _scaling = qBound (0.01, factor, 20.0);
-      _image->resize (_pixmap.size () * _scaling);
-      qDebug () << "Scaling: " << _scaling;
-    }
-
+#if 0
     /*! Event filter */
     bool ImageView::eventFilter (QObject* obj, QEvent* event)
     {
@@ -91,7 +132,7 @@ namespace HIP {
 
       return processed;
     }
-
+#endif
 
   }
 }

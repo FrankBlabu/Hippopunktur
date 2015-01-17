@@ -7,9 +7,6 @@
         <file>assets/about.html</file>
         <file>assets/hippopunktur.css</file>
         <file>assets/images/main.jpg</file>
-        <file>assets/images/top.jpg</file>
-        <file>assets/images/bottom.jpg</file>
         <file>assets/images/front.jpg</file>
-        <file>assets/images/back.jpg</file>
     </qresource>
 </RCC>

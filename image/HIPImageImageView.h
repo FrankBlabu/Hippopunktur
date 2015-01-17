@@ -23,6 +23,8 @@ namespace HIP {
 
   namespace Image {
 
+    class ImageWidget;
+
     /*
      * View displaying an acupunctur image
      */
@@ -34,17 +36,9 @@ namespace HIP {
       ImageView (const Database::Image& image, QWidget* parent);
       virtual ~ImageView ();
 
-      void setScaling (double factor);
-
-    protected:
-      virtual bool eventFilter (QObject* obj, QEvent* event);
-
     private:
       Ui::HIP_Image_ImageView* _ui;
-      QLabel* _image;
-
-      QPixmap _pixmap;
-      double _scaling;
+      ImageWidget* _widget;
     };
 
   }
