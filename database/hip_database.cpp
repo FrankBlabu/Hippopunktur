@@ -111,7 +111,7 @@ namespace HIP {
 
     Position& Position::operator= (const Position& toCopy)
     {
-      _image = toCopy._image;
+      _image      = toCopy._image;
       _coordinate = toCopy._coordinate;
 
       return *this;
@@ -175,11 +175,11 @@ namespace HIP {
 
     Point& Point::operator= (const Point& toCopy)
     {
-      _id = toCopy._id;
+      _id          = toCopy._id;
       _description = toCopy._description;
-      _tags = toCopy._tags;
-      _positions = toCopy._positions;
-      _selected = toCopy._selected;
+      _tags        = toCopy._tags;
+      _positions   = toCopy._positions;
+      _selected    = toCopy._selected;
 
       return *this;
     }
@@ -273,6 +273,9 @@ namespace HIP {
                   for ( QDomNode point_n = top_e.firstChild (); !point_n.isNull ();
                         point_n = point_n.nextSibling () )
                     {
+                      //
+                      // Element: Point
+                      //
                       QDomElement point_e = point_n.toElement ();
                       if (point_e.tagName () != Tags::POINT)
                         throw Exception (tr ("Point element expected, but got %1").arg (point_e.tagName ()));
@@ -282,6 +285,9 @@ namespace HIP {
                       Point point;
                       point.setId (point_e.attribute (Attributes::ID));
 
+                      //
+                      // Category: Point::Tags
+                      //
                       QList<QString> tags;
 
                       QDomNodeList tags_l = point_e.elementsByTagName (Tags::TAG);
@@ -294,6 +300,13 @@ namespace HIP {
                           tags.push_back (tag_e.attribute (Attributes::NAME));
                         }
 
+                      point.setTags (tags);
+
+                      //
+                      // Category: Point::Positions
+                      //
+                      QList<Position> positions;
+
                       QDomNodeList positions_l = point_e.elementsByTagName (Tags::POSITION);
                       if (positions_l.isEmpty ())
                         throw Exception (tr ("Point entry does not have a position"));
@@ -301,10 +314,32 @@ namespace HIP {
                       for (int i=0; i < positions_l.count (); ++i)
                         {
                           QDomElement position_e = positions_l.at (i).toElement ();
+                          if (!position_e.hasAttribute (Attributes::IMAGE))
+                            throw Exception (tr ("Position must specify an image"));
+                          if (!position_e.hasAttribute (Attributes::X))
+                            throw Exception (tr ("Position must specify an x coordinate"));
+                          if (!position_e.hasAttribute (Attributes::Y))
+                            throw Exception (tr ("Position must specify a y coordinate"));
+
+                          bool x_ok = true;
+                          bool y_ok = true;
+
+                          Position position;
+                          position.setImage (position_e.attribute (Attributes::IMAGE));
+                          position.setCoordinate (QVector2D (position_e.attribute (Attributes::X).toDouble (&x_ok),
+                                                             position_e.attribute (Attributes::X).toDouble (&y_ok)));
+
+                          if (!x_ok)
+                            throw Exception (tr ("X coordinate is not a number"));
+                          if (!y_ok)
+                            throw Exception (tr ("Y coordinate is not a number"));
                         }
 
-                      point.setTags (tags);
+                      point.setPositions (positions);
 
+                      //
+                      // Attribute: Point::Description
+                      //
                       QDomElement description_e = point_e.namedItem (Tags::DESCRIPTION).toElement ();
                       if (description_e.isNull ())
                         throw Exception (tr ("Point entry does not have a description"));
