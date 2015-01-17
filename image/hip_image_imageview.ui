@@ -46,6 +46,9 @@
      </property>
      <item>
       <widget class="QToolButton" name="_reset_zoom_w">
+       <property name="toolTip">
+        <string>reset zoom</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>

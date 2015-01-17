@@ -29,14 +29,7 @@
          <widget class="QWidget" name="_selector_w" native="true"/>
         </item>
         <item>
-         <widget class="QWidget" name="_explorer_w" native="true">
-          <property name="minimumSize">
-           <size>
-            <width>150</width>
-            <height>0</height>
-           </size>
-          </property>
-         </widget>
+         <widget class="QWidget" name="_explorer_w" native="true"/>
         </item>
        </layout>
       </widget>

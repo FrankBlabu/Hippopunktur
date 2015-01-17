@@ -33,22 +33,42 @@ namespace HIP {
       ImageWidget (const Database::Image& image, QWidget* parent);
       virtual ~ImageWidget ();
 
+      void resetZoom ();
+
     protected:
       virtual void paintEvent (QPaintEvent* event);
 
+      virtual void mousePressEvent (QMouseEvent* event);
+      virtual void mouseMoveEvent (QMouseEvent* event);
+      virtual void mouseReleaseEvent (QMouseEvent* event);
+      virtual void wheelEvent (QWheelEvent* event);
+
+    private:
+      QPointF toPixmapPoint (const QPointF& widget_point) const;
+      QRectF ensureBounds (const QRectF& r) const;
+
     private:
       QPixmap _pixmap;
+      QRectF _source_rect;
+      QRectF _target_rect;
+
+      QPointF _clicked_point;
     };
 
     /*! Constructor */
     ImageWidget::ImageWidget (const Database::Image& image, QWidget* parent)
       : QWidget (parent),
-        _pixmap (image.getPath ())
+        _pixmap        (image.getPath ()),
+        _source_rect   (_pixmap.rect ()),
+        _target_rect   (),
+        _clicked_point ()
     {
       if (_pixmap.isNull ())
         throw Exception (tr ("Unable to load image '%1'").arg (image.getPath ()));
 
-      qDebug () << _pixmap.size ();
+      qDebug () << "Pixmap size: " << _pixmap.size ();
+
+      setMouseTracking (true);
     }
 
     /*! Destructor */
@@ -56,23 +76,40 @@ namespace HIP {
     {
     }
 
+    /* Reset zoom to original pixmap scale */
+    void ImageWidget::resetZoom ()
+    {
+      _source_rect = _pixmap.rect ();
+      update ();
+    }
+
+    /* Compute pixmap point matching the given widget point */
+    QPointF ImageWidget::toPixmapPoint (const QPointF& p) const
+    {
+       QPointF source_point (_source_rect.width () *
+                             (p.x () - _target_rect.left ()) / _target_rect.width (),
+                             _source_rect.height () *
+                             (p.y () - _target_rect.top ()) / _target_rect.height ());
+
+       return _source_rect.topLeft () + source_point;
+    }
+
     /* Paint widget */
     void ImageWidget::paintEvent (QPaintEvent* event)
     {
       Q_UNUSED (event);
 
-      QRectF source_rect = _pixmap.rect ();
-      QRectF target_rect = rect ();
+      _target_rect = rect ();
 
       //
       // Aspect ratio > 1 --> Fit width
       //
-      if ( source_rect.width () / source_rect.height () >
-           target_rect.width () / target_rect.height () )
+      if ( _source_rect.width () / _source_rect.height () >
+           _target_rect.width () / _target_rect.height () )
         {
-          double height = target_rect.width () * (source_rect.height () / source_rect.width ());
-          target_rect = QRectF (target_rect.left (), target_rect.center ().y () - height / 2.0,
-                                target_rect.width (), height);
+          double height = _target_rect.width () * (_source_rect.height () / _source_rect.width ());
+          _target_rect = QRectF (_target_rect.left (), _target_rect.center ().y () - height / 2.0,
+                                _target_rect.width (), height);
         }
 
       //
@@ -80,13 +117,82 @@ namespace HIP {
       //
       else
         {
-          double width = target_rect.height () * (source_rect.width () / source_rect.height ());
-          target_rect = QRectF (target_rect.center ().x () - width / 2.0, target_rect.top (),
-                                width, target_rect.height ());
+          double width = _target_rect.height () * (_source_rect.width () / _source_rect.height ());
+          _target_rect = QRectF (_target_rect.center ().x () - width / 2.0, _target_rect.top (),
+                                width, _target_rect.height ());
         }
 
       QPainter painter (this);
-      painter.drawPixmap (target_rect, _pixmap, source_rect);
+
+#if 0
+      painter.setPen (QPen (Qt::red, 3.0));
+      painter.drawRect (_target_rect);
+#endif
+
+      painter.drawPixmap (_target_rect, _pixmap, _source_rect);
+    }
+
+    void ImageWidget::mousePressEvent (QMouseEvent* event)
+    {
+      //qDebug () << "Click: " << toPixmapPoint (event->pos ());
+
+      _clicked_point = toPixmapPoint (event->pos ());
+
+      if (event->buttons ().testFlag (Qt::MidButton))
+        setCursor (Qt::SizeAllCursor);
+    }
+
+    void ImageWidget::mouseMoveEvent (QMouseEvent* event)
+    {
+      if (event->buttons ().testFlag (Qt::MidButton))
+        {
+          _source_rect.moveCenter (_source_rect.center () - (toPixmapPoint (event->pos ()) - _clicked_point));
+          _source_rect = ensureBounds (_source_rect);
+          update ();
+        }
+    }
+
+    void ImageWidget::mouseReleaseEvent (QMouseEvent* event)
+    {
+      Q_UNUSED (event);
+      unsetCursor ();
+    }
+
+    /*! Handle mouse wheel events */
+    void ImageWidget::wheelEvent (QWheelEvent* event)
+    {
+      double delta = -(event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+
+      QRectF r (_source_rect.x (), _source_rect.y (),
+                _source_rect.width () + _source_rect.width () * 0.1 * delta,
+                _source_rect.height () + _source_rect.height () * 0.1 * delta);
+      r.moveCenter (toPixmapPoint (event->posF ()));
+
+      if (r.width () >= _pixmap.width () || r.height () >= _pixmap.height ())
+        _source_rect = _pixmap.rect ();
+      else if (r.width () > 64 && r.height () > 64)
+        _source_rect = ensureBounds (r);
+
+      update ();
+    }
+
+    /*
+     * Ensure that the given source rect is within pixmap bounds
+     */
+    QRectF ImageWidget::ensureBounds (const QRectF& rect) const
+    {
+      QRectF r = rect;
+
+      if (r.left () < _pixmap.rect ().left ())
+        r.moveLeft (_pixmap.rect ().left ());
+      if (r.right () > _pixmap.rect ().right ())
+        r.moveRight (_pixmap.rect ().right ());
+      if (r.top () < _pixmap.rect ().top ())
+        r.moveTop (_pixmap.rect ().top ());
+      if (r.bottom () > _pixmap.rect ().bottom ())
+        r.moveBottom (_pixmap.rect ().bottom ());
+
+      return r;
     }
 
 
@@ -102,6 +208,8 @@ namespace HIP {
     {
       _ui->setupUi (this);
       _widget = Tools::addToParent (new ImageWidget (image, _ui->_view_w));
+
+      connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 
     /*! Destructor */
@@ -110,29 +218,10 @@ namespace HIP {
       delete _ui;
     }
 
-#if 0
-    /*! Event filter */
-    bool ImageView::eventFilter (QObject* obj, QEvent* event)
+    void ImageView::onResetZoom ()
     {
-      bool processed = false;
-
-      //
-      // Mouse wheel events
-      //
-      if (obj == _image && event->type () == QEvent::Wheel)
-        {
-          QWheelEvent* wheel_event = dynamic_cast<QWheelEvent*> (event);
-          Q_ASSERT (wheel_event != 0);
-
-          double delta = wheel_event->angleDelta ().x () + wheel_event->angleDelta ().y ();
-          setScaling (_scaling + _scaling * (0.005 * delta / 15));
-
-          processed = true;
-        }
-
-      return processed;
+      _widget->resetZoom ();
     }
-#endif
 
   }
 }

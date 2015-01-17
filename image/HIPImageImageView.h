@@ -36,6 +36,9 @@ namespace HIP {
       ImageView (const Database::Image& image, QWidget* parent);
       virtual ~ImageView ();
 
+    private slots:
+      void onResetZoom ();
+
     private:
       Ui::HIP_Image_ImageView* _ui;
       ImageWidget* _widget;
