@@ -64,11 +64,11 @@
 
   <!-- List of images -->
   <images>
-    <image id="main"   title="Global" path=":/assets/image_horse_main.png"/>
-    <image id="left"   title="Left"   path=":/assets/image_horse_left.png"/>
-    <image id="right"  title="Right"  path=":/assets/image_horse_right.png"/>
-    <image id="top"    title="Top"    path=":/assets/image_horse_top.png"/>
-    <image id="bottom" title="Bottom" path=":/assets/image_horse_bottom.png"/>
+    <image id="main"   title="Global" path=":/assets/images/main.jpg"/>
+    <image id="front"  title="Front"  path=":/assets/images/front.jpg"/>
+    <image id="back"   title="Back"   path=":/assets/images/back.jpg"/>
+    <image id="top"    title="Top"    path=":/assets/images/top.jpg"/>
+    <image id="bottom" title="Bottom" path=":/assets/images/bottom.jpg"/>
   </images>
 
 </database>

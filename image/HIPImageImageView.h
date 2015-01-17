@@ -7,6 +7,7 @@
 #ifndef __HIPImageImageView_h__
 #define __HIPImageImageView_h__
 
+#include <QLabel>
 #include <QWidget>
 
 namespace Ui {
@@ -34,6 +35,7 @@ namespace HIP {
 
     private:
       Ui::HIP_Image_ImageView* _ui;
+      QLabel* _image;
     };
 
   }

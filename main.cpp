@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
 
   try
   {
-    HIP::Database::Database database (":/data/points.xml");
+    HIP::Database::Database database (":/data/database.xml");
 
     HIP::Gui::MainWindow main_win (&database);
     main_win.resize (800, 600);

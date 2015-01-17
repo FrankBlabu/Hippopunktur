@@ -1,19 +1,15 @@
 <RCC>
-
     <qresource prefix="/">
-
         <file>main.qml</file>
-
         <file>explorer/Explorer.qml</file>
-
         <file>core/AboutDialog.qml</file>
-
-        <file>data/points.xml</file>
-
+        <file>data/database.xml</file>
         <file>assets/about.html</file>
-
         <file>assets/hippopunktur.css</file>
-
+        <file>assets/images/main.jpg</file>
+        <file>assets/images/top.jpg</file>
+        <file>assets/images/bottom.jpg</file>
+        <file>assets/images/front.jpg</file>
+        <file>assets/images/back.jpg</file>
     </qresource>
-
 </RCC>
