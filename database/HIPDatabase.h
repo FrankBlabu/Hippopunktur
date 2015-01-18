@@ -53,6 +53,8 @@ namespace HIP {
       Point (const Point& toCopy);
       virtual ~Point ();
 
+      bool matches (const QString& tag) const;
+
       const QString& getId () const { return _id; }
       void setId (const QString& id);
 

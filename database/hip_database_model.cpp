@@ -39,26 +39,8 @@ namespace HIP {
     /* Check if row is filtered */
     bool DatabaseFilterProxyModel::filterAcceptsRow (int source_row, const QModelIndex& source_parent) const
     {
-      bool accepted = false;
-
-      if (!_tag.isEmpty ())
-        {
-          QModelIndex index = sourceModel ()->index (source_row, 0, source_parent);
-          Point point = sourceModel ()->data (index, DatabaseModel::Role::POINT).value<Point> ();
-
-          if (point.getId ().startsWith (_tag, Qt::CaseInsensitive))
-            accepted = true;
-          else
-            {
-              foreach (const QString& tag, point.getTags ())
-                if (tag.startsWith (_tag, Qt::CaseInsensitive))
-                  accepted = true;
-            }
-        }
-      else
-        accepted = true;
-
-      return accepted;
+      QModelIndex index = sourceModel ()->index (source_row, 0, source_parent);
+      return sourceModel ()->data (index, DatabaseModel::Role::POINT).value<Point> ().matches (_tag);
     }
 
 

@@ -14,6 +14,7 @@
 #include <QImage>
 #include <QPainter>
 #include <QScrollArea>
+#include <QToolTip>
 #include <QWheelEvent>
 #include <QDebug>
 
@@ -24,49 +25,6 @@ namespace HIP {
     // CLASS HIP::Image::ImageView
     //#**********************************************************************
 
-    /*!
-     * Image drawing widget
-     */
-    class ImageWidget : public QWidget
-    {
-    public:
-      ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent);
-      virtual ~ImageWidget ();
-
-      void resetZoom ();
-
-      void updateAll ();
-      void updatePoint (const QString& id);
-
-    protected:
-      QPointF toPixmapPoint (const QPointF& widget_point) const;
-      QPointF toWidgetPoint (const QPointF& pixmap_point) const;
-
-      virtual void paintEvent (QPaintEvent* event);
-      virtual void resizeEvent (QResizeEvent* event);
-
-      virtual void mousePressEvent (QMouseEvent* event);
-      virtual void mouseMoveEvent (QMouseEvent* event);
-      virtual void mouseReleaseEvent (QMouseEvent* event);
-      virtual void wheelEvent (QWheelEvent* event);
-
-    private:
-      QRectF computeDefaultViewport () const;
-      void ensureBounds ();
-
-    private:
-      Database::Database* _database;
-      Database::Image _image;
-
-      QPixmap _pixmap;  // Source pixmap
-      QRectF _viewport; // Source viewport in pixmap coordinates
-
-      QPointF _clicked_point; // Origin for dragging movements in widget coordinates
-      QRectF _dragged;
-
-      static const double POINT_RADIUS;
-    };
-
     /*! Point radius [STATIC] */
     const double ImageWidget::POINT_RADIUS = 5.0;
 
@@ -75,6 +33,7 @@ namespace HIP {
       : QWidget (parent),
         _database      (database),
         _image         (image),
+        _tag           (),
         _pixmap        (image.getPath ()),
         _viewport      (),
         _clicked_point (),
@@ -94,22 +53,11 @@ namespace HIP {
     {
     }
 
-    /*! Computes the default maximum viewport size */
-    QRectF ImageWidget::computeDefaultViewport () const
+    /* Set filter tag */
+    void ImageWidget::setTag (const QString& tag)
     {
-      QSizeF pixmap_size (_pixmap.size ());
-      QSizeF widget_size (size ());
-
-      double scaling = 1.0;
-      if (pixmap_size.width () / pixmap_size.height () < widget_size.width () / widget_size.height ())
-        scaling = pixmap_size.height () / widget_size.height ();
-      else
-        scaling = pixmap_size.width () / widget_size.width ();
-
-      QRectF r = QRectF (0, 0, width () * scaling, height () * scaling);
-      r.moveCenter (_pixmap.rect ().center ());
-
-      return r;
+      _tag = tag;
+      update ();
     }
 
     /* Reset zoom to original pixmap scale */
@@ -122,6 +70,7 @@ namespace HIP {
     /* Update all point related data */
     void ImageWidget::updateAll ()
     {
+      update ();
     }
 
     /* Called when a single point has been changed and needs an update */
@@ -145,29 +94,60 @@ namespace HIP {
                       (p.y () - _viewport.y ()) * height () / _viewport.height ());
     }
 
+    /* General widget event handling */
+    bool ImageWidget::event (QEvent* e)
+    {
+      bool processed = false;
+
+      if (e->type () == QEvent::ToolTip)
+        {
+          QHelpEvent* help_event = dynamic_cast<QHelpEvent*> (e);
+          Q_ASSERT (help_event != 0);
+
+          QString id = getPointAt (help_event->pos ());
+          if (!id.isEmpty ())
+            QToolTip::showText (help_event->globalPos (), computeToolTipText (id));
+          else
+            QToolTip::hideText ();
+        }
+
+      if (!processed)
+        processed = QWidget::event (e);
+
+      return processed;
+    }
+
+
     /* Paint widget */
     void ImageWidget::paintEvent (QPaintEvent* event)
     {
       Q_UNUSED (event);
 
+      QColor unselected_color (0x00, 0x00, 0x00, 0x33);
+
       QPainter painter (this);
       painter.drawPixmap (rect (), _pixmap, _viewport);
 
-      painter.setPen (QPen ());
       painter.setFont (QFont ());
 
       foreach (const Database::Point& point, _database->getPoints ())
         {
-          foreach (const Database::Position& position, point.getPositions ())
+          if (point.matches (_tag))
             {
-              if (position.getImage () == _image.getId ())
+              foreach (const Database::Position& position, point.getPositions ())
                 {
-                  QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
+                  if (position.getImage () == _image.getId ())
+                    {
+                      QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
 
-                  painter.setBrush (point.getColor ());
-                  painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
-                                       POINT_RADIUS, POINT_RADIUS);
-                  painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
+                      painter.setPen (point.getSelected () ? point.getColor () : unselected_color);
+                      painter.setBrush (point.getSelected () ? point.getColor () : unselected_color);
+                      painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
+                                           POINT_RADIUS, POINT_RADIUS);
+
+                      painter.setPen (point.getSelected () ? QColor ("black") : unselected_color);
+                      painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
+                    }
                 }
             }
         }
@@ -179,9 +159,49 @@ namespace HIP {
       resetZoom ();
     }
 
+    /*
+     * Returns the ID of the point close to the given widget position
+     */
+    QString ImageWidget::getPointAt (const QPointF& pos) const
+    {
+      QString id;
+
+      QPointF p = toPixmapPoint (pos);
+      double min_distance = std::numeric_limits<double>::max ();
+
+      foreach (const Database::Point& point, _database->getPoints ())
+        {
+          if (point.matches (_tag))
+            {
+              foreach (const Database::Position& position, point.getPositions ())
+                {
+                  if (position.getImage () == _image.getId ())
+                    {
+                      double distance = qAbs ((position.getCoordinate ().toPointF () - p).manhattanLength ());
+                      if ( distance < min_distance &&
+                           distance < 30 * POINT_RADIUS )
+                        {
+                          min_distance = distance;
+                          id = point.getId ();
+                        }
+                    }
+                }
+            }
+        }
+
+      return id;
+    }
+
+
     void ImageWidget::mousePressEvent (QMouseEvent* event)
     {
-      if (event->buttons ().testFlag (Qt::MidButton))
+      if (event->buttons ().testFlag (Qt::LeftButton))
+        {
+          QString id = getPointAt (event->pos ());
+          if (!id.isEmpty ())
+            emit pointSelected (id);
+        }
+      else if (event->buttons ().testFlag (Qt::MidButton))
         {
           setCursor (Qt::SizeAllCursor);
           _clicked_point = event->pos ();
@@ -248,6 +268,34 @@ namespace HIP {
         _viewport.moveBottom (v.bottom ());
     }
 
+    /*! Computes the default maximum viewport size */
+    QRectF ImageWidget::computeDefaultViewport () const
+    {
+      QSizeF pixmap_size (_pixmap.size ());
+      QSizeF widget_size (size ());
+
+      double scaling = 1.0;
+      if (pixmap_size.width () / pixmap_size.height () < widget_size.width () / widget_size.height ())
+        scaling = pixmap_size.height () / widget_size.height ();
+      else
+        scaling = pixmap_size.width () / widget_size.width ();
+
+      QRectF r = QRectF (0, 0, width () * scaling, height () * scaling);
+      r.moveCenter (_pixmap.rect ().center ());
+
+      return r;
+    }
+
+    /*! Compute tool tip text for the given id */
+    QString ImageWidget::computeToolTipText (const QString& id) const
+    {
+      const Database::Point& point = _database->getPoint (id);
+
+      QString text ("<b>%1</b><p>%2");
+
+      return text.arg (Tools::quoteHTML (point.getId ()), Tools::quoteHTML (point.getDescription ()));
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::Image::ImageView
@@ -281,6 +329,11 @@ namespace HIP {
     void ImageView::onPointChanged (const QString &id)
     {
       _widget->updatePoint (id);
+    }
+
+    void ImageView::onTagChanged (const QString &id)
+    {
+      _widget->setTag (id);
     }
 
   }

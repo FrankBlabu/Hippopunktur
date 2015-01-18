@@ -32,16 +32,21 @@ namespace HIP {
     {
       _ui->setupUi (this);
 
-      Explorer::TagSelector* selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
+      Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
       Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
       _ui->_tab_w->clear ();
 
       foreach (const Database::Image& image, database->getImages ())
-        _ui->_tab_w->addTab (new Image::ImageView (database, image, _ui->_tab_w), image.getTitle ());
+        {
+          Image::ImageView* view = new Image::ImageView (database, image, _ui->_tab_w);
+          _ui->_tab_w->addTab (view, image.getTitle ());
 
-      connect (selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
+          connect (tag_selector, &Explorer::TagSelector::tagChanged, view, &Image::ImageView::onTagChanged);
+        }
+
+      connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
     }

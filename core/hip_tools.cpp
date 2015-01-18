@@ -40,6 +40,28 @@ namespace HIP {
       return text;
     }
 
+    /* Quote string for HTML output */
+    QString quoteHTML (const QString& text)
+    {
+      QString quoted;
+
+      for (int i=0; i < text.size (); ++i)
+        {
+          const QChar& c = text[i];
+
+          if (c == '<')
+            quoted += "&lt;";
+          else if (c == '>')
+            quoted += "&gt;";
+          else if (c == '&')
+            quoted += "&amp;";
+          else
+            quoted += c;
+        }
+
+      return quoted;
+    }
+
 
   } // namespace Tools
 } // namespace HIP

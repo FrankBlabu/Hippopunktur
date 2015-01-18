@@ -180,6 +180,26 @@ namespace HIP {
     {
     }
 
+    /*! Check if the point matches the given tag */
+    bool Point::matches (const QString& tag) const
+    {
+      bool match = false;
+
+      if (tag.isEmpty ())
+        match = true;
+      else if (_id.startsWith (tag, Qt::CaseInsensitive))
+        match = true;
+      else
+        {
+          foreach (const QString& t, _tags)
+            if (t.startsWith (tag, Qt::CaseInsensitive))
+              match = true;
+        }
+
+      return match;
+    }
+
+
     void Point::setId (const QString& id)
     {
       _id = id;
