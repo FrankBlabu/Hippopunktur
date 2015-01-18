@@ -37,6 +37,7 @@ namespace HIP {
 
     protected:
       virtual void paintEvent (QPaintEvent* event);
+      virtual void resizeEvent (QResizeEvent* event);
 
       virtual void mousePressEvent (QMouseEvent* event);
       virtual void mouseMoveEvent (QMouseEvent* event);
@@ -44,24 +45,25 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
+      QRectF computeDefaultViewport () const;
       QPointF toPixmapPoint (const QPointF& widget_point) const;
-      QRectF ensureBounds (const QRectF& r) const;
+      void ensureBounds ();
 
     private:
-      QPixmap _pixmap;
-      QRectF _source_rect;
-      QRectF _target_rect;
+      QPixmap _pixmap;  // Source pixmap
+      QRectF _viewport; // Source viewport in pixmap coordinates
 
-      QPointF _clicked_point;
+      QPointF _clicked_point; // Origin for dragging movements in widget coordinates
+      QRectF _dragged;
     };
 
     /*! Constructor */
     ImageWidget::ImageWidget (const Database::Image& image, QWidget* parent)
       : QWidget (parent),
         _pixmap        (image.getPath ()),
-        _source_rect   (_pixmap.rect ()),
-        _target_rect   (),
-        _clicked_point ()
+        _viewport      (),
+        _clicked_point (),
+        _dragged       ()
     {
       if (_pixmap.isNull ())
         throw Exception (tr ("Unable to load image '%1'").arg (image.getPath ()));
@@ -76,22 +78,48 @@ namespace HIP {
     {
     }
 
+    /*! Computes the default maximum viewport size */
+    QRectF ImageWidget::computeDefaultViewport () const
+    {
+      QSizeF pixmap_size (_pixmap.size ());
+      QSizeF widget_size (size ());
+
+      double scaling = 1.0;
+      if (pixmap_size.width () / pixmap_size.height () < widget_size.width () / widget_size.height ())
+        scaling = pixmap_size.height () / widget_size.height ();
+      else
+        scaling = pixmap_size.width () / widget_size.width ();
+
+      QRectF r = QRectF (0, 0, width () * scaling, height () * scaling);
+      r.moveCenter (_pixmap.rect ().center ());
+
+      return r;
+    }
+
     /* Reset zoom to original pixmap scale */
     void ImageWidget::resetZoom ()
     {
-      _source_rect = _pixmap.rect ();
+      _viewport = computeDefaultViewport ();
       update ();
     }
 
     /* Compute pixmap point matching the given widget point */
     QPointF ImageWidget::toPixmapPoint (const QPointF& p) const
     {
-       QPointF source_point (_source_rect.width () *
-                             (p.x () - _target_rect.left ()) / _target_rect.width (),
-                             _source_rect.height () *
-                             (p.y () - _target_rect.top ()) / _target_rect.height ());
+      double scaling = _viewport.width () / width ();
+      QPointF point (_viewport.x () + p.x () * scaling, _viewport.y () + p.y () * scaling);
 
-       return _source_rect.topLeft () + source_point;
+      if (_viewport.height () > _pixmap.rect ().height ())
+        point.setY (point.y () - (_viewport.height () - _pixmap.rect ().height ()) / 2);
+      else
+        point.setY (point.y () + _viewport.y ());
+
+      if (_viewport.width () > _pixmap.rect ().width ())
+        point.setX (point.x () - (_viewport.width () - _pixmap.rect ().width ()) / 2);
+      else
+        point.setX (point.x () + _viewport.x ());
+
+      return point;
     }
 
     /* Paint widget */
@@ -99,55 +127,36 @@ namespace HIP {
     {
       Q_UNUSED (event);
 
-      _target_rect = rect ();
-
-      //
-      // Aspect ratio > 1 --> Fit width
-      //
-      if ( _source_rect.width () / _source_rect.height () >
-           _target_rect.width () / _target_rect.height () )
-        {
-          double height = _target_rect.width () * (_source_rect.height () / _source_rect.width ());
-          _target_rect = QRectF (_target_rect.left (), _target_rect.center ().y () - height / 2.0,
-                                _target_rect.width (), height);
-        }
-
-      //
-      // Aspect ratio < 1 --> Fit height
-      //
-      else
-        {
-          double width = _target_rect.height () * (_source_rect.width () / _source_rect.height ());
-          _target_rect = QRectF (_target_rect.center ().x () - width / 2.0, _target_rect.top (),
-                                width, _target_rect.height ());
-        }
-
       QPainter painter (this);
+      painter.drawPixmap (rect (), _pixmap, _viewport);
+    }
 
-#if 0
-      painter.setPen (QPen (Qt::red, 3.0));
-      painter.drawRect (_target_rect);
-#endif
-
-      painter.drawPixmap (_target_rect, _pixmap, _source_rect);
+    void ImageWidget::resizeEvent (QResizeEvent* event)
+    {
+      QWidget::resizeEvent (event);
+      resetZoom ();
     }
 
     void ImageWidget::mousePressEvent (QMouseEvent* event)
     {
-      //qDebug () << "Click: " << toPixmapPoint (event->pos ());
-
-      _clicked_point = toPixmapPoint (event->pos ());
+      _clicked_point = event->pos ();
 
       if (event->buttons ().testFlag (Qt::MidButton))
-        setCursor (Qt::SizeAllCursor);
+        {
+          setCursor (Qt::SizeAllCursor);
+          _dragged = _viewport;
+        }
     }
 
     void ImageWidget::mouseMoveEvent (QMouseEvent* event)
     {
       if (event->buttons ().testFlag (Qt::MidButton))
         {
-          _source_rect.moveCenter (_source_rect.center () - (toPixmapPoint (event->pos ()) - _clicked_point));
-          _source_rect = ensureBounds (_source_rect);
+          QPointF delta = (_clicked_point - event->pos ()) * _viewport.width () / width ();
+          _viewport = _dragged;
+          _viewport.moveCenter (_viewport.center () + delta);
+
+          ensureBounds ();
           update ();
         }
     }
@@ -161,38 +170,41 @@ namespace HIP {
     /*! Handle mouse wheel events */
     void ImageWidget::wheelEvent (QWheelEvent* event)
     {
-      double delta = -(event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      double scaling = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      QPointF delta (_viewport.width () * scaling, _viewport.height () * scaling);
 
-      QRectF r (_source_rect.x (), _source_rect.y (),
-                _source_rect.width () + _source_rect.width () * 0.1 * delta,
-                _source_rect.height () + _source_rect.height () * 0.1 * delta);
-      r.moveCenter (toPixmapPoint (event->posF ()));
+      QRectF v = _viewport;
+      v.setTopLeft (_viewport.topLeft () + delta);
+      v.setBottomRight (_viewport.bottomRight () - delta);
 
-      if (r.width () >= _pixmap.width () || r.height () >= _pixmap.height ())
-        _source_rect = _pixmap.rect ();
-      else if (r.width () > 64 && r.height () > 64)
-        _source_rect = ensureBounds (r);
-
-      update ();
+      if (v.width () > 64 && v.height () > 64)
+        {
+          _viewport = v;
+          ensureBounds ();
+          update ();
+        }
     }
 
     /*
-     * Ensure that the given source rect is within pixmap bounds
+     * Ensure that the viewportvrect is within pixmap bounds
      */
-    QRectF ImageWidget::ensureBounds (const QRectF& rect) const
+    void ImageWidget::ensureBounds ()
     {
-      QRectF r = rect;
+      if ( _viewport.width () > _pixmap.width () &&
+           _viewport.height () > _pixmap.height () )
+        resetZoom ();
 
-      if (r.left () < _pixmap.rect ().left ())
-        r.moveLeft (_pixmap.rect ().left ());
-      if (r.right () > _pixmap.rect ().right ())
-        r.moveRight (_pixmap.rect ().right ());
-      if (r.top () < _pixmap.rect ().top ())
-        r.moveTop (_pixmap.rect ().top ());
-      if (r.bottom () > _pixmap.rect ().bottom ())
-        r.moveBottom (_pixmap.rect ().bottom ());
+      QRectF v = computeDefaultViewport ();
 
-      return r;
+      if (_viewport.left () < v.left ())
+        _viewport.moveLeft (v.left ());
+      else if (_viewport.right () > v.right ())
+        _viewport.moveRight (v.right ());
+
+      if (_viewport.top () < v.top ())
+        _viewport.moveTop (v.top ());
+      else if (_viewport.bottom () > v.bottom ())
+        _viewport.moveBottom (v.bottom ());
     }
 
 
