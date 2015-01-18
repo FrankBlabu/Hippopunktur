@@ -36,6 +36,9 @@ namespace HIP {
       void resetZoom ();
 
     protected:
+      QPointF toPixmapPoint (const QPointF& widget_point) const;
+      QPointF toWidgetPoint (const QPointF& pixmap_point) const;
+
       virtual void paintEvent (QPaintEvent* event);
       virtual void resizeEvent (QResizeEvent* event);
 
@@ -46,7 +49,6 @@ namespace HIP {
 
     private:
       QRectF computeDefaultViewport () const;
-      QPointF toPixmapPoint (const QPointF& widget_point) const;
       void ensureBounds ();
 
     private:
@@ -106,20 +108,15 @@ namespace HIP {
     /* Compute pixmap point matching the given widget point */
     QPointF ImageWidget::toPixmapPoint (const QPointF& p) const
     {
-      double scaling = _viewport.width () / width ();
-      QPointF point (_viewport.x () + p.x () * scaling, _viewport.y () + p.y () * scaling);
+      return QPointF (_viewport.x () + p.x () * ( _viewport.width () / width ()),
+                      _viewport.y () + p.y () * ( _viewport.height () / height ()));
+    }
 
-      if (_viewport.height () > _pixmap.rect ().height ())
-        point.setY (point.y () - (_viewport.height () - _pixmap.rect ().height ()) / 2);
-      else
-        point.setY (point.y () + _viewport.y ());
-
-      if (_viewport.width () > _pixmap.rect ().width ())
-        point.setX (point.x () - (_viewport.width () - _pixmap.rect ().width ()) / 2);
-      else
-        point.setX (point.x () + _viewport.x ());
-
-      return point;
+    /* Compute widget point matching the given pixmap point */
+    QPointF ImageWidget::toWidgetPoint (const QPointF& p) const
+    {
+      return QPointF ((p.x () - _viewport.x ()) * width () / _viewport.width (),
+                      (p.y () - _viewport.y ()) * height () / _viewport.height ());
     }
 
     /* Paint widget */
@@ -139,11 +136,10 @@ namespace HIP {
 
     void ImageWidget::mousePressEvent (QMouseEvent* event)
     {
-      _clicked_point = event->pos ();
-
       if (event->buttons ().testFlag (Qt::MidButton))
         {
           setCursor (Qt::SizeAllCursor);
+          _clicked_point = event->pos ();
           _dragged = _viewport;
         }
     }

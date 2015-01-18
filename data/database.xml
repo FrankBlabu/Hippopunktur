@@ -16,6 +16,7 @@
         <position image="top" x="50" y="20"/>
       </positions>
       <description>Pain in left ear; Nervus nervoesus</description>
+      <color>blue</color>
     </point>
     <point id="BI2">
       <tags>
@@ -27,6 +28,7 @@
         <position image="left" x="50" y="60"/>
       </positions>
       <description>Pain in right ear</description>
+      <color>blue</color>
     </point>
     <point id="BI3">
       <tags>
@@ -38,6 +40,7 @@
         <position image="right" x="20" y="80"/>
       </positions>
       <description>Mystic soul healing point</description>
+      <color>blue</color>
     </point>
     <point id="CI1">
       <tags>
@@ -48,6 +51,7 @@
         <position image="top" x="80" y="50"/>
       </positions>
       <description>Do not touch this point, horse will explode !</description>
+      <color>green</color>
     </point>
     <point id="CI2">
       <tags>
@@ -59,6 +63,7 @@
         <position image="bottom" x="20" y="10"/>
       </positions>
       <description>Horse gear shift</description>
+      <color>#ff0000</color>
     </point>
   </points>
 

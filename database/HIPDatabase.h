@@ -8,6 +8,7 @@
 #define __HIPDatabase_h__
 
 #include <QObject>
+#include <QColor>
 #include <QString>
 #include <QList>
 #include <QFile>
@@ -63,6 +64,9 @@ namespace HIP {
       const QList<Position>& getPositions () const { return _positions; }
       void setPositions (const QList<Position>& positions);
 
+      const QColor& getColor () const { return _color; }
+      void setColor (const QColor& color);
+
       bool getSelected () const { return _selected; }
       void setSelected (bool state);
 
@@ -73,6 +77,7 @@ namespace HIP {
       QString _description;
       QList<QString> _tags;
       QList<Position> _positions;
+      QColor _color;
 
       bool _selected;
     };

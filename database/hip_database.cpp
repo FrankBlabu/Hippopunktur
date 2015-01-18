@@ -7,6 +7,7 @@
 #include "HIPDatabase.h"
 #include "core/HIPException.h"
 
+#include <QColor>
 #include <QDebug>
 #include <QDomDocument>
 #include <QFile>
@@ -31,6 +32,7 @@ namespace HIP {
         static const char* const DESCRIPTION = "description";
         static const char* const IMAGES      = "images";
         static const char* const IMAGE       = "image";
+        static const char* const COLOR       = "color";
       };
 
       namespace Attributes
@@ -128,6 +130,7 @@ namespace HIP {
         _description (),
         _tags        (),
         _positions   (),
+        _color       (),
         _selected    (false)
     {
     }
@@ -139,6 +142,7 @@ namespace HIP {
         _description (toCopy._description),
         _tags        (toCopy._tags),
         _positions   (toCopy._positions),
+        _color       (toCopy._color),
         _selected    (toCopy._selected)
     {
     }
@@ -168,6 +172,11 @@ namespace HIP {
       _positions = positions;
     }
 
+    void Point::setColor (const QColor& color)
+    {
+      _color = color;
+    }
+
     void Point::setSelected (bool state)
     {
       _selected = state;
@@ -179,6 +188,7 @@ namespace HIP {
       _description = toCopy._description;
       _tags        = toCopy._tags;
       _positions   = toCopy._positions;
+      _color       = toCopy._color;
       _selected    = toCopy._selected;
 
       return *this;
@@ -347,6 +357,22 @@ namespace HIP {
                         throw Exception (tr ("Character data expected for point description"));
 
                       point.setDescription (description_e.firstChild ().toCharacterData ().data ());
+
+                      //
+                      // Attribute: Point::Color
+                      //
+                      QDomElement color_e = point_e.namedItem (Tags::COLOR).toElement ();
+                      if (color_e.isNull ())
+                        throw Exception (tr ("Point entry does not have a color"));
+                      if (!color_e.firstChild ().isCharacterData ())
+                        throw Exception (tr ("Character data expected for point color"));
+
+                      QString color_name = color_e.firstChild ().toCharacterData ().data ();
+                      QColor color (color_name);
+                      if (!color.isValid ())
+                        throw Exception (tr ("Invalid point color '%1'").arg (color_name));
+
+                      point.setColor (color);
 
                       _points.push_back (point);
                     }
