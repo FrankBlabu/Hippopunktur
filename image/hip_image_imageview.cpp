@@ -30,10 +30,13 @@ namespace HIP {
     class ImageWidget : public QWidget
     {
     public:
-      ImageWidget (const Database::Image& image, QWidget* parent);
+      ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent);
       virtual ~ImageWidget ();
 
       void resetZoom ();
+
+      void updateAll ();
+      void updatePoint (const QString& id);
 
     protected:
       QPointF toPixmapPoint (const QPointF& widget_point) const;
@@ -52,16 +55,26 @@ namespace HIP {
       void ensureBounds ();
 
     private:
+      Database::Database* _database;
+      Database::Image _image;
+
       QPixmap _pixmap;  // Source pixmap
       QRectF _viewport; // Source viewport in pixmap coordinates
 
       QPointF _clicked_point; // Origin for dragging movements in widget coordinates
       QRectF _dragged;
+
+      static const double POINT_RADIUS;
     };
 
+    /*! Point radius [STATIC] */
+    const double ImageWidget::POINT_RADIUS = 5.0;
+
     /*! Constructor */
-    ImageWidget::ImageWidget (const Database::Image& image, QWidget* parent)
+    ImageWidget::ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent)
       : QWidget (parent),
+        _database      (database),
+        _image         (image),
         _pixmap        (image.getPath ()),
         _viewport      (),
         _clicked_point (),
@@ -73,6 +86,7 @@ namespace HIP {
       qDebug () << "Pixmap size: " << _pixmap.size ();
 
       setMouseTracking (true);
+      updateAll ();
     }
 
     /*! Destructor */
@@ -105,6 +119,18 @@ namespace HIP {
       update ();
     }
 
+    /* Update all point related data */
+    void ImageWidget::updateAll ()
+    {
+    }
+
+    /* Called when a single point has been changed and needs an update */
+    void ImageWidget::updatePoint (const QString& id)
+    {
+      Q_UNUSED (id);
+      updateAll ();
+    }
+
     /* Compute pixmap point matching the given widget point */
     QPointF ImageWidget::toPixmapPoint (const QPointF& p) const
     {
@@ -126,6 +152,25 @@ namespace HIP {
 
       QPainter painter (this);
       painter.drawPixmap (rect (), _pixmap, _viewport);
+
+      painter.setPen (QPen ());
+      painter.setFont (QFont ());
+
+      foreach (const Database::Point& point, _database->getPoints ())
+        {
+          foreach (const Database::Position& position, point.getPositions ())
+            {
+              if (position.getImage () == _image.getId ())
+                {
+                  QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
+
+                  painter.setBrush (point.getColor ());
+                  painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
+                                       POINT_RADIUS, POINT_RADIUS);
+                  painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
+                }
+            }
+        }
     }
 
     void ImageWidget::resizeEvent (QResizeEvent* event)
@@ -209,14 +254,16 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
-    ImageView::ImageView (const Database::Image& image, QWidget* parent)
+    ImageView::ImageView (Database::Database* database, const Database::Image& image, QWidget* parent)
       : QWidget(parent),
-      _ui     (new Ui::HIP_Image_ImageView),
-      _widget (0)
+      _ui       (new Ui::HIP_Image_ImageView),
+      _database (database),
+      _widget   (0)
     {
       _ui->setupUi (this);
-      _widget = Tools::addToParent (new ImageWidget (image, _ui->_view_w));
+      _widget = Tools::addToParent (new ImageWidget (database, image, _ui->_view_w));
 
+      connect (_database, &Database::Database::pointChanged, this, &ImageView::onPointChanged);
       connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 
@@ -229,6 +276,11 @@ namespace HIP {
     void ImageView::onResetZoom ()
     {
       _widget->resetZoom ();
+    }
+
+    void ImageView::onPointChanged (const QString &id)
+    {
+      _widget->updatePoint (id);
     }
 
   }

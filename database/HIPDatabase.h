@@ -11,6 +11,7 @@
 #include <QColor>
 #include <QString>
 #include <QList>
+#include <QMap>
 #include <QFile>
 #include <QVector2D>
 
@@ -115,6 +116,8 @@ namespace HIP {
      */
     class Database : public QObject
     {
+      Q_OBJECT;
+
     public:
       Database (const QString& path);
       virtual ~Database ();
@@ -123,19 +126,31 @@ namespace HIP {
       const QList<QString>& getTags () const { return _tags; }
       const QList<Image>& getImages () const { return _images; }
 
+      const Point& getPoint (const QString& id) const;
       void setPoint (const QString& id, const Point& point);
       void setSelected (const QString& id, bool selected);
 
+    signals:
+      void pointChanged (const QString& id);
+
     private:
       void computeTags ();
+      void computeIndices ();
+
       int findIndex (const QString& id) const;
 
     private:
       QList<Point> _points;
       QList<QString> _tags;
       QList<Image> _images;
+
+      typedef QMap<QString, int> PointIndexMap;
+      PointIndexMap _point_indices;
     };
   }
+
+  QDebug operator<< (QDebug stream, const Database::Position& position);
+  QDebug operator<< (QDebug stream, const Database::Point& point);
 }
 
 Q_DECLARE_METATYPE (HIP::Database::Point);

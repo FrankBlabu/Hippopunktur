@@ -13,6 +13,34 @@
 #include <QFile>
 
 namespace HIP {
+
+  //#************************************************************************
+  // Debug operators
+  //#************************************************************************
+
+  QDebug operator<< (QDebug stream, const Database::Position& position)
+  {
+    stream << "Position (image=" << position.getImage ()
+           << ", coordinate=" << position.getCoordinate ()
+           << ")";
+
+    return stream;
+  }
+
+  QDebug operator<< (QDebug stream, const Database::Point& point)
+  {
+    stream << "Point (id=" << point.getId ()
+           << ", description=" << point.getDescription ()
+           << ", tags=" << point.getTags ()
+           << ", positions=" << point.getPositions ().count ()
+           << ", color="  << point.getColor ()
+           << ", selected=" << point.getSelected ()
+           << ")";
+
+    return stream;
+  }
+
+
   namespace Database {
 
     //#**********************************************************************
@@ -248,6 +276,10 @@ namespace HIP {
 
     /*! Constructor */
     Database::Database (const QString& path)
+      : _points        (),
+        _tags          (),
+        _images        (),
+        _point_indices ()
     {
       QFile file (path);
 
@@ -343,6 +375,8 @@ namespace HIP {
                             throw Exception (tr ("X coordinate is not a number"));
                           if (!y_ok)
                             throw Exception (tr ("Y coordinate is not a number"));
+
+                          positions.push_back (position);
                         }
 
                       point.setPositions (positions);
@@ -412,12 +446,20 @@ namespace HIP {
 
       std::sort (_points.begin (), _points.end (), PointComparator ());
 
+      computeIndices ();
       computeTags ();
     }
 
     /*! Destructor */
     Database::~Database ()
     {
+    }
+
+    /* Access point with the given id */
+    const Point& Database::getPoint (const QString& id) const
+    {
+      Q_ASSERT (_point_indices.contains (id));
+      return _points.at (_point_indices.value (id));
     }
 
     /*! Set point value */
@@ -428,7 +470,10 @@ namespace HIP {
       Q_ASSERT (index >= 0 && index < _points.size ());
       _points[index] = point;
 
+      computeIndices ();
       computeTags ();
+
+      emit pointChanged (id);
     }
 
     /*! Set point selection status */
@@ -438,6 +483,8 @@ namespace HIP {
 
       Q_ASSERT (index >= 0 && index < _points.size ());
       _points[index].setSelected (selected);
+
+      emit pointChanged (id);
     }
 
     /*! Compute list of all existing tags */
@@ -450,6 +497,18 @@ namespace HIP {
       _tags = tags.toList ();
 
       std::sort (_tags.begin (), _tags.end ());
+    }
+
+    /*! Compute point index list */
+    void Database::computeIndices ()
+    {
+      _point_indices.clear ();
+
+      for (int i=0; i < _points.size (); ++i)
+        {
+          const Point& point = _points[i];
+          _point_indices.insert (point.getId (), i);
+        }
     }
 
     /*! Find index of the point matching a given id */

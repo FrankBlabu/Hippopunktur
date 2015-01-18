@@ -39,7 +39,7 @@ namespace HIP {
       _ui->_tab_w->clear ();
 
       foreach (const Database::Image& image, database->getImages ())
-        _ui->_tab_w->addTab (new Image::ImageView (image, _ui->_tab_w), image.getTitle ());
+        _ui->_tab_w->addTab (new Image::ImageView (database, image, _ui->_tab_w), image.getTitle ());
 
       connect (selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));

@@ -18,6 +18,7 @@ namespace Ui {
 namespace HIP {
 
   namespace Database {
+    class Database;
     class Image;
   }
 
@@ -33,14 +34,16 @@ namespace HIP {
       Q_OBJECT
 
     public:
-      ImageView (const Database::Image& image, QWidget* parent);
+      ImageView (Database::Database* database, const Database::Image& image, QWidget* parent);
       virtual ~ImageView ();
 
     private slots:
+      void onPointChanged (const QString& id);
       void onResetZoom ();
 
     private:
       Ui::HIP_Image_ImageView* _ui;
+      Database::Database* _database;
       ImageWidget* _widget;
     };
 
