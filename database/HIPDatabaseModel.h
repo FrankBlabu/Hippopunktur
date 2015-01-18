@@ -52,6 +52,8 @@ namespace HIP {
       DatabaseModel (Database* database, QObject* parent);
       virtual ~DatabaseModel ();
 
+      QModelIndex getIndex (const QString& id) const;
+
       virtual QHash<int, QByteArray> roleNames () const;
 
       virtual int columnCount (const QModelIndex& parent) const;

@@ -213,7 +213,7 @@ namespace HIP {
             {
               QString id = getPointAt (event->pos ());
               if (!id.isEmpty ())
-                emit pointSelected (id);
+                emit pointClicked (id);
             }
           else if (event->buttons ().testFlag (Qt::MidButton))
             {
@@ -350,6 +350,7 @@ namespace HIP {
       _widget = Tools::addToParent (new ImageWidget (database, image, _ui->_view_w));
 
       connect (_database, &Database::Database::pointChanged, this, &ImageView::onPointChanged);
+      connect (_widget, &ImageWidget::pointClicked, this, &ImageView::pointClicked);
       connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 

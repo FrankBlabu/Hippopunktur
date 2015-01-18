@@ -32,6 +32,7 @@ namespace HIP {
 
     public slots:
       void onTagChanged (const QString& tag);
+      void onPointClicked (const QString& id);
 
     private:
       Database::Database* _database;

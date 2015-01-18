@@ -43,7 +43,7 @@ namespace HIP {
       void updatePoint (const QString& id);
 
     signals:
-      void pointSelected (const QString& id);
+      void pointClicked (const QString& id);
 
     protected:
       QPointF toPixmapPoint (const QPointF& widget_point) const;
@@ -96,6 +96,9 @@ namespace HIP {
       virtual ~ImageView ();
 
       const Database::Image& getImage () const { return _image; }
+
+    signals:
+      void pointClicked (const QString& id);
 
     public slots:
       void onTagChanged (const QString& id);

@@ -60,6 +60,18 @@ namespace HIP {
     {
     }
 
+    /*! Compute model matching the given point id */
+    QModelIndex DatabaseModel::getIndex (const QString& id) const
+    {
+      int row = -1;
+      for (int i=0; i < _database->getPoints ().size () && row == -1; ++i)
+        if (_database->getPoints ()[i].getId () == id)
+          row = i;
+
+      return index (row, 0, QModelIndex ());
+    }
+
+
     /*! Custom role names for QML interaction */
     QHash<int, QByteArray> DatabaseModel::roleNames () const
     {

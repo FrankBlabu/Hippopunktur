@@ -51,6 +51,7 @@ namespace HIP {
           Q_ASSERT (view != 0);
 
           connect (tag_selector, &Explorer::TagSelector::tagChanged, view, &Image::ImageView::onTagChanged);
+          connect (view, &Image::ImageView::pointClicked, explorer, &Explorer::Explorer::onPointClicked);
         }
 
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));

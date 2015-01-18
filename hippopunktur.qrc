@@ -11,5 +11,6 @@
         <file>assets/images/back.jpg</file>
         <file>assets/images/top.jpg</file>
         <file>assets/images/bottom.jpg</file>
+        <file>assets/icons/busy_indicator.png</file>
     </qresource>
 </RCC>
