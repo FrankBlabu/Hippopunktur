@@ -1,5 +1,4 @@
-/*
- * hip_image_image_view.cpp - View displaying an acupunctur image
+/* * hip_image_image_view.cpp - View displaying an acupunctur image
  *
  * Frank Blankenburg, Jan. 2015
  */
@@ -8,6 +7,7 @@
 #include "ui_hip_image_imageview.h"
 
 #include "core/HIPException.h"
+#include "core/HIPImageLoader.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 
@@ -20,6 +20,7 @@
 
 namespace HIP {
   namespace Image {
+
 
     //#**********************************************************************
     // CLASS HIP::Image::ImageView
@@ -34,18 +35,17 @@ namespace HIP {
         _database      (database),
         _image         (image),
         _tag           (),
-        _pixmap        (image.getPath ()),
+        _loader        (0),
+        _pixmap        (),
         _viewport      (),
         _clicked_point (),
         _dragged       ()
     {
-      if (_pixmap.isNull ())
-        throw Exception (tr ("Unable to load image '%1'").arg (image.getPath ()));
-
-      qDebug () << "Pixmap size: " << _pixmap.size ();
-
       setMouseTracking (true);
-      updateAll ();
+
+      _loader = new Tools::ImageLoader (image.getPath (), this);
+
+      connect (_loader, SIGNAL (finished ()), SLOT (onImageLoaded ()), Qt::QueuedConnection);
     }
 
     /*! Destructor */
@@ -56,33 +56,36 @@ namespace HIP {
     /* Set filter tag */
     void ImageWidget::setTag (const QString& tag)
     {
-      _tag = tag;
-      update ();
+      if (!_pixmap.isNull ())
+        {
+          _tag = tag;
+          update ();
+        }
     }
 
     /* Reset zoom to original pixmap scale */
     void ImageWidget::resetZoom ()
     {
-      _viewport = computeDefaultViewport ();
-      update ();
-    }
-
-    /* Update all point related data */
-    void ImageWidget::updateAll ()
-    {
-      update ();
+      if (!_pixmap.isNull ())
+        {
+          _viewport = computeDefaultViewport ();
+          update ();
+        }
     }
 
     /* Called when a single point has been changed and needs an update */
     void ImageWidget::updatePoint (const QString& id)
     {
       Q_UNUSED (id);
-      updateAll ();
+      update ();
     }
 
     /* Compute pixmap point matching the given widget point */
     QPointF ImageWidget::toPixmapPoint (const QPointF& p) const
     {
+      if (_pixmap.isNull ())
+        return QPointF ();
+
       return QPointF (_viewport.x () + p.x () * ( _viewport.width () / width ()),
                       _viewport.y () + p.y () * ( _viewport.height () / height ()));
     }
@@ -90,6 +93,9 @@ namespace HIP {
     /* Compute widget point matching the given pixmap point */
     QPointF ImageWidget::toWidgetPoint (const QPointF& p) const
     {
+      if (_pixmap.isNull ())
+        return QPointF ();
+
       return QPointF ((p.x () - _viewport.x ()) * width () / _viewport.width (),
                       (p.y () - _viewport.y ()) * height () / _viewport.height ());
     }
@@ -99,7 +105,7 @@ namespace HIP {
     {
       bool processed = false;
 
-      if (e->type () == QEvent::ToolTip)
+      if (!_pixmap.isNull () && e->type () == QEvent::ToolTip)
         {
           QHelpEvent* help_event = dynamic_cast<QHelpEvent*> (e);
           Q_ASSERT (help_event != 0);
@@ -123,30 +129,33 @@ namespace HIP {
     {
       Q_UNUSED (event);
 
-      QColor unselected_color (0x00, 0x00, 0x00, 0x33);
-
-      QPainter painter (this);
-      painter.drawPixmap (rect (), _pixmap, _viewport);
-
-      painter.setFont (QFont ());
-
-      foreach (const Database::Point& point, _database->getPoints ())
+      if (!_pixmap.isNull ())
         {
-          if (point.matches (_tag))
+          QColor unselected_color (0x00, 0x00, 0x00, 0x33);
+
+          QPainter painter (this);
+          painter.drawPixmap (rect (), _pixmap, _viewport);
+
+          painter.setFont (QFont ());
+
+          foreach (const Database::Point& point, _database->getPoints ())
             {
-              foreach (const Database::Position& position, point.getPositions ())
+              if (point.matches (_tag))
                 {
-                  if (position.getImage () == _image.getId ())
+                  foreach (const Database::Position& position, point.getPositions ())
                     {
-                      QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
+                      if (position.getImage () == _image.getId ())
+                        {
+                          QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
 
-                      painter.setPen (point.getSelected () ? point.getColor () : unselected_color);
-                      painter.setBrush (point.getSelected () ? point.getColor () : unselected_color);
-                      painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
-                                           POINT_RADIUS, POINT_RADIUS);
+                          painter.setPen (point.getSelected () ? point.getColor () : unselected_color);
+                          painter.setBrush (point.getSelected () ? point.getColor () : unselected_color);
+                          painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
+                                               POINT_RADIUS, POINT_RADIUS);
 
-                      painter.setPen (point.getSelected () ? QColor ("black") : unselected_color);
-                      painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
+                          painter.setPen (point.getSelected () ? QColor ("black") : unselected_color);
+                          painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
+                        }
                     }
                 }
             }
@@ -166,23 +175,26 @@ namespace HIP {
     {
       QString id;
 
-      QPointF p = toPixmapPoint (pos);
-      double min_distance = std::numeric_limits<double>::max ();
-
-      foreach (const Database::Point& point, _database->getPoints ())
+      if (!_pixmap.isNull ())
         {
-          if (point.matches (_tag))
+          QPointF p = toPixmapPoint (pos);
+          double min_distance = std::numeric_limits<double>::max ();
+
+          foreach (const Database::Point& point, _database->getPoints ())
             {
-              foreach (const Database::Position& position, point.getPositions ())
+              if (point.matches (_tag))
                 {
-                  if (position.getImage () == _image.getId ())
+                  foreach (const Database::Position& position, point.getPositions ())
                     {
-                      double distance = qAbs ((position.getCoordinate ().toPointF () - p).manhattanLength ());
-                      if ( distance < min_distance &&
-                           distance < 30 * POINT_RADIUS )
+                      if (position.getImage () == _image.getId ())
                         {
-                          min_distance = distance;
-                          id = point.getId ();
+                          double distance = qAbs ((position.getCoordinate ().toPointF () - p).manhattanLength ());
+                          if ( distance < min_distance &&
+                               distance < 30 * POINT_RADIUS )
+                            {
+                              min_distance = distance;
+                              id = point.getId ();
+                            }
                         }
                     }
                 }
@@ -195,55 +207,80 @@ namespace HIP {
 
     void ImageWidget::mousePressEvent (QMouseEvent* event)
     {
-      if (event->buttons ().testFlag (Qt::LeftButton))
+      if (!_pixmap.isNull ())
         {
-          QString id = getPointAt (event->pos ());
-          if (!id.isEmpty ())
-            emit pointSelected (id);
-        }
-      else if (event->buttons ().testFlag (Qt::MidButton))
-        {
-          setCursor (Qt::SizeAllCursor);
-          _clicked_point = event->pos ();
-          _dragged = _viewport;
+          if (event->buttons ().testFlag (Qt::LeftButton))
+            {
+              QString id = getPointAt (event->pos ());
+              if (!id.isEmpty ())
+                emit pointSelected (id);
+            }
+          else if (event->buttons ().testFlag (Qt::MidButton))
+            {
+              setCursor (Qt::SizeAllCursor);
+              _clicked_point = event->pos ();
+              _dragged = _viewport;
+            }
         }
     }
 
     void ImageWidget::mouseMoveEvent (QMouseEvent* event)
     {
-      if (event->buttons ().testFlag (Qt::MidButton))
+      if (!_pixmap.isNull ())
         {
-          QPointF delta = (_clicked_point - event->pos ()) * _viewport.width () / width ();
-          _viewport = _dragged;
-          _viewport.moveCenter (_viewport.center () + delta);
+          if (event->buttons ().testFlag (Qt::MidButton))
+            {
+              QPointF delta = (_clicked_point - event->pos ()) * _viewport.width () / width ();
+              _viewport = _dragged;
+              _viewport.moveCenter (_viewport.center () + delta);
 
-          ensureBounds ();
-          update ();
+              ensureBounds ();
+              update ();
+            }
         }
     }
 
     void ImageWidget::mouseReleaseEvent (QMouseEvent* event)
     {
       Q_UNUSED (event);
-      unsetCursor ();
+
+      if (!_pixmap.isNull ())
+        unsetCursor ();
     }
 
     /*! Handle mouse wheel events */
     void ImageWidget::wheelEvent (QWheelEvent* event)
     {
-      double scaling = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
-      QPointF delta (_viewport.width () * scaling, _viewport.height () * scaling);
-
-      QRectF v = _viewport;
-      v.setTopLeft (_viewport.topLeft () + delta);
-      v.setBottomRight (_viewport.bottomRight () - delta);
-
-      if (v.width () > 64 && v.height () > 64)
+      if (!_pixmap.isNull ())
         {
-          _viewport = v;
-          ensureBounds ();
-          update ();
+          double scaling = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+          QPointF delta (_viewport.width () * scaling, _viewport.height () * scaling);
+
+          QRectF v = _viewport;
+          v.setTopLeft (_viewport.topLeft () + delta);
+          v.setBottomRight (_viewport.bottomRight () - delta);
+
+          if (v.width () > 64 && v.height () > 64)
+            {
+              _viewport = v;
+              ensureBounds ();
+              update ();
+            }
         }
+    }
+
+    /*
+     * Called when the image has been loaded
+     */
+    void ImageWidget::onImageLoaded ()
+    {
+      Q_ASSERT (_loader != 0);
+      _pixmap = QPixmap::fromImage (_loader->getImage ());
+
+      delete _loader;
+      _loader = 0;
+
+      resetZoom ();
     }
 
     /*

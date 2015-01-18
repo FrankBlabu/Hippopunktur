@@ -43,6 +43,12 @@ namespace HIP {
         {
           Image::ImageView* view = new Image::ImageView (database, image, _ui->_tab_w);
           _ui->_tab_w->addTab (view, image.getTitle ());
+        }
+
+      for (int i=0; i < _ui->_tab_w->count (); ++i)
+        {
+          Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
+          Q_ASSERT (view != 0);
 
           connect (tag_selector, &Explorer::TagSelector::tagChanged, view, &Image::ImageView::onTagChanged);
         }

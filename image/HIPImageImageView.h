@@ -18,6 +18,11 @@ namespace Ui {
 }
 
 namespace HIP {
+
+  namespace Tools {
+    class ImageLoader;
+  }
+
   namespace Image {
 
     /*!
@@ -35,8 +40,6 @@ namespace HIP {
       void setTag (const QString& tag);
 
       void resetZoom ();
-
-      void updateAll ();
       void updatePoint (const QString& id);
 
     signals:
@@ -56,6 +59,9 @@ namespace HIP {
       virtual void mouseReleaseEvent (QMouseEvent* event);
       virtual void wheelEvent (QWheelEvent* event);
 
+    private slots:
+      void onImageLoaded ();
+
     private:
       void ensureBounds ();
 
@@ -67,7 +73,9 @@ namespace HIP {
       Database::Image _image;
       QString _tag;
 
-      QPixmap _pixmap;  // Source pixmap
+      Tools::ImageLoader* _loader;
+
+      QPixmap _pixmap; // Source pixmap
       QRectF _viewport; // Source viewport in pixmap coordinates
 
       QPointF _clicked_point; // Origin for dragging movements in widget coordinates

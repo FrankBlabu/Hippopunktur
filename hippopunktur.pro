@@ -6,6 +6,7 @@ QT += widgets
 QT += xml
 QT += quickwidgets
 QT += qml
+QT += concurrent
 
 INCLUDEPATH += $$PWD
 
@@ -19,7 +20,8 @@ SOURCES += \
     explorer/hip_explorer.cpp \
     core/hip_tools.cpp \
     explorer/hip_explorer_tagselector.cpp \
-    image/hip_image_imageview.cpp
+    image/hip_image_imageview.cpp \
+    core/hip_image_loader.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -38,7 +40,8 @@ HEADERS += \
     explorer/HIPExplorer.h \
     core/HIPTools.h \
     explorer/HIPExplorerTagSelector.h \
-    image/HIPImageImageView.h
+    image/HIPImageImageView.h \
+    core/HIPImageLoader.h
 
 FORMS += \
     gui/hip_main_window.ui \
