@@ -8,5 +8,8 @@
         <file>assets/hippopunktur.css</file>
         <file>assets/images/main.jpg</file>
         <file>assets/images/front.jpg</file>
+        <file>assets/images/back.jpg</file>
+        <file>assets/images/top.jpg</file>
+        <file>assets/images/bottom.jpg</file>
     </qresource>
 </RCC>

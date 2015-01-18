@@ -28,7 +28,8 @@ namespace HIP {
     /*! Constructor */
     MainWindow::MainWindow (Database::Database* database, QWidget *parent)
       : QMainWindow (parent),
-      _ui (new Ui::HIP_Gui_MainWindow)
+      _ui       (new Ui::HIP_Gui_MainWindow),
+      _database (database)
     {
       _ui->setupUi (this);
 
@@ -47,14 +48,40 @@ namespace HIP {
         }
 
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
+      connect (tag_selector, SIGNAL (tagChanged (const QString&)), this, SLOT (onTagChanged (const QString&)));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
+
+      onTagChanged ("");
     }
 
     /*! Destructor */
     MainWindow::~MainWindow ()
     {
       delete _ui;
+    }
+
+    /*! Adapt tab sensitivity to selector tag */
+    void MainWindow::onTagChanged (const QString& tag)
+    {
+      QSet<QString> used_images;
+
+      foreach (const Database::Point& point, _database->getPoints ())
+        {
+          if (point.matches (tag))
+            {
+              foreach (const Database::Position& position, point.getPositions ())
+                used_images.insert (position.getImage ());
+            }
+        }
+
+      for (int i=0; i < _ui->_tab_w->count (); ++i)
+        {
+          Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
+          Q_ASSERT (view != 0);
+
+          _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
+        }
     }
 
     /*! Show about dialog */

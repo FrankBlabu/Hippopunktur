@@ -87,6 +87,8 @@ namespace HIP {
       ImageView (Database::Database* database, const Database::Image& image, QWidget* parent);
       virtual ~ImageView ();
 
+      const Database::Image& getImage () const { return _image; }
+
     public slots:
       void onTagChanged (const QString& id);
 
@@ -97,6 +99,7 @@ namespace HIP {
     private:
       Ui::HIP_Image_ImageView* _ui;
       Database::Database* _database;
+      Database::Image _image;
       ImageWidget* _widget;
     };
 

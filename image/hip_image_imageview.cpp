@@ -306,6 +306,7 @@ namespace HIP {
       : QWidget(parent),
       _ui       (new Ui::HIP_Image_ImageView),
       _database (database),
+      _image    (image),
       _widget   (0)
     {
       _ui->setupUi (this);

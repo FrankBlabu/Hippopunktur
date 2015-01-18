@@ -33,10 +33,12 @@ namespace HIP {
       virtual ~MainWindow ();
 
     private slots:
+      void onTagChanged (const QString& tag);
       void onAbout ();
 
     private:
       Ui::HIP_Gui_MainWindow* _ui;
+      Database::Database* _database;
     };
 
   } // namespace Gui
