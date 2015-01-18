@@ -68,6 +68,19 @@ namespace HIP {
       delete _ui;
     }
 
+    /*! Set main window visible */
+    void MainWindow::setVisible (bool visible)
+    {
+      QMainWindow::setVisible (visible);
+
+      QList<int> sizes;
+      sizes.append (_ui->_splitter_w->width () * 30 / 100);
+      sizes.append (_ui->_splitter_w->width () * 70 / 100);
+
+      _ui->_splitter_w->setSizes (sizes);
+    }
+
+
     /*! Adapt tab sensitivity to selector tag */
     void MainWindow::onTagChanged (const QString& tag)
     {

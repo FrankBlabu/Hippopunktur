@@ -32,6 +32,8 @@ namespace HIP {
       explicit MainWindow (Database::Database* database, QWidget* parent=0);
       virtual ~MainWindow ();
 
+      virtual void setVisible (bool visible);
+
     private slots:
       void onTagChanged (const QString& tag);
       void onAbout ();
