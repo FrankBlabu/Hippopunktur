@@ -508,18 +508,18 @@ namespace HIP {
         {
         case SELECT:
           point.setSelected (true);
-          emit pointChanged (id);
+          emit selectionChanged (id);
           break;
 
         case DESELECT:
           point.setSelected (false);
-          emit pointChanged (id);
+          emit selectionChanged (id);
           break;
 
         case EXCLUSIV:
           clearSelection ();
           point.setSelected (true);
-          emit pointChanged (id);
+          emit selectionChanged (id);
           break;
 
         case EXPAND:

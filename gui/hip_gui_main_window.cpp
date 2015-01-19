@@ -39,8 +39,6 @@ namespace HIP {
       Gui::PointEditor* point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-      Q_UNUSED (point_editor);
-
       _ui->_tab_w->clear ();
 
       foreach (const Database::Image& image, database->getImages ())
@@ -59,8 +57,13 @@ namespace HIP {
 
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), this, SLOT (onTagChanged (const QString&)));
+
       connect (_database, SIGNAL (pointChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
+      connect (_database, SIGNAL (selectionChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
       connect (_database, SIGNAL (dataChanged ()), explorer, SLOT (onDataChanged ()));
+
+      connect (_database, SIGNAL (selectionChanged (const QString&)), point_editor, SLOT (onSelectionChanged (const QString&)));
+
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
 

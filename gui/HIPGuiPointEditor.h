@@ -21,6 +21,8 @@ namespace HIP {
 
   namespace Gui {
 
+    class PointEditorModel;
+
     /*!
      * Editor for the point database
      */
@@ -32,9 +34,13 @@ namespace HIP {
       PointEditor (Database::Database* database, QWidget* parent);
       virtual ~PointEditor ();
 
+    public slots:
+      void onSelectionChanged (const QString& id);
+
     private:
       Ui::HIP_Gui_PointEditor* _ui;
       Database::Database* _database;
+      PointEditorModel* _model;
     };
 
   }

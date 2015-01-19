@@ -162,6 +162,7 @@ namespace HIP {
 
     signals:
       void pointChanged (const QString& id);
+      void selectionChanged (const QString& id);
       void dataChanged ();
 
     private:

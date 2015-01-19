@@ -85,7 +85,14 @@
        </layout>
       </item>
       <item row="0" column="0">
-       <widget class="QTreeView" name="_positions_w"/>
+       <widget class="QTreeView" name="_positions_w">
+        <property name="rootIsDecorated">
+         <bool>false</bool>
+        </property>
+        <property name="allColumnsShowFocus">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

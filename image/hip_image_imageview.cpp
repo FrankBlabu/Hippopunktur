@@ -364,6 +364,7 @@ namespace HIP {
       _widget = Tools::addToParent (new ImageWidget (database, image, _ui->_view_w));
 
       connect (_database, &Database::Database::pointChanged, this, &ImageView::onPointChanged);
+      connect (_database, &Database::Database::selectionChanged, this, &ImageView::onPointChanged);
       connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 
