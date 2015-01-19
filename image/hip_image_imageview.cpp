@@ -1,4 +1,5 @@
-/* * hip_image_image_view.cpp - View displaying an acupunctur image
+/*
+ * hip_image_image_view.cpp - View displaying an acupunctur image
  *
  * Frank Blankenburg, Jan. 2015
  */
@@ -11,6 +12,7 @@
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 
+#include <QEventLoop>
 #include <QImage>
 #include <QPainter>
 #include <QScrollArea>
@@ -32,14 +34,16 @@ namespace HIP {
     /*! Constructor */
     ImageWidget::ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent)
       : QWidget (parent),
-        _database      (database),
-        _image         (image),
-        _tag           (),
-        _loader        (0),
-        _pixmap        (),
-        _viewport      (),
-        _clicked_point (),
-        _dragged       ()
+        _database            (database),
+        _image               (image),
+        _tag                 (),
+        _loader              (0),
+        _pixmap              (),
+        _viewport            (),
+        _clicked_point       (),
+        _dragged             (),
+        _selection           (0),
+        _selected_coordinate ()
     {
       setMouseTracking (true);
 
@@ -61,6 +65,29 @@ namespace HIP {
           _tag = tag;
           update ();
         }
+    }
+
+    /*! Interactively select coordinate in this widget */
+    bool ImageWidget::selectCoordinate (QPointF* coordinate)
+    {
+      bool ok = true;
+
+      Q_UNUSED (coordinate);
+      Q_ASSERT (_selection == 0);
+
+      _selection = new QEventLoop (this);
+      setCursor (Qt::CrossCursor);
+
+      _selection->exec ();
+
+      unsetCursor ();
+      delete _selection;
+      _selection = 0;
+
+      coordinate->setX (_selected_coordinate.x ());
+      coordinate->setY (_selected_coordinate.y ());
+
+      return ok;
     }
 
     /* Reset zoom to original pixmap scale */
@@ -146,11 +173,11 @@ namespace HIP {
                     {
                       if (position.getImage () == _image.getId ())
                         {
-                          QPointF p = toWidgetPoint (position.getCoordinate ().toPointF ());
+                          QPointF p = toWidgetPoint (position.getCoordinate ());
 
                           painter.setPen (point.getSelected () ? point.getColor () : unselected_color);
                           painter.setBrush (point.getSelected () ? point.getColor () : unselected_color);
-                          painter.drawEllipse (toWidgetPoint (position.getCoordinate ().toPointF ()),
+                          painter.drawEllipse (toWidgetPoint (position.getCoordinate ()),
                                                POINT_RADIUS, POINT_RADIUS);
 
                           painter.setPen (point.getSelected () ? QColor ("black") : unselected_color);
@@ -188,7 +215,7 @@ namespace HIP {
                     {
                       if (position.getImage () == _image.getId ())
                         {
-                          double distance = qAbs ((position.getCoordinate ().toPointF () - p).manhattanLength ());
+                          double distance = qAbs ((position.getCoordinate () - p).manhattanLength ());
                           if ( distance < min_distance &&
                                distance < 30 * POINT_RADIUS )
                             {
@@ -211,22 +238,37 @@ namespace HIP {
         {
           if (event->buttons ().testFlag (Qt::LeftButton))
             {
-              QString id = getPointAt (event->pos ());
-              if (!id.isEmpty ())
+              //
+              // Point selection mode
+              //
+              if (_selection == 0)
                 {
-                  Database::Database::SelectionMode mode = Database::Database::SELECT;
-
-                  if (event->modifiers ().testFlag (Qt::ControlModifier))
+                  QString id = getPointAt (event->pos ());
+                  if (!id.isEmpty ())
                     {
-                      if (_database->getPoint (id).getSelected ())
-                        mode = Database::Database::DESELECT;
-                      else
-                        mode = Database::Database::SELECT;
-                    }
-                  else
-                    mode = Database::Database::EXCLUSIV;
+                      Database::Database::SelectionMode mode = Database::Database::SELECT;
 
-                  _database->setSelected (id, mode);
+                      if (event->modifiers ().testFlag (Qt::ControlModifier))
+                        {
+                          if (_database->getPoint (id).getSelected ())
+                            mode = Database::Database::DESELECT;
+                          else
+                            mode = Database::Database::SELECT;
+                        }
+                      else
+                        mode = Database::Database::EXCLUSIV;
+
+                      _database->setSelected (id, mode);
+                    }
+                }
+
+              //
+              // Coordinate selection mode
+              //
+              else
+                {
+                  _selected_coordinate = toPixmapPoint (event->pos ());
+                  _selection->exit ();
                 }
             }
           else if (event->buttons ().testFlag (Qt::MidButton))
@@ -259,7 +301,12 @@ namespace HIP {
       Q_UNUSED (event);
 
       if (!_pixmap.isNull ())
-        unsetCursor ();
+        {
+          if (_selection)
+            setCursor (Qt::CrossCursor);
+          else
+            unsetCursor ();
+        }
     }
 
     /*! Handle mouse wheel events */
@@ -372,6 +419,11 @@ namespace HIP {
     ImageView::~ImageView ()
     {
       delete _ui;
+    }
+
+    bool ImageView::selectCoordinate (QPointF* coordinate)
+    {
+      return _widget->selectCoordinate (coordinate);
     }
 
     void ImageView::onResetZoom ()

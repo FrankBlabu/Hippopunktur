@@ -10,8 +10,11 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QWidget>
+#include <QPointF>
 
 #include "database/HIPDatabase.h"
+
+class QEventLoop;
 
 namespace Ui {
   class HIP_Image_ImageView;
@@ -41,6 +44,8 @@ namespace HIP {
 
       void resetZoom ();
       void updatePoint (const QString& id);
+
+      bool selectCoordinate (QPointF* coordinate);
 
     protected:
       QPointF toPixmapPoint (const QPointF& widget_point) const;
@@ -78,6 +83,9 @@ namespace HIP {
       QPointF _clicked_point; // Origin for dragging movements in widget coordinates
       QRectF _dragged;
 
+      QEventLoop* _selection;
+      QPointF _selected_coordinate;
+
       static const double POINT_RADIUS;
     };
 
@@ -93,6 +101,8 @@ namespace HIP {
       virtual ~ImageView ();
 
       const Database::Image& getImage () const { return _image; }
+
+      bool selectCoordinate (QPointF* coordinate);
 
     public slots:
       void onTagChanged (const QString& id);

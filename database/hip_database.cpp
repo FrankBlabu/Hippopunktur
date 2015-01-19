@@ -134,7 +134,7 @@ namespace HIP {
       _image = image;
     }
 
-    void Position::setCoordinate (const QVector2D& coordinate)
+    void Position::setCoordinate (const QPointF& coordinate)
     {
       _coordinate = coordinate;
     }
@@ -388,8 +388,8 @@ namespace HIP {
 
                           Position position;
                           position.setImage (position_e.attribute (Attributes::IMAGE));
-                          position.setCoordinate (QVector2D (position_e.attribute (Attributes::X).toDouble (&x_ok),
-                                                             position_e.attribute (Attributes::X).toDouble (&y_ok)));
+                          position.setCoordinate (QPointF (position_e.attribute (Attributes::X).toDouble (&x_ok),
+                                                           position_e.attribute (Attributes::X).toDouble (&y_ok)));
 
                           if (!x_ok)
                             throw Exception (tr ("X coordinate is not a number"));
@@ -510,6 +510,33 @@ namespace HIP {
       return _images[index];
     }
 
+    /*!
+     * Set position of point
+     *
+     * If a position with the given image id already exists, it is overwritten
+     */
+    void Database::setPosition (const QString& id, const Position& position)
+    {
+      int index = findIndex (id);
+      Q_ASSERT (index >= 0);
+
+      qDebug () << "Set: " << id << ", " << position;
+
+      Point& point = _points[index];
+      QList<Position> positions = point.getPositions ();
+
+      int pos = -1;
+      for (int i=0; i < positions.size () && pos == -1; ++i)
+        if (positions[i].getImage () == position.getImage ())
+          pos = i;
+
+      if (pos >= 0)
+        positions[pos] = position;
+      else
+        positions.append (position);
+
+      point.setPositions (positions);
+    }
 
     /*! Set point selection status */
     void Database::setSelected (const QString &id, SelectionMode mode)

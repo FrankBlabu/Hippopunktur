@@ -13,8 +13,7 @@
 #include <QList>
 #include <QMap>
 #include <QFile>
-#include <QVector2D>
-#include <QQmlListProperty>
+#include <QPointF>
 
 class QDomDocument;
 
@@ -29,7 +28,7 @@ namespace HIP {
       Q_OBJECT
 
       Q_PROPERTY (QString image READ getImage WRITE setImage)
-      Q_PROPERTY (QVector2D coordinate READ getCoordinate WRITE setCoordinate)
+      Q_PROPERTY (QPointF coordinate READ getCoordinate WRITE setCoordinate)
 
     public:
       Position ();
@@ -39,14 +38,14 @@ namespace HIP {
       const QString& getImage () const { return _image; }
       void setImage (const QString& image);
 
-      const QVector2D& getCoordinate () const { return _coordinate; }
-      void setCoordinate (const QVector2D& coordinate);
+      const QPointF& getCoordinate () const { return _coordinate; }
+      void setCoordinate (const QPointF& coordinate);
 
       Position& operator= (const Position& toCopy);
 
     private:
       QString _image;
-      QVector2D _coordinate;
+      QPointF _coordinate;
     };
 
     /*
@@ -152,10 +151,11 @@ namespace HIP {
       const QList<QString>& getTags () const { return _tags; }
       const QList<Image>& getImages () const { return _images; }
 
-      Q_INVOKABLE const Point& getPoint (const QString& id) const;
-      Q_INVOKABLE void setPoint (const QString& id, const Point& point);
+      const Point& getPoint (const QString& id) const;
+      void setPoint (const QString& id, const Point& point);
 
-      Q_INVOKABLE const Image& getImage (const QString& id) const;
+      const Image& getImage (const QString& id) const;
+      void setPosition (const QString& id, const Position& position);
 
       enum SelectionMode { SELECT=0, DESELECT, EXCLUSIV, EXPAND };
 

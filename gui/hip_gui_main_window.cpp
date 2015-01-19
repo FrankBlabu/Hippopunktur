@@ -23,6 +23,65 @@ namespace HIP {
   namespace Gui {
 
     //#**********************************************************************
+    // CLASS HIP::GUI::ImageViewInterfaceImpl
+    //#**********************************************************************
+
+    /*
+     * Interface used to access the image views
+     */
+    class ImageViewInterfaceImpl : public PointEditor::ImageViewInterface
+    {
+    public:
+      ImageViewInterfaceImpl (QTabWidget* tabs, QObject* parent);
+      virtual ~ImageViewInterfaceImpl ();
+
+      virtual QString getActiveImage () const;
+      virtual bool selectCoordinate (const QString& id, QPointF* coordinate) const;
+
+    private:
+      QTabWidget* _tabs;
+    };
+
+    /*! Constructor */
+    ImageViewInterfaceImpl::ImageViewInterfaceImpl (QTabWidget* tabs, QObject* parent)
+      : PointEditor::ImageViewInterface (parent),
+        _tabs (tabs)
+    {
+    }
+
+    /*! Destructor */
+    ImageViewInterfaceImpl::~ImageViewInterfaceImpl ()
+    {
+    }
+
+    /*! Return the id of the currently active image */
+    QString ImageViewInterfaceImpl::getActiveImage () const
+    {
+      Image::ImageView* view = qobject_cast<Image::ImageView*> (_tabs->currentWidget ());
+      Q_ASSERT (view != 0);
+      return view->getImage ().getId ();
+    }
+
+    /*! Select coordinate in image */
+    bool ImageViewInterfaceImpl::selectCoordinate (const QString& id, QPointF* coordinate) const
+    {
+      Image::ImageView* view = 0;
+      for (int i=0; i < _tabs->count () && view == 0; ++i)
+        {
+          Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_tabs->widget (i));
+          Q_ASSERT (candidate != 0);
+
+          if (candidate->getImage ().getId () == id)
+            view = candidate;
+        }
+
+      Q_ASSERT (view != 0);
+
+      return view->selectCoordinate (coordinate);
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::GUI::MainWindow
     //#**********************************************************************
 
@@ -41,6 +100,7 @@ namespace HIP {
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
       _point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
+      _point_editor->setImageViewInterface (new ImageViewInterfaceImpl (_ui->_tab_w, this));
 
       _ui->_tab_w->clear ();
 

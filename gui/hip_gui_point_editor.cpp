@@ -18,6 +18,22 @@ namespace HIP {
   namespace Gui {
 
     //#**********************************************************************
+    // CLASS HIP::Gui::PointEditor::ImageViewInterface
+    //#**********************************************************************
+
+    /*! Constructor */
+    PointEditor::ImageViewInterface::ImageViewInterface (QObject* parent)
+      : QObject (parent)
+    {
+    }
+
+    /*! Destructor */
+    PointEditor::ImageViewInterface::~ImageViewInterface ()
+    {
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::Gui::PointEditorModel
     //#**********************************************************************
 
@@ -30,11 +46,11 @@ namespace HIP {
       struct Column { enum Type_t { IMAGE, COORDINATE }; };
       typedef Column::Type_t Columm_t;
 
-      struct Role { enum Type_t { IMAGE_ID=Qt::UserRole + 1 }; };
+      struct Role { enum Type_t { IMAGE_ID=Qt::UserRole + 1, COORDINATE }; };
       typedef Role::Type_t Role_t;
 
     public:
-      PointEditorModel (const Database::Database* database, QObject* parent);
+      PointEditorModel (Database::Database* database, QObject* parent);
       virtual ~PointEditorModel ();
 
       void setPoint (const Database::Point& point);
@@ -52,14 +68,14 @@ namespace HIP {
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
 
     private:
-      const Database::Database* _database;
+      Database::Database* _database;
       QString _id;
       QList<Database::Position> _positions;
     };
 
 
     /* Constructor */
-    PointEditorModel::PointEditorModel (const Database::Database* database, QObject* parent)
+    PointEditorModel::PointEditorModel (Database::Database* database, QObject* parent)
       : QAbstractItemModel (parent),
         _database  (database),
         _id        (),
@@ -169,8 +185,13 @@ namespace HIP {
           if (index.column () == Column::IMAGE)
             {
             }
-          else if (index.column () == Column::COORDINATE)
+
+          if (role == Role::COORDINATE)
             {
+              position.setCoordinate (value.value<QPointF> ());
+              _database->setPosition (_id, position);
+              emit dataChanged (this->index (index.row (), Column::IMAGE, QModelIndex ()),
+                                this->index (index.row (), Column::COORDINATE, QModelIndex ()));
             }
         }
 
@@ -202,10 +223,10 @@ namespace HIP {
     /*! Constructor */
     PointEditor::PointEditor (Database::Database* database, QWidget* parent)
       : QWidget(parent),
-        _ui               (new Ui::HIP_Gui_PointEditor),
-        _database         (database),
-        _model            (new PointEditorModel (database, this)),
-        _current_image_id ()
+        _ui       (new Ui::HIP_Gui_PointEditor),
+        _database (database),
+        _model    (new PointEditorModel (database, this)),
+        _iv       (0)
     {
       _ui->setupUi (this);
       _ui->_positions_w->setModel (_model);
@@ -213,15 +234,55 @@ namespace HIP {
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::IMAGE, QHeaderView::ResizeToContents);
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::COORDINATE, QHeaderView::Stretch);
 
+      connect (_ui->_add_w, SIGNAL (clicked (bool)), SLOT (onAdd ()));
+      connect (_ui->_remove_w, SIGNAL (clicked (bool)), SLOT (onRemove ()));
+      connect (_ui->_edit_w, SIGNAL (clicked (bool)), SLOT (onEdit ()));
+
       connect (_ui->_positions_w->selectionModel (),
                SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
                SLOT (onPositionSelectionChanged (const QItemSelection&)));
+
+      updateSensitivity ();
     }
 
     /*! Destructor */
     PointEditor::~PointEditor ()
     {
       delete _ui;
+    }
+
+    /*! Set image view interface */
+    void PointEditor::setImageViewInterface (ImageViewInterface* iv)
+    {
+      _iv = iv;
+    }
+
+    /*! Called when a new point should be added */
+    void PointEditor::onAdd ()
+    {
+      updateSensitivity ();
+    }
+
+    /*! Called when the current point shall be removed */
+    void PointEditor::onRemove ()
+    {
+      updateSensitivity ();
+    }
+
+    /*! Called when the coordinates of the current point should be edited */
+    void PointEditor::onEdit ()
+    {
+      QModelIndexList indices = _ui->_positions_w->selectionModel ()->selectedRows ();
+      Q_ASSERT (indices.size () == 1);
+      Q_ASSERT (_iv != 0);
+
+      QModelIndex index = indices.front ();
+
+      QPointF coordinate;
+      if (_iv->selectCoordinate (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString (), &coordinate))
+        _model->setData (index, qVariantFromValue (coordinate), PointEditorModel::Role::COORDINATE);
+
+      updateSensitivity ();
     }
 
     /*! Update editor content on point selection changes */
@@ -243,6 +304,8 @@ namespace HIP {
       _ui->_tags_w->setText (tags);
 
       _model->setPoint (point);
+
+      updateSensitivity ();
     }
 
     /*! Called when the selection in the positions list changed */
@@ -250,18 +313,25 @@ namespace HIP {
     {
       foreach (const QModelIndex& index, selected.indexes ())
         emit imageSelected (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString ());
+
+      updateSensitivity ();
     }
 
     /*! Called when the currently displayed image changed */
     void PointEditor::onCurrentImageChanged (const QString& id)
     {
-      _current_image_id = id;
-
       QModelIndex index = _model->getImageIndex (id);
       if (index.isValid ())
         _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
       else
         _ui->_positions_w->selectionModel ()->clear ();
+    }
+
+    void PointEditor::updateSensitivity ()
+    {
+      bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
+      _ui->_remove_w->setEnabled (selected);
+      _ui->_edit_w->setEnabled (selected);
     }
 
   }

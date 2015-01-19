@@ -70,6 +70,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QToolButton" name="_edit_w">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="_button_spacer_w">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
