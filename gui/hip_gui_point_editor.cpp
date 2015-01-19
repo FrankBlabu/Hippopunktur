@@ -10,6 +10,7 @@
 #include "database/HIPDatabase.h"
 
 #include <QAbstractItemModel>
+#include <QItemSelectionModel>
 #include <QLineEdit>
 #include <QDebug>
 
@@ -29,11 +30,15 @@ namespace HIP {
       struct Column { enum Type_t { IMAGE, COORDINATE }; };
       typedef Column::Type_t Columm_t;
 
+      struct Role { enum Type_t { IMAGE_ID=Qt::UserRole + 1 }; };
+      typedef Role::Type_t Role_t;
+
     public:
-      PointEditorModel (QObject* parent);
+      PointEditorModel (const Database::Database* database, QObject* parent);
       virtual ~PointEditorModel ();
 
       void setPoint (const Database::Point& point);
+      QModelIndex getImageIndex (const QString& id) const;
 
       virtual int columnCount (const QModelIndex& parent) const;
       virtual int rowCount (const QModelIndex& parent) const;
@@ -47,14 +52,16 @@ namespace HIP {
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
 
     private:
+      const Database::Database* _database;
       QString _id;
       QList<Database::Position> _positions;
     };
 
 
     /* Constructor */
-    PointEditorModel::PointEditorModel (QObject* parent)
+    PointEditorModel::PointEditorModel (const Database::Database* database, QObject* parent)
       : QAbstractItemModel (parent),
+        _database  (database),
         _id        (),
         _positions ()
     {
@@ -74,6 +81,18 @@ namespace HIP {
       _positions = point.getPositions ();
 
       endResetModel ();
+    }
+
+    /*! Get the model index of the given image */
+    QModelIndex PointEditorModel::getImageIndex (const QString& id) const
+    {
+      QModelIndex result;
+
+      for (int i=0; i < _positions.size () && !result.isValid (); ++i)
+        if (_positions[i].getImage () == id)
+          result = index (i, 0, QModelIndex ());
+
+      return result;
     }
 
     int PointEditorModel::columnCount (const QModelIndex& parent) const
@@ -118,10 +137,16 @@ namespace HIP {
             case Qt::DisplayRole:
               {
                 if (index.column () == Column::IMAGE)
-                  result = qVariantFromValue (position.getImage ());
+                  result = qVariantFromValue (_database->getImage (position.getImage ()).getTitle ());
                 else if (index.column () == Column::COORDINATE)
-                  {}
+                  result = qVariantFromValue (QString ("(%1, %2)")
+                                              .arg (static_cast<int> (position.getCoordinate ().x ()))
+                                              .arg (static_cast<int> (position.getCoordinate ().y ())));
               }
+              break;
+
+            case Role::IMAGE_ID:
+              result = qVariantFromValue (position.getImage ());
               break;
             }
         }
@@ -139,6 +164,7 @@ namespace HIP {
       if (index.isValid () && index.row () < _positions.size ())
         {
           Database::Position position = _positions[index.row ()];
+          Q_UNUSED (position);
 
           if (index.column () == Column::IMAGE)
             {
@@ -176,15 +202,20 @@ namespace HIP {
     /*! Constructor */
     PointEditor::PointEditor (Database::Database* database, QWidget* parent)
       : QWidget(parent),
-        _ui       (new Ui::HIP_Gui_PointEditor),
-        _database (database),
-        _model    (new PointEditorModel (this))
+        _ui               (new Ui::HIP_Gui_PointEditor),
+        _database         (database),
+        _model            (new PointEditorModel (database, this)),
+        _current_image_id ()
     {
       _ui->setupUi (this);
       _ui->_positions_w->setModel (_model);
 
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::IMAGE, QHeaderView::ResizeToContents);
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::COORDINATE, QHeaderView::Stretch);
+
+      connect (_ui->_positions_w->selectionModel (),
+               SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
+               SLOT (onPositionSelectionChanged (const QItemSelection&)));
     }
 
     /*! Destructor */
@@ -194,7 +225,7 @@ namespace HIP {
     }
 
     /*! Update editor content on point selection changes */
-    void PointEditor::onSelectionChanged (const QString& id)
+    void PointEditor::onPointSelectionChanged (const QString& id)
     {
       const Database::Point& point = _database->getPoint (id);
 
@@ -212,6 +243,25 @@ namespace HIP {
       _ui->_tags_w->setText (tags);
 
       _model->setPoint (point);
+    }
+
+    /*! Called when the selection in the positions list changed */
+    void PointEditor::onPositionSelectionChanged (const QItemSelection& selected)
+    {
+      foreach (const QModelIndex& index, selected.indexes ())
+        emit imageSelected (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString ());
+    }
+
+    /*! Called when the currently displayed image changed */
+    void PointEditor::onCurrentImageChanged (const QString& id)
+    {
+      _current_image_id = id;
+
+      QModelIndex index = _model->getImageIndex (id);
+      if (index.isValid ())
+        _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+      else
+        _ui->_positions_w->selectionModel ()->clear ();
     }
 
   }

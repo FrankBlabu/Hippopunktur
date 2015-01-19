@@ -9,6 +9,8 @@
 
 #include <QWidget>
 
+class QItemSelection;
+
 namespace Ui {
   class HIP_Gui_PointEditor;
 }
@@ -35,12 +37,19 @@ namespace HIP {
       virtual ~PointEditor ();
 
     public slots:
-      void onSelectionChanged (const QString& id);
+      void onPointSelectionChanged (const QString& id);
+      void onPositionSelectionChanged (const QItemSelection& selected);
+      void onCurrentImageChanged (const QString& id);
+
+    signals:
+      void imageSelected (const QString& id);
 
     private:
       Ui::HIP_Gui_PointEditor* _ui;
       Database::Database* _database;
       PointEditorModel* _model;
+
+      QString _current_image_id;
     };
 
   }

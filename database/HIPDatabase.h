@@ -155,6 +155,8 @@ namespace HIP {
       Q_INVOKABLE const Point& getPoint (const QString& id) const;
       Q_INVOKABLE void setPoint (const QString& id, const Point& point);
 
+      Q_INVOKABLE const Image& getImage (const QString& id) const;
+
       enum SelectionMode { SELECT=0, DESELECT, EXCLUSIV, EXPAND };
 
       Q_INVOKABLE void setSelected (const QString& id, SelectionMode mode);

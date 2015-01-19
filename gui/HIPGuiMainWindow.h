@@ -21,6 +21,8 @@ namespace HIP {
 
   namespace Gui {
 
+    class PointEditor;
+
     /*
      * Main window for the hippopunktur application
      */
@@ -36,11 +38,16 @@ namespace HIP {
 
     private slots:
       void onTagChanged (const QString& tag);
+      void onImageSelected (const QString& id);
+      void onCurrentTabChanged (int index);
+
       void onAbout ();
 
     private:
       Ui::HIP_Gui_MainWindow* _ui;
       Database::Database* _database;
+
+      PointEditor* _point_editor;
     };
 
   } // namespace Gui

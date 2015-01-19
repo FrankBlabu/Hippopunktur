@@ -496,6 +496,21 @@ namespace HIP {
       emit pointChanged (id);
     }
 
+    /*! Get image entry from database */
+    const Image& Database::getImage (const QString& id) const
+    {
+      int index = -1;
+
+      for (int i=0; i < _images.size () && index == -1; ++i)
+        if (_images[i].getId () == id)
+          index = i;
+
+      Q_ASSERT (index >= 0);
+
+      return _images[index];
+    }
+
+
     /*! Set point selection status */
     void Database::setSelected (const QString &id, SelectionMode mode)
     {

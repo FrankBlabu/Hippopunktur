@@ -29,15 +29,18 @@ namespace HIP {
     /*! Constructor */
     MainWindow::MainWindow (Database::Database* database, QWidget *parent)
       : QMainWindow (parent),
-      _ui       (new Ui::HIP_Gui_MainWindow),
-      _database (database)
+      _ui           (new Ui::HIP_Gui_MainWindow),
+      _database     (database),
+      _point_editor (0)
     {
       _ui->setupUi (this);
 
       Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
+
       Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
-      Gui::PointEditor* point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+      _point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
 
       _ui->_tab_w->clear ();
 
@@ -61,8 +64,11 @@ namespace HIP {
       connect (_database, SIGNAL (pointChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
       connect (_database, SIGNAL (selectionChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
       connect (_database, SIGNAL (dataChanged ()), explorer, SLOT (onDataChanged ()));
+      connect (_database, SIGNAL (selectionChanged (const QString&)), _point_editor, SLOT (onPointSelectionChanged (const QString&)));
 
-      connect (_database, SIGNAL (selectionChanged (const QString&)), point_editor, SLOT (onSelectionChanged (const QString&)));
+      connect (_point_editor, SIGNAL (imageSelected (const QString&)), SLOT (onImageSelected (const QString&)));
+
+      connect (_ui->_tab_w, SIGNAL (currentChanged (int)), SLOT (onCurrentTabChanged (int)));
 
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
@@ -116,6 +122,32 @@ namespace HIP {
 
           _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
         }
+    }
+
+    /*! React on image entry selection in the point editor */
+    void MainWindow::onImageSelected (const QString& id)
+    {
+      Image::ImageView* view = 0;
+
+      for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
+        {
+          Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
+          if (candidate->getImage ().getId () == id)
+            view = candidate;
+        }
+
+      Q_ASSERT (view != 0);
+
+      _ui->_tab_w->setCurrentWidget (view);
+    }
+
+    /*! Called when the currently visible image view tab changes */
+    void MainWindow::onCurrentTabChanged (int index)
+    {
+      Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (index));
+      Q_ASSERT (view != 0);
+
+      _point_editor->onCurrentImageChanged (view->getImage ().getId ());
     }
 
     /*! Show about dialog */
