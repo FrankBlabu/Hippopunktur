@@ -213,7 +213,21 @@ namespace HIP {
             {
               QString id = getPointAt (event->pos ());
               if (!id.isEmpty ())
-                emit pointClicked (id);
+                {
+                  Database::Database::SelectionMode mode = Database::Database::SELECT;
+
+                  if (event->modifiers ().testFlag (Qt::ControlModifier))
+                    {
+                      if (_database->getPoint (id).getSelected ())
+                        mode = Database::Database::DESELECT;
+                      else
+                        mode = Database::Database::SELECT;
+                    }
+                  else
+                    mode = Database::Database::EXCLUSIV;
+
+                  _database->setSelected (id, mode);
+                }
             }
           else if (event->buttons ().testFlag (Qt::MidButton))
             {
@@ -350,7 +364,6 @@ namespace HIP {
       _widget = Tools::addToParent (new ImageWidget (database, image, _ui->_view_w));
 
       connect (_database, &Database::Database::pointChanged, this, &ImageView::onPointChanged);
-      connect (_widget, &ImageWidget::pointClicked, this, &ImageView::pointClicked);
       connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 

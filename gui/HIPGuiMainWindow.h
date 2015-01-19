@@ -1,11 +1,11 @@
 /*
- * HIPMainWindow.h - Main window for the hippopunktur application
+ * HIPGuiMainWindow.h - Main window for the hippopunktur application
  *
  * Frank Blankenburg, Jan. 2015
  */
 
-#ifndef __HIPMainWindow_h__
-#define __HIPMainWindow_h__
+#ifndef __HIPGuiMainWindow_h__
+#define __HIPGuiMainWindow_h__
 
 #include <QMainWindow>
 

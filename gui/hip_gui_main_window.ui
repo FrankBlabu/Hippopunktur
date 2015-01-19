@@ -20,6 +20,9 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
+      <property name="handleWidth">
+       <number>10</number>
+      </property>
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="_left_layout">
         <property name="spacing">
@@ -29,7 +32,37 @@
          <widget class="QWidget" name="_selector_w" native="true"/>
         </item>
         <item>
-         <widget class="QWidget" name="_explorer_w" native="true"/>
+         <widget class="QWidget" name="_explorer_frame_w" native="true">
+          <layout class="QGridLayout" name="gridLayout_2">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <property name="spacing">
+            <number>10</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QSplitter" name="_explorer_splitter_w">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="handleWidth">
+              <number>10</number>
+             </property>
+             <widget class="QWidget" name="_explorer_w" native="true"/>
+             <widget class="QWidget" name="_point_editor_w" native="true"/>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </item>
        </layout>
       </widget>

@@ -11,7 +11,7 @@
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 #include "explorer/HIPSortFilterProxyModel.h"
-#include "gui/HIPMainWindow.h"
+#include "gui/HIPGuiMainWindow.h"
 
 int main (int argc, char* argv[])
 {

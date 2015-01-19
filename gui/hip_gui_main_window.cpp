@@ -4,13 +4,14 @@
  * Frank Blankenburg, Jan. 2015
  */
 
-#include "HIPMainWindow.h"
+#include "HIPGuiMainWindow.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 #include "explorer/HIPExplorer.h"
 #include "explorer/HIPExplorerTagSelector.h"
+#include "gui/HIPGuiPointEditor.h"
 #include "image/HIPImageImageView.h"
-#include "ui_hip_main_window.h"
+#include "ui_hip_gui_main_window.h"
 
 #include <QApplication>
 #include <QHBoxLayout>
@@ -35,7 +36,10 @@ namespace HIP {
 
       Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
       Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
+      Gui::PointEditor* point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+      Q_UNUSED (point_editor);
 
       _ui->_tab_w->clear ();
 
@@ -51,7 +55,6 @@ namespace HIP {
           Q_ASSERT (view != 0);
 
           connect (tag_selector, &Explorer::TagSelector::tagChanged, view, &Image::ImageView::onTagChanged);
-          connect (view, &Image::ImageView::pointClicked, explorer, &Explorer::Explorer::onPointClicked);
         }
 
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
@@ -75,11 +78,17 @@ namespace HIP {
     {
       QMainWindow::setVisible (visible);
 
-      QList<int> sizes;
-      sizes.append (_ui->_splitter_w->width () * 30 / 100);
-      sizes.append (_ui->_splitter_w->width () * 70 / 100);
+      QList<int> main_window_sizes;
+      main_window_sizes.append (_ui->_splitter_w->width () * 30 / 100);
+      main_window_sizes.append (_ui->_splitter_w->width () * 70 / 100);
 
-      _ui->_splitter_w->setSizes (sizes);
+      _ui->_splitter_w->setSizes (main_window_sizes);
+
+      QList<int> explorer_sizes;
+      explorer_sizes.append (_ui->_explorer_splitter_w->width () * 50 / 100);
+      explorer_sizes.append (_ui->_explorer_splitter_w->width () * 50 / 100);
+
+      _ui->_explorer_splitter_w->setSizes (explorer_sizes);
     }
 
 

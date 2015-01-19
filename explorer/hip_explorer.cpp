@@ -59,20 +59,6 @@ namespace HIP {
       _filter->setTag (tag);
     }
 
-    /*! Caller when an image point has been clicked */
-    void Explorer::onPointClicked (const QString &id)
-    {
-      Q_ASSERT (!id.isEmpty ());
-
-      Database::DatabaseModel* model = dynamic_cast<Database::DatabaseModel*> (_model);
-      Q_ASSERT (model != 0);
-
-      QModelIndex index = model->getIndex (id);
-      Q_ASSERT (index.isValid ());
-
-      model->setData (index, qVariantFromValue (true), Database::DatabaseModel::Role::SELECTED);
-    }
-
     /*! Called when a single point in the database has been changed */
     void Explorer::onPointChanged (const QString& id)
     {
