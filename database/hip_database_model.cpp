@@ -71,6 +71,20 @@ namespace HIP {
       return index (row, 0, QModelIndex ());
     }
 
+    /*! Reset whole model */
+    void DatabaseModel::reset ()
+    {
+      beginResetModel ();
+      endResetModel ();
+    }
+
+    /*! Notify change in a single row */
+    void DatabaseModel::onChanged (const QString &id)
+    {
+      QModelIndex index = getIndex (id);
+      if (index.isValid ())
+        emit dataChanged (index, index);
+    }
 
     /*! Custom role names for QML interaction */
     QHash<int, QByteArray> DatabaseModel::roleNames () const
@@ -161,7 +175,7 @@ namespace HIP {
             {
             case Role::SELECTED:
               {
-                _database->setSelected (point.getId (), value.toBool ());
+                _database->setSelected (point.getId (), value.toBool () ? Database::SELECT : Database::DESELECT) ;
                 emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
               }
               break;

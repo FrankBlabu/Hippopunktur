@@ -14,6 +14,7 @@
 #include <QMap>
 #include <QFile>
 #include <QVector2D>
+#include <QQmlListProperty>
 
 class QDomDocument;
 
@@ -25,6 +26,11 @@ namespace HIP {
      */
     class Position : public QObject
     {
+      Q_OBJECT
+
+      Q_PROPERTY (QString image READ getImage WRITE setImage)
+      Q_PROPERTY (QVector2D coordinate READ getCoordinate WRITE setCoordinate)
+
     public:
       Position ();
       Position (const Position& toCopy);
@@ -48,12 +54,20 @@ namespace HIP {
      */
     class Point : public QObject
     {
+      Q_OBJECT
+
+      Q_PROPERTY (QString id READ getId WRITE setId)
+      Q_PROPERTY (QString description READ getDescription WRITE setDescription ())
+      Q_PROPERTY (QList<QString> tags READ getTags WRITE setTags)
+      Q_PROPERTY (QColor color READ getColor WRITE setColor)
+      Q_PROPERTY (bool selected READ getSelected WRITE setSelected)
+
     public:
       Point ();
       Point (const Point& toCopy);
       virtual ~Point ();
 
-      bool matches (const QString& tag) const;
+      Q_INVOKABLE bool matches (const QString& tag) const;
 
       const QString& getId () const { return _id; }
       void setId (const QString& id);
@@ -91,6 +105,12 @@ namespace HIP {
      */
     class Image : public QObject
     {
+      Q_OBJECT
+
+      Q_PROPERTY (QString id READ getId WRITE setId)
+      Q_PROPERTY (QString title READ getTitle WRITE setTitle)
+      Q_PROPERTY (QString path READ getPath WRITE setPath)
+
     public:
       Image ();
       Image (const Image& toCopy);
@@ -118,9 +138,13 @@ namespace HIP {
      */
     class Database : public QObject
     {
-      Q_OBJECT;
+      Q_OBJECT
+
+      Q_PROPERTY (QList<QString> tags READ getTags)
+      Q_ENUMS (SelectionMode)
 
     public:
+      Database () {}
       Database (const QString& path);
       virtual ~Database ();
 
@@ -128,12 +152,17 @@ namespace HIP {
       const QList<QString>& getTags () const { return _tags; }
       const QList<Image>& getImages () const { return _images; }
 
-      const Point& getPoint (const QString& id) const;
-      void setPoint (const QString& id, const Point& point);
-      void setSelected (const QString& id, bool selected);
+      Q_INVOKABLE const Point& getPoint (const QString& id) const;
+      Q_INVOKABLE void setPoint (const QString& id, const Point& point);
+
+      enum SelectionMode { SELECT=0, DESELECT, EXCLUSIV, EXPAND };
+
+      Q_INVOKABLE void setSelected (const QString& id, SelectionMode mode);
+      Q_INVOKABLE void clearSelection ();
 
     signals:
       void pointChanged (const QString& id);
+      void dataChanged ();
 
     private:
       void computeTags ();
@@ -155,7 +184,8 @@ namespace HIP {
   QDebug operator<< (QDebug stream, const Database::Point& point);
 }
 
-Q_DECLARE_METATYPE (HIP::Database::Point);
-Q_DECLARE_METATYPE (HIP::Database::Image);
+Q_DECLARE_METATYPE (HIP::Database::Position)
+Q_DECLARE_METATYPE (HIP::Database::Point)
+Q_DECLARE_METATYPE (HIP::Database::Image)
 
 #endif

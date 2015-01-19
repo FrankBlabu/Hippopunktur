@@ -497,14 +497,44 @@ namespace HIP {
     }
 
     /*! Set point selection status */
-    void Database::setSelected (const QString &id, bool selected)
+    void Database::setSelected (const QString &id, SelectionMode mode)
     {
       int index = findIndex (id);
-
       Q_ASSERT (index >= 0 && index < _points.size ());
-      _points[index].setSelected (selected);
 
-      emit pointChanged (id);
+      Point& point = _points[index];
+
+      switch (mode)
+        {
+        case SELECT:
+          point.setSelected (true);
+          emit pointChanged (id);
+          break;
+
+        case DESELECT:
+          point.setSelected (false);
+          emit pointChanged (id);
+          break;
+
+        case EXCLUSIV:
+          clearSelection ();
+          point.setSelected (true);
+          emit pointChanged (id);
+          break;
+
+        case EXPAND:
+          qWarning () << "Not implemented !";
+          break;
+        }
+    }
+
+    /*! Clear selection */
+    void Database::clearSelection ()
+    {
+      for (int i=0; i < _points.size (); ++i)
+        _points[i].setSelected (false);
+
+      emit dataChanged ();
     }
 
     /*! Compute list of all existing tags */

@@ -63,8 +63,20 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        selected = !selected
-                        explorer.currentIndex = index
+                        if (mouse.button == Qt.LeftButton)
+                        {
+                            if (mouse.modifiers & Qt.ControlModifier)
+                            {
+                                if (selected)
+                                    database.setSelected (name, Database.DESELECT)
+                                else
+                                    database.setSelected (name, Database.SELECT)
+                            }
+                            else if (mouse.modifiers & Qt.ShiftModifier)
+                                ; //database.setSelected (name, Database.EXPAND)
+                            else
+                                database.setSelected (name, Database.EXCLUSIV)
+                        }
                     }
                 }
             }

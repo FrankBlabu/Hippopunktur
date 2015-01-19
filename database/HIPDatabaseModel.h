@@ -53,6 +53,8 @@ namespace HIP {
       virtual ~DatabaseModel ();
 
       QModelIndex getIndex (const QString& id) const;
+      void reset ();
+      void onChanged (const QString& id);
 
       virtual QHash<int, QByteArray> roleNames () const;
 

@@ -56,6 +56,8 @@ namespace HIP {
 
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
       connect (tag_selector, SIGNAL (tagChanged (const QString&)), this, SLOT (onTagChanged (const QString&)));
+      connect (_database, SIGNAL (pointChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
+      connect (_database, SIGNAL (dataChanged ()), explorer, SLOT (onDataChanged ()));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
 

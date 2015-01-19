@@ -22,6 +22,7 @@ int main (int argc, char* argv[])
   app.setStyleSheet (HIP::Tools::loadResource<QString> (":/assets/hippopunktur.css"));
 
   qmlRegisterType<HIP::Explorer::SortFilterProxyModel> ("com.blankenburg.hippopunktur", 1, 0, "SortFilterProxyModel");
+  qmlRegisterType<HIP::Database::Database> ("com.blankenburg.hippopunktur", 1, 0, "Database");
 
   try
   {

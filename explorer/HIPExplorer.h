@@ -33,12 +33,15 @@ namespace HIP {
     public slots:
       void onTagChanged (const QString& tag);
       void onPointClicked (const QString& id);
+      void onPointChanged (const QString& id);
+      void onDataChanged ();
 
     private:
       Database::Database* _database;
       Database::DatabaseModel* _model;
       Database::DatabaseFilterProxyModel* _filter;
 
+      static const char* const QML_DATABASE_NAME;
       static const char* const QML_MODEL_NAME;
     };
 
