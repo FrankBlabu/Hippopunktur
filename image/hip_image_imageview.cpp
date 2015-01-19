@@ -80,7 +80,9 @@ namespace HIP {
       setCursor (Qt::CrossCursor);
 
       Tools::StatusBar::showMessage (tr ("Select coordinate in image with mouse click..."));
+
       _selection->exec ();
+
       Tools::StatusBar::clearMessage ();
 
       unsetCursor ();

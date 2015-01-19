@@ -162,6 +162,8 @@ namespace HIP {
       Q_INVOKABLE void setSelected (const QString& id, SelectionMode mode);
       Q_INVOKABLE void clearSelection ();
 
+      QString toXML () const;
+
     signals:
       void pointChanged (const QString& id);
       void selectionChanged (const QString& id);

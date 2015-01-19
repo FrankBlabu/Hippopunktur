@@ -55,6 +55,7 @@ namespace HIP {
       void onRemove ();
       void onEdit ();
 
+      void onCommit ();
       void onPointSelectionChanged (const QString& id);
       void onPositionSelectionChanged (const QItemSelection& selected);
       void onCurrentImageChanged (const QString& id);

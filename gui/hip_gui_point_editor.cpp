@@ -12,6 +12,7 @@
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
 #include <QLineEdit>
+#include <QSignalBlocker>
 #include <QDebug>
 
 namespace HIP {
@@ -242,6 +243,10 @@ namespace HIP {
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::IMAGE, QHeaderView::ResizeToContents);
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::COORDINATE, QHeaderView::Stretch);
 
+      connect (_ui->_name_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
+      connect (_ui->_description_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
+      connect (_ui->_tags_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
+
       connect (_ui->_add_w, SIGNAL (clicked (bool)), SLOT (onAdd ()));
       connect (_ui->_remove_w, SIGNAL (clicked (bool)), SLOT (onRemove ()));
       connect (_ui->_edit_w, SIGNAL (clicked (bool)), SLOT (onEdit ()));
@@ -265,6 +270,23 @@ namespace HIP {
       _iv = iv;
     }
 
+    /*! Commit changes to database */
+    void PointEditor::onCommit ()
+    {
+      Database::Point point = _model->getPoint ();
+      QString id = point.getId ();
+
+      point.setDescription (_ui->_description_w->text ());
+
+      QStringList tags = _ui->_tags_w->text ().split (',');
+      for (int i=0; i < tags.size (); ++i)
+        tags[i] = tags[i].trimmed ();
+
+      point.setTags (tags);
+
+      _database->setPoint (id, point);
+    }
+
     /*! Called when a new point should be added */
     void PointEditor::onAdd ()
     {
@@ -286,6 +308,8 @@ namespace HIP {
 
       QModelIndex index = indices.front ();
 
+      setEnabled (false);
+
       QPointF coordinate;
       if (_iv->selectCoordinate (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString (), &coordinate))
         {
@@ -293,15 +317,22 @@ namespace HIP {
           _database->setSelected (_model->getPoint ().getId (), Database::Database::EXCLUSIV);
         }
 
+      setEnabled (true);
+
       updateSensitivity ();
     }
 
     /*! Update editor content on point selection changes */
     void PointEditor::onPointSelectionChanged (const QString& id)
     {
+      QSignalBlocker blocker (this);
+
       const Database::Point& point = _database->getPoint (id);
 
+      QSignalBlocker name_blocker (_ui->_name_w);
       _ui->_name_w->setText (point.getId ());
+
+      QSignalBlocker description_blocker (_ui->_description_w);
       _ui->_description_w->setText (point.getDescription ());
 
       QString tags;
@@ -312,6 +343,7 @@ namespace HIP {
           separator = ",";
         }
 
+      QSignalBlocker tags_blocker (_ui->_tags_w);
       _ui->_tags_w->setText (tags);
 
       _model->setPoint (point);

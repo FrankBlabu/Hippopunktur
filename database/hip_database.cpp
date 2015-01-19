@@ -410,6 +410,7 @@ namespace HIP {
                       if (!description_e.firstChild ().isCharacterData ())
                         throw Exception (tr ("Character data expected for point description"));
 
+
                       point.setDescription (description_e.firstChild ().toCharacterData ().data ());
 
                       //
@@ -478,6 +479,9 @@ namespace HIP {
     /* Access point with the given id */
     const Point& Database::getPoint (const QString& id) const
     {
+      if (!_point_indices.contains (id))
+        qWarning () << "ERROR !";
+
       Q_ASSERT (_point_indices.contains (id));
       return _points.at (_point_indices.value (id));
     }
@@ -490,10 +494,12 @@ namespace HIP {
       Q_ASSERT (index >= 0 && index < _points.size ());
       _points[index] = point;
 
+      std::sort (_points.begin (), _points.end (), PointComparator ());
+
       computeIndices ();
       computeTags ();
 
-      emit pointChanged (id);
+      emit dataChanged ();
     }
 
     /*! Get image entry from database */
@@ -611,6 +617,13 @@ namespace HIP {
           index = i;
 
       return index;
+    }
+
+    /*! Generate XML representation of the database */
+    QString Database::toXML () const
+    {
+      qWarning () << "Not implemented.";
+      return QString ();
     }
 
   }
