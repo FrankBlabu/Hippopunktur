@@ -5,12 +5,15 @@
  */
 
 #include "HIPGuiMainWindow.h"
+
+#include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 #include "explorer/HIPExplorer.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gui/HIPGuiPointEditor.h"
 #include "image/HIPImageImageView.h"
+
 #include "ui_hip_gui_main_window.h"
 
 #include <QApplication>
@@ -93,6 +96,7 @@ namespace HIP {
       _point_editor (0)
     {
       _ui->setupUi (this);
+      new Tools::StatusBar (_ui->_status_bar_w);
 
       Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
 

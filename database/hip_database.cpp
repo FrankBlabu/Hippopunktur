@@ -520,8 +520,6 @@ namespace HIP {
       int index = findIndex (id);
       Q_ASSERT (index >= 0);
 
-      qDebug () << "Set: " << id << ", " << position;
-
       Point& point = _points[index];
       QList<Position> positions = point.getPositions ();
 

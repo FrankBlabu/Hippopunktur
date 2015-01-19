@@ -53,7 +53,9 @@ namespace HIP {
       PointEditorModel (Database::Database* database, QObject* parent);
       virtual ~PointEditorModel ();
 
+      const Database::Point& getPoint () const;
       void setPoint (const Database::Point& point);
+
       QModelIndex getImageIndex (const QString& id) const;
 
       virtual int columnCount (const QModelIndex& parent) const;
@@ -86,6 +88,12 @@ namespace HIP {
     /*! Destructor */
     PointEditorModel::~PointEditorModel ()
     {
+    }
+
+    /*! Get edited point */
+    const Database::Point& PointEditorModel::getPoint () const
+    {
+      return _database->getPoint (_id);
     }
 
     /*! Set point to be displayed */
@@ -280,7 +288,10 @@ namespace HIP {
 
       QPointF coordinate;
       if (_iv->selectCoordinate (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString (), &coordinate))
-        _model->setData (index, qVariantFromValue (coordinate), PointEditorModel::Role::COORDINATE);
+        {
+          _model->setData (index, qVariantFromValue (coordinate), PointEditorModel::Role::COORDINATE);
+          _database->setSelected (_model->getPoint ().getId (), Database::Database::EXCLUSIV);
+        }
 
       updateSensitivity ();
     }

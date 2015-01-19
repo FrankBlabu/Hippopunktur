@@ -22,7 +22,8 @@ SOURCES += \
     image/hip_image_imageview.cpp \
     core/hip_image_loader.cpp \
     gui/hip_gui_point_editor.cpp \
-    gui/hip_gui_main_window.cpp
+    gui/hip_gui_main_window.cpp \
+    core/hip_status_bar.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -43,7 +44,8 @@ HEADERS += \
     image/HIPImageImageView.h \
     core/HIPImageLoader.h \
     gui/HIPGuiMainWindow.h \
-    gui/HIPGuiPointEditor.h
+    gui/HIPGuiPointEditor.h \
+    core/HIPStatusBar.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \

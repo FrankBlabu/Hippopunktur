@@ -9,6 +9,7 @@
 
 #include "core/HIPException.h"
 #include "core/HIPImageLoader.h"
+#include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 
@@ -78,7 +79,9 @@ namespace HIP {
       _selection = new QEventLoop (this);
       setCursor (Qt::CrossCursor);
 
+      Tools::StatusBar::showMessage (tr ("Select coordinate in image with mouse click..."));
       _selection->exec ();
+      Tools::StatusBar::clearMessage ();
 
       unsetCursor ();
       delete _selection;
