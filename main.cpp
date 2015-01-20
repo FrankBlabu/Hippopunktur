@@ -11,7 +11,6 @@
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
-#include "explorer/HIPSortFilterProxyModel.h"
 #include "gui/HIPGuiMainWindow.h"
 
 int main (int argc, char* argv[])
@@ -22,7 +21,6 @@ int main (int argc, char* argv[])
 
   app.setStyleSheet (HIP::Tools::loadResource<QString> (":/assets/style/hippopunktur.css"));
 
-  qmlRegisterType<HIP::Explorer::SortFilterProxyModel> ("com.blankenburg.hippopunktur", 1, 0, "SortFilterProxyModel");
   qmlRegisterType<HIP::Database::Database> ("com.blankenburg.hippopunktur", 1, 0, "Database");
 
   try

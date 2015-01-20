@@ -194,9 +194,7 @@ namespace HIP {
       connect (_ui->_edit_w, SIGNAL (clicked (bool)), SLOT (onEdit ()));
 
       connect (_database, &Database::Database::databaseChanged, this, &PointEditor::onDatabaseChanged);
-      connect (_ui->_positions_w->selectionModel (),
-               SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
-               SLOT (onSelectionChanged (const QItemSelection&)));
+      connect (_ui->_positions_w->selectionModel (), &QItemSelectionModel::selectionChanged, this, &PointEditor::onSelectionChanged);
 
       updateSensitivity ();
     }
@@ -292,6 +290,8 @@ namespace HIP {
 
     void PointEditor::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
+      Q_UNUSED (id);
+
       switch (reason)
         {
         case Database::Database::Reason::DATA:
@@ -331,11 +331,17 @@ namespace HIP {
     }
 
     /*! Called when the selection in the positions list changed */
-    void PointEditor::onSelectionChanged (const QItemSelection& selected)
+    void PointEditor::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
     {
-      Q_ASSERT (selected.indexes ().size () <= 1);
-      _database->setVisibleImage (_model->data (selected.indexes ().front (), PointEditorModel::Role::IMAGE_ID).toString ());
-      updateSensitivity ();
+      Q_UNUSED (selected);
+      Q_UNUSED (deselected);
+
+      if (_ui->_positions_w->selectionModel ()->selectedRows ().size () == 1)
+        {
+          _database->setVisibleImage (_model->data (_ui->_positions_w->selectionModel ()->selectedRows ().front (),
+                                                    PointEditorModel::Role::IMAGE_ID).toString ());
+          updateSensitivity ();
+        }
     }
 
     /*! Update color displayed in the color selection button */
@@ -358,7 +364,9 @@ namespace HIP {
     {
       bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
 
+      _ui->_positions_w->setEnabled (_point.isValid ());
       _ui->_color_w->setEnabled (_point.isValid ());
+      _ui->_add_w->setEnabled (_point.isValid ());
       _ui->_remove_w->setEnabled (selected);
       _ui->_edit_w->setEnabled (selected);
     }

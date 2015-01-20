@@ -116,10 +116,11 @@ namespace HIP {
     /*! Constructor */
     ExplorerView::ExplorerView (Database::Database* database, QWidget* parent)
       : QWidget (parent),
-        _ui       (new Ui::HIP_Explorer_ExplorerView),
-        _database (database),
-        _model    (new Database::DatabaseModel (database, this)),
-        _filter   (new Database::DatabaseFilterProxyModel (database, this))
+        _ui                 (new Ui::HIP_Explorer_ExplorerView),
+        _database           (database),
+        _model              (new Database::DatabaseModel (database, this)),
+        _filter             (new Database::DatabaseFilterProxyModel (database, this)),
+        _update_in_progress (false)
     {
       _ui->setupUi (this);
 
@@ -140,47 +141,66 @@ namespace HIP {
 
     void ExplorerView::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
     {
-      foreach (QModelIndex index, selected.indexes ())
+      if (!_update_in_progress)
         {
-          QString id = _model->data (index, Database::DatabaseModel::Role::ID).toString ();
+          _update_in_progress = true;
 
-          if (!_database->getPoint (id).getSelected ())
-            _database->setSelected (id, Database::Database::SelectionMode::SELECT);
-        }
+          foreach (QModelIndex index, selected.indexes ())
+            {
+              QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
 
-      foreach (QModelIndex index, deselected.indexes ())
-        {
-          QString id = _model->data (index, Database::DatabaseModel::Role::ID).toString ();
+              if (!_database->getPoint (id).getSelected ())
+                _database->select (id, Database::Database::SelectionMode::SELECT);
+            }
 
-          if (_database->getPoint (id).getSelected ())
-            _database->setSelected (id, Database::Database::SelectionMode::DESELECT);
+          foreach (QModelIndex index, deselected.indexes ())
+            {
+              QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
+
+              if (_database->getPoint (id).getSelected ())
+                _database->select (id, Database::Database::SelectionMode::DESELECT);
+            }
+
+          _update_in_progress = false;
         }
     }
 
-
     void ExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
-      switch (reason)
+      if (!_update_in_progress)
         {
-        case Database::Database::Reason::SELECTION:
-          {
-            Q_ASSERT (!id.isEmpty ());
+          _update_in_progress = true;
 
-            QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
-            Q_ASSERT (index.isValid ());
+          qDebug () << "* Changed, reason=" << reason << ", id=" << id;
 
-            if (_database->getPoint (id).getSelected ())
-              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-            else
-              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
-          }
-          break;
+          switch (reason)
+            {
+            case Database::Database::Reason::SELECTION:
+              {
+                Q_ASSERT (!id.isEmpty ());
 
-        case Database::Database::Reason::DATA:
-        case Database::Database::Reason::POINT:
-        case Database::Database::Reason::FILTER:
-        case Database::Database::Reason::VISIBLE_IMAGE:
-          break;
+                QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
+                qDebug () << "  index=" << index;
+
+                Q_ASSERT (index.isValid ());
+
+                qDebug () << "  point=" << id << ", selected=" << _database->getPoint (id).getSelected ();
+
+                if (_database->getPoint (id).getSelected ())
+                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+                else
+                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect);
+              }
+              break;
+
+            case Database::Database::Reason::DATA:
+            case Database::Database::Reason::POINT:
+            case Database::Database::Reason::FILTER:
+            case Database::Database::Reason::VISIBLE_IMAGE:
+              break;
+            }
+
+          _update_in_progress = false;
         }
     }
 

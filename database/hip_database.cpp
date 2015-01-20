@@ -585,31 +585,50 @@ namespace HIP {
     }
 
     /*! Set point selection status */
-    void Database::setSelected (const QString &id, SelectionMode_t mode)
+    void Database::select (const QString &id, SelectionMode_t mode)
     {
       int index = findIndex (id);
       Q_ASSERT (index >= 0 && index < _points.size ());
+
+      qDebug () << "select (id=" << id << ", mode=" << mode << ")";
 
       Point& point = _points[index];
 
       switch (mode)
         {
         case SelectionMode::SELECT:
-          point.setSelected (true);
-          emit databaseChanged (Reason::SELECTION, point.getId ());
+          if (!point.getSelected ())
+            {
+              point.setSelected (true);
+              emit databaseChanged (Reason::SELECTION, point.getId ());
+            }
           break;
 
         case SelectionMode::DESELECT:
-          point.setSelected (false);
-          emit databaseChanged (Reason::SELECTION, point.getId ());
+          if (point.getSelected ())
+            {
+              point.setSelected (false);
+              emit databaseChanged (Reason::SELECTION, point.getId ());
+            }
           break;
 
         case SelectionMode::EXCLUSIV:
-          for (int i=0; i < _points.size (); ++i)
-            _points[i].setSelected (false);
-          point.setSelected (true);
+          {
+            for (int i=0; i < _points.size (); ++i)
+              {
+                if (_points[i].getSelected () && _points[i].getId () != point.getId ())
+                  {
+                    _points[i].setSelected (false);
+                    emit databaseChanged (Reason::SELECTION, _points[i].getId ());
+                  }
+              }
 
-          emit databaseChanged (Reason::DATA, point.getId ());
+            if (!point.getSelected ())
+              {
+                point.setSelected (true);
+                emit databaseChanged (Reason::SELECTION, point.getId ());
+              }
+          }
           break;
         }
     }

@@ -222,8 +222,6 @@ namespace HIP {
       dialog.setDefaultSuffix (".xml");
       dialog.setDirectory (QStandardPaths::writableLocation (QStandardPaths::DocumentsLocation));
 
-      qDebug () << QStandardPaths::writableLocation (QStandardPaths::DocumentsLocation);
-
       if (dialog.exec ())
         {
           Q_ASSERT (dialog.selectedFiles ().size () == 1);

@@ -265,7 +265,7 @@ namespace HIP {
                       else
                         mode = Database::Database::SelectionMode::EXCLUSIV;
 
-                      _database->setSelected (id, mode);
+                      _database->select (id, mode);
                     }
                 }
 

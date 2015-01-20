@@ -15,7 +15,6 @@ SOURCES += \
     database/hip_database.cpp \
     core/hip_exception.cpp \
     database/hip_database_model.cpp \
-    explorer/hip_sort_filter_proxy_model.cpp \
     core/hip_tools.cpp \
     explorer/hip_explorer_tagselector.cpp \
     image/hip_image_imageview.cpp \
@@ -37,7 +36,6 @@ HEADERS += \
     database/HIPDatabase.h \
     core/HIPException.h \
     database/HIPDatabaseModel.h \
-    explorer/HIPSortFilterProxyModel.h \
     core/HIPTools.h \
     explorer/HIPExplorerTagSelector.h \
     image/HIPImageImageView.h \

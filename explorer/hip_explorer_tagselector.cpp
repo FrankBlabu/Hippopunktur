@@ -96,11 +96,11 @@ namespace HIP {
         {
         case Database::Database::Reason::DATA:
         case Database::Database::Reason::POINT:
-        case Database::Database::Reason::SELECTION:
           beginResetModel ();
           endResetModel ();
           break;
 
+        case Database::Database::Reason::SELECTION:
         case Database::Database::Reason::FILTER:
         case Database::Database::Reason::VISIBLE_IMAGE:
           break;
@@ -215,20 +215,37 @@ namespace HIP {
     /*! Filter text changed */
     void TagSelector::onTextChanged (const QString& text)
     {
-      _database->setFilter (text);
+      foreach (const Database::Point& point, _database->getPoints ())
+        if (point.getSelected () && !point.matches (text))
+          _database->select (point.getId (), Database::Database::SelectionMode::DESELECT);
+
+      if (_database->getFilter () != text)
+        _database->setFilter (text);
     }
 
     /* Item has been selected */
     void TagSelector::onActivated (int index)
     {
       Q_ASSERT (index >= 0 && index < _database->getTags ().size ());
-      _ui->_input_w->setCurrentText (_database->getTags ()[index]);
+      QString tag = _database->getTags ()[index];
+
+      {
+        QSignalBlocker blocker (_ui->_input_w);
+        _ui->_input_w->setCurrentText (tag);
+      }
+
+      onTextChanged (tag);
     }
 
     /* Clear tag selector */
     void TagSelector::onClear ()
     {
-      _ui->_input_w->setCurrentText (QString ());
+      {
+        QSignalBlocker blocker (_ui->_input_w);
+        _ui->_input_w->setCurrentText (QString ());
+      }
+
+      onTextChanged (QString ());
     }
 
   }

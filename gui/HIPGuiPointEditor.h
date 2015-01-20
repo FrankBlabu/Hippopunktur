@@ -89,7 +89,7 @@ namespace HIP {
       void onSelectColor ();
 
       void onValueChanged ();
-      void onSelectionChanged (const QItemSelection& selected);
+      void onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected);
 
     signals:
       void imageSelected (const QString& id);
