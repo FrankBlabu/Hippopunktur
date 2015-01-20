@@ -9,7 +9,7 @@
 #include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
-#include "explorer/HIPExplorer.h"
+#include "explorer/HIPQMLExplorer.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gui/HIPGuiPointEditor.h"
 #include "image/HIPImageImageView.h"

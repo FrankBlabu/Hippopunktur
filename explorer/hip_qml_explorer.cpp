@@ -4,7 +4,7 @@
  * Frank Blankenburg, Jan. 2015
  */
 
-#include "HIPExplorer.h"
+#include "HIPQMLExplorer.h"
 #include "core/HIPTools.h"
 #include "core/HIPException.h"
 #include "database/HIPDatabase.h"
