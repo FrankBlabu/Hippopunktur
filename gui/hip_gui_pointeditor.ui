@@ -125,6 +125,13 @@
       <property name="spacing">
        <number>10</number>
       </property>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="_name_w">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="_name_label_w">
         <property name="text">
@@ -132,12 +139,8 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="_name_w">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="_description_w"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="_description_label_w">
@@ -146,8 +149,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="_description_w"/>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="_tags_w"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="_tags_label_w">
@@ -156,8 +159,19 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="_tags_w"/>
+      <item row="3" column="0">
+       <widget class="QLabel" name="_color_label_w">
+        <property name="text">
+         <string>Color</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="_color_w">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -5,12 +5,37 @@
         <file>core/AboutDialog.qml</file>
         <file>data/database.xml</file>
         <file>assets/about.html</file>
-        <file>assets/hippopunktur.css</file>
         <file>assets/images/main.jpg</file>
         <file>assets/images/front.jpg</file>
         <file>assets/images/back.jpg</file>
         <file>assets/images/top.jpg</file>
         <file>assets/images/bottom.jpg</file>
         <file>assets/icons/busy_indicator.png</file>
+        <file>assets/style/branch_closed.png</file>
+        <file>assets/style/branch_closed-on.png</file>
+        <file>assets/style/branch_open.png</file>
+        <file>assets/style/branch_open-on.png</file>
+        <file>assets/style/checkbox.png</file>
+        <file>assets/style/checkbox_indeterminate.png</file>
+        <file>assets/style/close.png</file>
+        <file>assets/style/down_arrow.png</file>
+        <file>assets/style/down_arrow_disabled.png</file>
+        <file>assets/style/Hmovetoolbar.png</file>
+        <file>assets/style/Hsepartoolbar.png</file>
+        <file>assets/style/left_arrow.png</file>
+        <file>assets/style/left_arrow_disabled.png</file>
+        <file>assets/style/right_arrow.png</file>
+        <file>assets/style/right_arrow_disabled.png</file>
+        <file>assets/style/sizegrip.png</file>
+        <file>assets/style/hippopunktur.css</file>
+        <file>assets/style/stylesheet-branch-end.png</file>
+        <file>assets/style/stylesheet-branch-more.png</file>
+        <file>assets/style/stylesheet-vline.png</file>
+        <file>assets/style/transparent.png</file>
+        <file>assets/style/undock.png</file>
+        <file>assets/style/up_arrow.png</file>
+        <file>assets/style/up_arrow_disabled.png</file>
+        <file>assets/style/Vmovetoolbar.png</file>
+        <file>assets/style/Vsepartoolbar.png</file>
     </qresource>
 </RCC>

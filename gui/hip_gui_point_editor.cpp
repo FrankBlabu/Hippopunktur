@@ -10,8 +10,13 @@
 #include "database/HIPDatabase.h"
 
 #include <QAbstractItemModel>
+#include <QColorDialog>
 #include <QItemSelectionModel>
+#include <QFont>
+#include <QFontMetrics>
 #include <QLineEdit>
+#include <QPainter>
+#include <QPixmap>
 #include <QSignalBlocker>
 #include <QDebug>
 
@@ -238,6 +243,7 @@ namespace HIP {
         _iv       (0)
     {
       _ui->setupUi (this);
+
       _ui->_positions_w->setModel (_model);
 
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::IMAGE, QHeaderView::ResizeToContents);
@@ -246,6 +252,7 @@ namespace HIP {
       connect (_ui->_name_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
       connect (_ui->_description_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
       connect (_ui->_tags_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
+      connect (_ui->_color_w, SIGNAL (clicked (bool)), SLOT (onSelectColor ()));
 
       connect (_ui->_add_w, SIGNAL (clicked (bool)), SLOT (onAdd ()));
       connect (_ui->_remove_w, SIGNAL (clicked (bool)), SLOT (onRemove ()));
@@ -274,7 +281,6 @@ namespace HIP {
     void PointEditor::onCommit ()
     {
       Database::Point point = _model->getPoint ();
-      QString id = point.getId ();
 
       point.setDescription (_ui->_description_w->text ());
 
@@ -284,7 +290,7 @@ namespace HIP {
 
       point.setTags (tags);
 
-      _database->setPoint (id, point);
+      _database->setPoint (point.getId (), point);
     }
 
     /*! Called when a new point should be added */
@@ -322,6 +328,20 @@ namespace HIP {
       updateSensitivity ();
     }
 
+    /*! Select point color */
+    void PointEditor::onSelectColor ()
+    {
+      Database::Point point = _model->getPoint ();
+
+      QColor color = QColorDialog::getColor (_model->getPoint ().getColor (), this, tr ("Select point color"));
+      if (color.isValid ())
+        {
+          point.setColor (color);
+          _database->setPoint (point.getId (), point);
+          updateColorButton ();
+        }
+    }
+
     /*! Update editor content on point selection changes */
     void PointEditor::onPointSelectionChanged (const QString& id)
     {
@@ -348,6 +368,7 @@ namespace HIP {
 
       _model->setPoint (point);
 
+      updateColorButton ();
       updateSensitivity ();
     }
 
@@ -370,6 +391,21 @@ namespace HIP {
         _ui->_positions_w->selectionModel ()->clear ();
     }
 
+    /*! Update color displayed in the color selection button */
+    void PointEditor::updateColorButton ()
+    {
+      QFontMetrics metrics (_ui->_color_w->font ());
+      QPixmap icon (metrics.height (), metrics.height ());
+
+      {
+        QPainter painter (&icon);
+        painter.fillRect (QRectF (0, 0, icon.width (), icon.height ()), _model->getPoint ().getColor ());
+      }
+
+      _ui->_color_w->setIcon (icon);
+    }
+
+    /*! Update widget sensitivities */
     void PointEditor::updateSensitivity ()
     {
       bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();

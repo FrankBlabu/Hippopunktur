@@ -54,6 +54,7 @@ namespace HIP {
       void onAdd ();
       void onRemove ();
       void onEdit ();
+      void onSelectColor ();
 
       void onCommit ();
       void onPointSelectionChanged (const QString& id);
@@ -64,6 +65,7 @@ namespace HIP {
       void imageSelected (const QString& id);
 
     private:
+      void updateColorButton ();
       void updateSensitivity ();
 
     private:
