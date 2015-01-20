@@ -12,10 +12,102 @@
 
 #include <QDebug>
 #include <QItemSelectionModel>
+#include <QLabel>
+#include <QPainter>
+#include <QSharedPointer>
 #include <QSignalBlocker>
+#include <QStyledItemDelegate>
+#include <QTextDocument>
 
 namespace HIP {
   namespace Explorer {
+
+    //#**********************************************************************
+    // CLASS HIP::Explorer::ExplorerViewDelegate
+    //#**********************************************************************
+
+    /*
+     * Delegate for painting the explorer items
+     */
+    class ExplorerViewDelegate : public QStyledItemDelegate
+    {
+    public:
+      ExplorerViewDelegate (const Database::Database* database, QObject* parent);
+      virtual ~ExplorerViewDelegate ();
+
+      virtual void paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+      virtual QSize	sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const;
+
+    private:
+      void setupLabel (const Database::Point& point, const QSize& proposed_size) const;
+
+    private:
+      const Database::Database* _database;
+      mutable QLabel* _label;
+    };
+
+    /* Constructor */
+    ExplorerViewDelegate::ExplorerViewDelegate (const Database::Database* database, QObject* parent)
+      : QStyledItemDelegate (parent),
+        _database (database),
+        _label    (new QLabel)
+    {
+      _label->setObjectName ("HIP_ExplorerViewDelegate_ItemLabel");
+    }
+
+    /* Destructor */
+    ExplorerViewDelegate::~ExplorerViewDelegate ()
+    {
+      delete _label;
+    }
+
+    /* Paint item */
+    void ExplorerViewDelegate::paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+      const Database::Point& point = _database->getPoint (index.model ()->data (index, Database::DatabaseModel::Role::ID).toString ());
+      setupLabel (point, option.rect.size ());
+
+      if (point.getSelected ())
+        {
+          painter->save ();
+          painter->translate (option.rect.topLeft ());
+          _label->render (painter);
+          painter->restore ();
+        }
+      else
+        QStyledItemDelegate::paint (painter, option, index);
+    }
+
+    /* Compute size hint */
+    QSize ExplorerViewDelegate::sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+      QSize size = QStyledItemDelegate::sizeHint (option, index);
+
+      const Database::Point& point = _database->getPoint (index.model ()->data (index, Database::DatabaseModel::Role::ID).toString ());
+      setupLabel (point, size);
+
+      if (point.getSelected ())
+        size = _label->size ();
+
+      return size;
+    }
+
+    /* Setup label to display the text belonging to the given point */
+    void ExplorerViewDelegate::setupLabel (const Database::Point& point, const QSize& proposed_size) const
+    {
+      _label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Preferred);
+      _label->setMinimumWidth (proposed_size.width ());
+      _label->setMaximumWidth (proposed_size.width ());
+
+      _label->setText (QString ("<b>%1</b><p>%2")
+                       .arg (point.getId ())
+                       .arg (point.getDescription ()));
+
+      _label->adjustSize ();
+      _label->update ();
+    }
+
+
 
     //#**********************************************************************
     // CLASS HIP::Explorer::ExplorerView
@@ -33,6 +125,7 @@ namespace HIP {
 
       _filter->setSourceModel (_model);
       _ui->_tree_w->setModel (_filter);
+      _ui->_tree_w->setItemDelegate (new ExplorerViewDelegate (database, this));
 
       connect (_ui->_tree_w->selectionModel (),
                SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),

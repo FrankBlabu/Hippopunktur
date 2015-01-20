@@ -606,6 +606,17 @@ QLabel
     border: 0px solid black;
 }
 
+/*--- Label used to draw selected point explorer elements */
+QLabel#HIP_ExplorerViewDelegate_ItemLabel
+{
+   color: white;
+   background-color: #78879b;
+   margin: 1px;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 3px;
+}
+
 
 QTabWidget::pane {
     border: 1px solid #3A3939;
