@@ -41,6 +41,24 @@ namespace HIP {
     return stream;
   }
 
+  QDebug operator<< (QDebug stream, const Database::Database::SelectionMode_t mode)
+  {
+    switch (mode)
+      {
+      case Database::Database::SelectionMode::SELECT:
+        stream << "SELECT";
+        break;
+      case Database::Database::SelectionMode::DESELECT:
+        stream << "DESELECT";
+        break;
+      case Database::Database::SelectionMode::EXCLUSIV:
+        stream << "EXCLUSIVE";
+        break;
+      }
+
+    return stream;
+  }
+
 
   namespace Database {
 
@@ -562,33 +580,31 @@ namespace HIP {
     }
 
     /*! Set point selection status */
-    void Database::setSelected (const QString &id, SelectionMode mode)
+    void Database::setSelected (const QString &id, SelectionMode_t mode)
     {
       int index = findIndex (id);
       Q_ASSERT (index >= 0 && index < _points.size ());
 
       Point& point = _points[index];
 
+      qDebug () << "Select: id=" << id << ", mode=" << mode;
+
       switch (mode)
         {
-        case SELECT:
+        case SelectionMode::SELECT:
           point.setSelected (true);
           emit selectionChanged (id);
           break;
 
-        case DESELECT:
+        case SelectionMode::DESELECT:
           point.setSelected (false);
           emit selectionChanged (id);
           break;
 
-        case EXCLUSIV:
+        case SelectionMode::EXCLUSIV:
           clearSelection ();
           point.setSelected (true);
           emit selectionChanged (id);
-          break;
-
-        case EXPAND:
-          qWarning () << "Not implemented !";
           break;
         }
     }

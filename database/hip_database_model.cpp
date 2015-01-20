@@ -178,7 +178,7 @@ namespace HIP {
             {
             case Role::SELECTED:
               {
-                _database->setSelected (point.getId (), value.toBool () ? Database::SELECT : Database::DESELECT) ;
+                _database->setSelected (point.getId (), value.toBool () ? Database::SelectionMode::SELECT : Database::SelectionMode::DESELECT) ;
                 emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
               }
               break;

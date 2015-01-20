@@ -323,7 +323,7 @@ namespace HIP {
       if (_iv->selectCoordinate (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString (), &coordinate))
         {
           _model->setData (index, qVariantFromValue (coordinate), PointEditorModel::Role::COORDINATE);
-          _database->setSelected (_model->getPoint ().getId (), Database::Database::EXCLUSIV);
+          _database->setSelected (_model->getPoint ().getId (), Database::Database::SelectionMode::EXCLUSIV);
         }
 
       setEnabled (true);

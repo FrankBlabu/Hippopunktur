@@ -160,17 +160,17 @@ namespace HIP {
     {
       foreach (QModelIndex index, selected.indexes ())
         _database->setSelected (_model->data (index, Database::DatabaseModel::Role::ID).toString (),
-                                Database::Database::SELECT);
+                                Database::Database::SelectionMode::SELECT);
 
       foreach (QModelIndex index, deselected.indexes ())
         _database->setSelected (_model->data (index, Database::DatabaseModel::Role::ID).toString (),
-                                Database::Database::DESELECT);
+                                Database::Database::SelectionMode::DESELECT);
     }
 
 
     void ExplorerView::onDatabaseSelectionChanged (const QString& id)
     {
-      QSignalBlocker blocker (this);
+      QSignalBlocker blocker (_ui->_tree_w);
 
       if (_database->getPoint (id).getSelected ())
         _ui->_tree_w->selectionModel ()->select (_model->getIndex (id), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);

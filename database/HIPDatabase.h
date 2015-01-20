@@ -140,7 +140,7 @@ namespace HIP {
       Q_OBJECT
 
       Q_PROPERTY (QList<QString> tags READ getTags)
-      Q_ENUMS (SelectionMode)
+      Q_ENUMS (SelectionMode_t)
 
     private:
       Database (const Database& toCopy) { Q_UNUSED (toCopy); }
@@ -160,9 +160,10 @@ namespace HIP {
       const Image& getImage (const QString& id) const;
       void setPosition (const QString& id, const Position& position);
 
-      enum SelectionMode { SELECT=0, DESELECT, EXCLUSIV, EXPAND };
+      struct SelectionMode { enum Type_t { SELECT=0, DESELECT, EXCLUSIV }; };
+      typedef SelectionMode::Type_t SelectionMode_t;
 
-      Q_INVOKABLE void setSelected (const QString& id, SelectionMode mode);
+      Q_INVOKABLE void setSelected (const QString& id, SelectionMode_t mode);
       Q_INVOKABLE void clearSelection ();
 
       QString toXML () const;
@@ -192,6 +193,7 @@ namespace HIP {
 
   QDebug operator<< (QDebug stream, const Database::Position& position);
   QDebug operator<< (QDebug stream, const Database::Point& point);
+  QDebug operator<< (QDebug stream, const Database::Database::SelectionMode_t mode);
 }
 
 Q_DECLARE_METATYPE (HIP::Database::Position)
