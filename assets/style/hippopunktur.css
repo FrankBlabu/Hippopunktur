@@ -28,7 +28,7 @@ QToolTip
 QWidget
 {
     color: silver;
-    background-color: #302F2F;
+    background-color: #4f4f4f;
     selection-background-color:#78879b;
     selection-color: black;
     background-clip: border;
@@ -50,7 +50,7 @@ QWidget:item:selected
 
 QMenuBar
 {
-    background-color: #302F2F;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #7d7d7d, stop: 1 #585858);
     color: silver;
 }
 
@@ -88,6 +88,7 @@ QMenu::icon
 
 QMenu::item
 {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #7d7d7d, stop: 1 #585858);
     padding: 5px 30px 5px 30px;
     margin-left: 5px;
     border: 1px solid transparent;

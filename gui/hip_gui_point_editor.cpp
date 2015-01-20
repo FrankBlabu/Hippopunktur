@@ -14,6 +14,7 @@
 #include <QItemSelectionModel>
 #include <QFont>
 #include <QFontMetrics>
+#include <QMessageBox>
 #include <QLineEdit>
 #include <QPainter>
 #include <QPixmap>
@@ -296,12 +297,14 @@ namespace HIP {
     /*! Called when a new point should be added */
     void PointEditor::onAdd ()
     {
+      QMessageBox::warning (this, tr ("Not implemented"), tr ("Adding points interactively is not implemented yet.<p>Export and edit database instead."));
       updateSensitivity ();
     }
 
     /*! Called when the current point shall be removed */
     void PointEditor::onRemove ()
     {
+      QMessageBox::warning (this, tr ("Not implemented"), tr ("Removing points interactively is not implemented yet.<p>Export and edit database instead."));
       updateSensitivity ();
     }
 
@@ -408,9 +411,16 @@ namespace HIP {
     /*! Update widget sensitivities */
     void PointEditor::updateSensitivity ()
     {
-      bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
-      _ui->_remove_w->setEnabled (selected);
-      _ui->_edit_w->setEnabled (selected);
+      bool position_selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
+
+      bool point_selected = false;
+      foreach (const Database::Point& point, _database->getPoints ())
+        if (point.getSelected ())
+          point_selected = true;
+
+      _ui->_color_w->setEnabled (point_selected);
+      _ui->_remove_w->setEnabled (position_selected);
+      _ui->_edit_w->setEnabled (position_selected);
     }
 
   }

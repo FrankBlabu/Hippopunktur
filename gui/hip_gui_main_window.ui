@@ -115,17 +115,6 @@
    <addaction name="_menu_help_w"/>
   </widget>
   <widget class="QStatusBar" name="_status_bar_w"/>
-  <widget class="QToolBar" name="_toolbar_w">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
   <action name="_action_exit">
    <property name="text">
     <string>Exit</string>
