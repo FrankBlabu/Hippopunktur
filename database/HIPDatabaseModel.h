@@ -41,7 +41,8 @@ namespace HIP {
     {
     public:
       struct Role { enum Type_t {
-          NAME = Qt::UserRole + 1,
+          ID = Qt::UserRole + 1,
+          NAME,
           DESCRIPTION,
           SELECTED,
           POINT

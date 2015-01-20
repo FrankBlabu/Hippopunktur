@@ -90,6 +90,8 @@ namespace HIP {
     QHash<int, QByteArray> DatabaseModel::roleNames () const
     {
       QHash<int, QByteArray> roles;
+
+      roles[Role::ID]          = "id";
       roles[Role::NAME]        = "name";
       roles[Role::DESCRIPTION] = "description";
       roles[Role::SELECTED]    = "selected";
@@ -140,6 +142,7 @@ namespace HIP {
           switch (role)
             {
             case Qt::DisplayRole:
+            case Role::ID:
             case Role::NAME:
               result = qVariantFromValue (point.getId ());
               break;

@@ -9,7 +9,7 @@
 #include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
-#include "explorer/HIPQMLExplorer.h"
+#include "explorer/HIPExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gui/HIPGuiPointEditor.h"
 #include "image/HIPImageImageView.h"
@@ -105,7 +105,7 @@ namespace HIP {
 
       Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
 
-      Explorer::Explorer* explorer = Tools::addToParent (new Explorer::Explorer (database, _ui->_explorer_w));
+      Explorer::ExplorerView* explorer = Tools::addToParent (new Explorer::ExplorerView (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
       _point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
