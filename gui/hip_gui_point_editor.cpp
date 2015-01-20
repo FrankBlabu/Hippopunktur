@@ -1,5 +1,4 @@
-/*
- * hip_gui_point_editor.cpp - Editor for the point database
+/* * hip_gui_point_editor.cpp - Editor for the point database
  *
  * Frank Blankenburg, Jan. 2015
  */
@@ -238,7 +237,25 @@ namespace HIP {
     /*! Called when a new point should be added */
     void PointEditor::onAdd ()
     {
-      QMessageBox::warning (this, tr ("Not implemented"), tr ("Adding image locations interactively is not implemented yet.<p>Export and edit database instead."));
+      QString image_id = _database->getVisibleImage ();
+
+      QPointF coordinate;
+      if (_iv->selectCoordinate (image_id, &coordinate))
+        {
+          QList<Database::Position> positions = _point.getPositions ();
+
+          Database::Position position;
+          position.setImage (image_id);
+          position.setCoordinate (coordinate);
+
+          positions.push_back (position);
+
+          _point.setPositions (positions);
+          _database->setPoint (_point);
+          _database->select (_point.getId (), Database::Database::SelectionMode::EXCLUSIV);
+          _database->setVisibleImage (image_id);
+        }
+
       updateSensitivity ();
     }
 
@@ -326,7 +343,6 @@ namespace HIP {
 
         case Database::Database::Reason::VISIBLE_IMAGE:
           {
-            qDebug () << "Image: " << id;
             QModelIndex index =  _model->getIndex (id);
             if (index.isValid ())
               _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
@@ -386,10 +402,15 @@ namespace HIP {
     void PointEditor::updateSensitivity ()
     {
       bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
+      bool current_image_present = false;
+
+      foreach (const Database::Position& position, _point.getPositions ())
+        if (position.getImage () == _database->getVisibleImage ())
+          current_image_present = true;
 
       _ui->_positions_w->setEnabled (_point.isValid ());
       _ui->_color_w->setEnabled (_point.isValid ());
-      _ui->_add_w->setEnabled (_point.isValid ());
+      _ui->_add_w->setEnabled (_point.isValid () && !current_image_present);
       _ui->_remove_w->setEnabled (selected);
       _ui->_edit_w->setEnabled (selected);
     }

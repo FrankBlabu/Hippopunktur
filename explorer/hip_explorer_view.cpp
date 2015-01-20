@@ -171,8 +171,6 @@ namespace HIP {
         {
           _update_in_progress = true;
 
-          qDebug () << "* Changed, reason=" << reason << ", id=" << id;
-
           switch (reason)
             {
             case Database::Database::Reason::SELECTION:
@@ -180,11 +178,7 @@ namespace HIP {
                 Q_ASSERT (!id.isEmpty ());
 
                 QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
-                qDebug () << "  index=" << index;
-
                 Q_ASSERT (index.isValid ());
-
-                qDebug () << "  point=" << id << ", selected=" << _database->getPoint (id).getSelected ();
 
                 if (_database->getPoint (id).getSelected ())
                   _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);

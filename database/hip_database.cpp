@@ -535,6 +535,11 @@ namespace HIP {
 
       std::sort (_points.begin (), _points.end (), PointComparator ());
 
+      if (_images.isEmpty ())
+        throw Exception (tr ("No images found in database."));
+
+      _visible_image = _images.front ().getId ();
+
       computeIndices ();
       computeTags ();
     }
@@ -589,8 +594,6 @@ namespace HIP {
     {
       int index = findIndex (id);
       Q_ASSERT (index >= 0 && index < _points.size ());
-
-      qDebug () << "select (id=" << id << ", mode=" << mode << ")";
 
       Point& point = _points[index];
 
