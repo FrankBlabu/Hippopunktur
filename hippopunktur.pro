@@ -23,7 +23,6 @@ SOURCES += \
     gui/hip_gui_point_editor.cpp \
     gui/hip_gui_main_window.cpp \
     core/hip_status_bar.cpp \
-    explorer/hip_qml_explorer.cpp \
     explorer/hip_explorer_view.cpp
 
 RESOURCES += \
@@ -46,7 +45,6 @@ HEADERS += \
     gui/HIPGuiMainWindow.h \
     gui/HIPGuiPointEditor.h \
     core/HIPStatusBar.h \
-    explorer/HIPQMLExplorer.h \
     explorer/HIPExplorerView.h
 
 FORMS += \

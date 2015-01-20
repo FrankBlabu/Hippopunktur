@@ -9,6 +9,9 @@
 
 #include <QWidget>
 #include <QPointF>
+#include <QAbstractItemModel>
+
+#include "database/HIPDatabase.h"
 
 class QItemSelection;
 
@@ -17,14 +20,43 @@ namespace Ui {
 }
 
 namespace HIP {
-
-  namespace Database {
-    class Database;
-  }
-
   namespace Gui {
 
-    class PointEditorModel;
+    /*
+     * Model for the point editor positions
+     */
+    class PointEditorModel : public QAbstractItemModel
+    {
+      Q_OBJECT
+
+    public:
+      struct Column { enum Type_t { IMAGE, COORDINATE }; };
+      typedef Column::Type_t Columm_t;
+
+      struct Role { enum Type_t { IMAGE_ID=Qt::UserRole + 1, COORDINATE }; };
+      typedef Role::Type_t Role_t;
+
+    public:
+      PointEditorModel (Database::Database* database, QObject* parent);
+      virtual ~PointEditorModel ();
+
+      virtual int columnCount (const QModelIndex& parent) const;
+      virtual int rowCount (const QModelIndex& parent) const;
+
+      virtual QModelIndex index (int row, int column, const QModelIndex& parent) const;
+      virtual QModelIndex parent (const QModelIndex& index) const;
+      virtual Qt::ItemFlags flags (const QModelIndex& index) const;
+
+      virtual QVariant data (const QModelIndex& index, int role) const;
+      virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
+
+    private slots:
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+
+    private:
+      Database::Database* _database;
+      Database::Point _point;
+    };
 
     /*!
      * Editor for the point database
@@ -56,13 +88,14 @@ namespace HIP {
       void onEdit ();
       void onSelectColor ();
 
-      void onCommit ();
-      void onPointSelectionChanged (const QString& id);
-      void onPositionSelectionChanged (const QItemSelection& selected);
-      void onCurrentImageChanged (const QString& id);
+      void onValueChanged ();
+      void onSelectionChanged (const QItemSelection& selected);
 
     signals:
       void imageSelected (const QString& id);
+
+    private slots:
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
 
     private:
       void updateColorButton ();
@@ -73,6 +106,8 @@ namespace HIP {
       Database::Database* _database;
       PointEditorModel* _model;
       ImageViewInterface* _iv;
+
+      Database::Point _point;
     };
 
   }

@@ -119,7 +119,7 @@ namespace HIP {
         _ui       (new Ui::HIP_Explorer_ExplorerView),
         _database (database),
         _model    (new Database::DatabaseModel (database, this)),
-        _filter   (new Database::DatabaseFilterProxyModel (this))
+        _filter   (new Database::DatabaseFilterProxyModel (database, this))
     {
       _ui->setupUi (this);
 
@@ -129,10 +129,8 @@ namespace HIP {
 
       connect (_ui->_tree_w->selectionModel (),
                SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
-               SLOT (onExplorerSelectionChanged (const QItemSelection&, const QItemSelection&)));
-      connect (_database, SIGNAL (selectionChanged (const QString&)),
-               SLOT (onDatabaseSelectionChanged (const QString&)));
-
+               SLOT (onSelectionChanged (const QItemSelection&, const QItemSelection&)));
+      connect (database, &Database::Database::databaseChanged, this, &ExplorerView::onDatabaseChanged);
     }
 
     ExplorerView::~ExplorerView ()
@@ -140,42 +138,50 @@ namespace HIP {
       delete _ui;
     }
 
-    void ExplorerView::onTagChanged (const QString& tag)
-    {
-      _database->clearSelection ();
-      _filter->setTag (tag);
-    }
-
-    void ExplorerView::onPointChanged (const QString& id)
-    {
-      _model->onChanged (id);
-    }
-
-    void ExplorerView::onDataChanged ()
-    {
-      _model->reset ();
-    }
-
-    void ExplorerView::onExplorerSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
+    void ExplorerView::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
     {
       foreach (QModelIndex index, selected.indexes ())
-        _database->setSelected (_model->data (index, Database::DatabaseModel::Role::ID).toString (),
-                                Database::Database::SelectionMode::SELECT);
+        {
+          QString id = _model->data (index, Database::DatabaseModel::Role::ID).toString ();
+
+          if (!_database->getPoint (id).getSelected ())
+            _database->setSelected (id, Database::Database::SelectionMode::SELECT);
+        }
 
       foreach (QModelIndex index, deselected.indexes ())
-        _database->setSelected (_model->data (index, Database::DatabaseModel::Role::ID).toString (),
-                                Database::Database::SelectionMode::DESELECT);
+        {
+          QString id = _model->data (index, Database::DatabaseModel::Role::ID).toString ();
+
+          if (_database->getPoint (id).getSelected ())
+            _database->setSelected (id, Database::Database::SelectionMode::DESELECT);
+        }
     }
 
 
-    void ExplorerView::onDatabaseSelectionChanged (const QString& id)
+    void ExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
-      QSignalBlocker blocker (_ui->_tree_w);
+      switch (reason)
+        {
+        case Database::Database::Reason::SELECTION:
+          {
+            Q_ASSERT (!id.isEmpty ());
 
-      if (_database->getPoint (id).getSelected ())
-        _ui->_tree_w->selectionModel ()->select (_model->getIndex (id), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-      else
-        _ui->_tree_w->selectionModel ()->select (_model->getIndex (id), QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
+            QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
+            Q_ASSERT (index.isValid ());
+
+            if (_database->getPoint (id).getSelected ())
+              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+            else
+              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
+          }
+          break;
+
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::FILTER:
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          break;
+        }
     }
 
   }

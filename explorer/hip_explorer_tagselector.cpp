@@ -25,33 +25,12 @@ namespace HIP {
     // CLASS HIP::Explorer::TagSelectorModel
     //#**********************************************************************
 
-    /*
-     * Model for the tag selector
-     */
-    class TagSelectorModel : public QAbstractItemModel
-    {
-    public:
-      TagSelectorModel (Database::Database* database, QObject* parent);
-      virtual ~TagSelectorModel ();
-
-      virtual int columnCount (const QModelIndex& parent) const;
-      virtual int rowCount (const QModelIndex& parent) const;
-
-      virtual QModelIndex index (int row, int column, const QModelIndex& parent) const;
-      virtual QModelIndex parent (const QModelIndex& index) const;
-      virtual Qt::ItemFlags flags (const QModelIndex& index) const;
-
-      virtual QVariant data (const QModelIndex& index, int role) const;
-
-    private:
-      Database::Database* _database;
-    };
-
     /* Constructor */
     TagSelectorModel::TagSelectorModel (Database::Database* database, QObject* parent)
       : QAbstractItemModel (parent),
         _database (database)
     {
+      connect (database, &Database::Database::databaseChanged, this, &TagSelectorModel::onDatabaseChanged);
     }
 
     /*! Destructor */
@@ -108,6 +87,27 @@ namespace HIP {
 
       return result;
     }
+
+    void TagSelectorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    {
+      Q_UNUSED (id);
+
+      switch (reason)
+        {
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::SELECTION:
+          beginResetModel ();
+          endResetModel ();
+          break;
+
+        case Database::Database::Reason::FILTER:
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          break;
+        }
+    }
+
+
 
     //#**********************************************************************
     // CLASS HIP::Explorer::TagSelectorDelegate
@@ -202,7 +202,7 @@ namespace HIP {
       //_ui->_input_w->setItemDelegate (new TagSelectorDelegate (this));
 
       connect (_ui->_clear_w, SIGNAL (clicked ()), SLOT (onClear ()));
-      connect (_ui->_input_w, SIGNAL (currentTextChanged (const QString&)), SIGNAL (tagChanged (const QString&)));
+      connect (_ui->_input_w, SIGNAL (currentTextChanged (const QString&)), SLOT (onTextChanged (const QString&)));
       connect (_ui->_input_w, SIGNAL (activated (int)), SLOT (onActivated (int)));
     }
 
@@ -210,6 +210,12 @@ namespace HIP {
     TagSelector::~TagSelector ()
     {
       delete _ui;
+    }
+
+    /*! Filter text changed */
+    void TagSelector::onTextChanged (const QString& text)
+    {
+      _database->setFilter (text);
     }
 
     /* Item has been selected */

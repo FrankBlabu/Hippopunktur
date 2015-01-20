@@ -39,13 +39,8 @@ namespace HIP {
       ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent);
       virtual ~ImageWidget ();
 
-      QString getPointAt (const QPointF& pos) const;
-      void setTag (const QString& tag);
-
-      void resetZoom ();
-      void updatePoint (const QString& id);
-
       bool selectCoordinate (QPointF* coordinate);
+      void resetZoom ();
 
     protected:
       QPointF toPixmapPoint (const QPointF& widget_point) const;
@@ -63,8 +58,10 @@ namespace HIP {
 
     private slots:
       void onImageLoaded ();
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
 
     private:
+      QString getPointAt (const QPointF& pos) const;
       void ensureBounds ();
 
       QRectF computeDefaultViewport () const;
@@ -75,9 +72,9 @@ namespace HIP {
       Database::Image _image;
       QString _tag;
 
+      QPixmap _pixmap; // Source pixmap
       Tools::ImageLoader* _loader;
 
-      QPixmap _pixmap; // Source pixmap
       QRectF _viewport; // Source viewport in pixmap coordinates
 
       QPointF _clicked_point; // Origin for dragging movements in widget coordinates
@@ -104,11 +101,7 @@ namespace HIP {
 
       bool selectCoordinate (QPointF* coordinate);
 
-    public slots:
-      void onTagChanged (const QString& id);
-
     private slots:
-      void onPointChanged (const QString& id);
       void onResetZoom ();
 
     private:

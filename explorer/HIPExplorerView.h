@@ -9,6 +9,8 @@
 
 #include <QWidget>
 
+#include "database/HIPDatabase.h"
+
 class QItemSelection;
 
 namespace Ui {
@@ -36,14 +38,9 @@ namespace HIP {
       ExplorerView (Database::Database* database, QWidget* parent);
       virtual ~ExplorerView ();
 
-    public slots:
-      void onTagChanged (const QString& tag);
-      void onPointChanged (const QString& id);
-      void onDataChanged ();
-
     private slots:
-      void onExplorerSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected);
-      void onDatabaseSelectionChanged (const QString& id);
+      void onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
 
     private:
       Ui::HIP_Explorer_ExplorerView* _ui;

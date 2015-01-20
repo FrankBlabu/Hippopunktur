@@ -10,6 +10,8 @@
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 
+#include "database/HIPDatabase.h"
+
 namespace HIP {
   namespace Database {
 
@@ -20,25 +22,29 @@ namespace HIP {
      */
     class DatabaseFilterProxyModel : public QSortFilterProxyModel
     {
-    public:
-      DatabaseFilterProxyModel (QObject* parent);
-      virtual ~DatabaseFilterProxyModel ();
+      Q_OBJECT
 
-      void setTag (const QString& tag);
+    public:
+      DatabaseFilterProxyModel (const Database* database, QObject* parent);
+      virtual ~DatabaseFilterProxyModel ();
 
     protected:
       virtual bool	filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
+    private slots:
+      void onDatabaseChanged (Database::Reason_t reason, const QString& id);
+
     private:
       QString _tag;
     };
-
 
     /*
      * Model for database access
      */
     class DatabaseModel : public QAbstractItemModel
     {
+      Q_OBJECT
+
     public:
       struct Role { enum Type_t {
           ID = Qt::UserRole + 1,
@@ -54,8 +60,6 @@ namespace HIP {
       virtual ~DatabaseModel ();
 
       QModelIndex getIndex (const QString& id) const;
-      void reset ();
-      void onChanged (const QString& id);
 
       virtual QHash<int, QByteArray> roleNames () const;
 
@@ -67,8 +71,10 @@ namespace HIP {
       virtual Qt::ItemFlags flags (const QModelIndex& index) const;
 
       virtual QVariant data (const QModelIndex& index, int role) const;
-      virtual bool setData (const QModelIndex& index, const QVariant& value, int role);
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
+
+    private slots:
+      void onDatabaseChanged (Database::Reason_t reason, const QString& id);
 
     private:
       Database* _database;

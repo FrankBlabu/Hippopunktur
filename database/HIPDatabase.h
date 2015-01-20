@@ -66,7 +66,8 @@ namespace HIP {
       Point (const Point& toCopy);
       virtual ~Point ();
 
-      Q_INVOKABLE bool matches (const QString& tag) const;
+      bool isValid () const;
+      bool matches (const QString& tag) const;
 
       const QString& getId () const { return _id; }
       void setId (const QString& id);
@@ -139,11 +140,12 @@ namespace HIP {
     {
       Q_OBJECT
 
-      Q_PROPERTY (QList<QString> tags READ getTags)
-      Q_ENUMS (SelectionMode_t)
-
     private:
       Database (const Database& toCopy) { Q_UNUSED (toCopy); }
+
+    public:
+      struct Reason { enum Type_t { POINT, SELECTION, DATA, FILTER, VISIBLE_IMAGE }; };
+      typedef Reason::Type_t Reason_t;
 
     public:
       Database () {}
@@ -155,23 +157,29 @@ namespace HIP {
       const QList<Image>& getImages () const { return _images; }
 
       const Point& getPoint (const QString& id) const;
-      void setPoint (const QString& id, const Point& point);
+      void setPoint (const Point& point);
 
       const Image& getImage (const QString& id) const;
-      void setPosition (const QString& id, const Position& position);
 
+      //
+      // Point selection
+      //
       struct SelectionMode { enum Type_t { SELECT=0, DESELECT, EXCLUSIV }; };
       typedef SelectionMode::Type_t SelectionMode_t;
 
-      Q_INVOKABLE void setSelected (const QString& id, SelectionMode_t mode);
-      Q_INVOKABLE void clearSelection ();
+      void setSelected (const QString& id, SelectionMode_t mode);
+      void clearSelection ();
+
+      const QString& getVisibleImage () const;
+      void setVisibleImage (const QString& id);
+
+      const QString& getFilter () const;
+      void setFilter (const QString& filter);
 
       QString toXML () const;
 
     signals:
-      void pointChanged (const QString& id);
-      void selectionChanged (const QString& id);
-      void dataChanged ();
+      void databaseChanged (Reason_t reason, const QString& id);
 
     private:
       void computeTags ();
@@ -188,6 +196,9 @@ namespace HIP {
 
       typedef QMap<QString, int> PointIndexMap;
       PointIndexMap _point_indices;
+
+      QString _visible_image;
+      QString _filter;
     };
   }
 
@@ -199,5 +210,6 @@ namespace HIP {
 Q_DECLARE_METATYPE (HIP::Database::Position)
 Q_DECLARE_METATYPE (HIP::Database::Point)
 Q_DECLARE_METATYPE (HIP::Database::Image)
+Q_DECLARE_METATYPE (HIP::Database::Database::Reason_t)
 
 #endif

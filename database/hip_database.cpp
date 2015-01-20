@@ -59,6 +59,30 @@ namespace HIP {
     return stream;
   }
 
+  QDebug operator<< (QDebug stream, Database::Database::Reason_t reason)
+  {
+    switch (reason)
+      {
+      case Database::Database::Reason::DATA:
+        stream << "DATA";
+        break;
+      case Database::Database::Reason::SELECTION:
+        stream << "SELECTION";
+        break;
+      case Database::Database::Reason::POINT:
+        stream << "POINT";
+        break;
+      case Database::Database::Reason::FILTER:
+        stream << "FILTER";
+        break;
+      case Database::Database::Reason::VISIBLE_IMAGE:
+        stream << "VISIBLE_IMAGE";
+        break;
+      }
+
+    return stream;
+  }
+
 
   namespace Database {
 
@@ -212,6 +236,12 @@ namespace HIP {
     {
     }
 
+    /*! Check if this is a valid point */
+    bool Point::isValid () const
+    {
+      return !_id.isEmpty ();
+    }
+
     /*! Check if the point matches the given tag */
     bool Point::matches (const QString& tag) const
     {
@@ -331,7 +361,8 @@ namespace HIP {
       : _points        (),
         _tags          (),
         _images        (),
-        _point_indices ()
+        _point_indices (),
+        _visible_image ()
     {
       QFile file (path);
 
@@ -524,11 +555,11 @@ namespace HIP {
     }
 
     /*! Set point value */
-    void Database::setPoint (const QString& id, const Point& point)
+    void Database::setPoint (const Point& point)
     {
-      int index = findIndex (id);
+      int index = findIndex (point.getId ());
 
-      Q_ASSERT (index >= 0 && index < _points.size ());
+      Q_ASSERT (index >= 0 && index < _points.size () && "Adding points is not supported here.");
       _points[index] = point;
 
       std::sort (_points.begin (), _points.end (), PointComparator ());
@@ -536,7 +567,7 @@ namespace HIP {
       computeIndices ();
       computeTags ();
 
-      emit dataChanged ();
+      emit databaseChanged (Reason::POINT, point.getId ());
     }
 
     /*! Get image entry from database */
@@ -553,32 +584,6 @@ namespace HIP {
       return _images[index];
     }
 
-    /*!
-     * Set position of point
-     *
-     * If a position with the given image id already exists, it is overwritten
-     */
-    void Database::setPosition (const QString& id, const Position& position)
-    {
-      int index = findIndex (id);
-      Q_ASSERT (index >= 0);
-
-      Point& point = _points[index];
-      QList<Position> positions = point.getPositions ();
-
-      int pos = -1;
-      for (int i=0; i < positions.size () && pos == -1; ++i)
-        if (positions[i].getImage () == position.getImage ())
-          pos = i;
-
-      if (pos >= 0)
-        positions[pos] = position;
-      else
-        positions.append (position);
-
-      point.setPositions (positions);
-    }
-
     /*! Set point selection status */
     void Database::setSelected (const QString &id, SelectionMode_t mode)
     {
@@ -591,20 +596,56 @@ namespace HIP {
         {
         case SelectionMode::SELECT:
           point.setSelected (true);
-          emit selectionChanged (id);
+          emit databaseChanged (Reason::SELECTION, point.getId ());
           break;
 
         case SelectionMode::DESELECT:
           point.setSelected (false);
-          emit selectionChanged (id);
+          emit databaseChanged (Reason::SELECTION, point.getId ());
           break;
 
         case SelectionMode::EXCLUSIV:
-          clearSelection ();
+          for (int i=0; i < _points.size (); ++i)
+            _points[i].setSelected (false);
           point.setSelected (true);
-          emit selectionChanged (id);
+
+          emit databaseChanged (Reason::DATA, point.getId ());
           break;
         }
+    }
+
+    /*! Return id of the currently visible image */
+    const QString& Database::getVisibleImage () const
+    {
+      return _visible_image;
+    }
+
+    /*! Set visible image */
+    void Database::setVisibleImage (const QString& id)
+    {
+      bool found = false;
+      foreach (const Image& image, _images)
+        if (image.getId () == id)
+          found = true;
+
+      Q_ASSERT (found && "Invalid image id");
+
+      _visible_image = id;
+
+      emit databaseChanged (Reason::VISIBLE_IMAGE, _visible_image);
+    }
+
+    /*! Return the current filter configuration */
+    const QString& Database::getFilter () const
+    {
+      return _filter;
+    }
+
+    /*! Set filter configuration */
+    void Database::setFilter (const QString &filter)
+    {
+      _filter = filter;
+      emit databaseChanged (Reason::FILTER, _filter);
     }
 
     /*! Clear selection */
@@ -613,7 +654,7 @@ namespace HIP {
       for (int i=0; i < _points.size (); ++i)
         _points[i].setSelected (false);
 
-      emit dataChanged ();
+      emit databaseChanged (Reason::DATA, "");
     }
 
     /*! Compute list of all existing tags */

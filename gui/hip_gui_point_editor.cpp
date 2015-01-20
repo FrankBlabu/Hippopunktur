@@ -44,95 +44,19 @@ namespace HIP {
     // CLASS HIP::Gui::PointEditorModel
     //#**********************************************************************
 
-    /*
-     * Model for the point editor positions
-     */
-    class PointEditorModel : public QAbstractItemModel
-    {
-    public:
-      struct Column { enum Type_t { IMAGE, COORDINATE }; };
-      typedef Column::Type_t Columm_t;
-
-      struct Role { enum Type_t { IMAGE_ID=Qt::UserRole + 1, COORDINATE }; };
-      typedef Role::Type_t Role_t;
-
-    public:
-      PointEditorModel (Database::Database* database, QObject* parent);
-      virtual ~PointEditorModel ();
-
-      void reset ();
-
-      const Database::Point& getPoint () const;
-      void setPoint (const Database::Point& point);
-
-      QModelIndex getImageIndex (const QString& id) const;
-
-      virtual int columnCount (const QModelIndex& parent) const;
-      virtual int rowCount (const QModelIndex& parent) const;
-
-      virtual QModelIndex index (int row, int column, const QModelIndex& parent) const;
-      virtual QModelIndex parent (const QModelIndex& index) const;
-      virtual Qt::ItemFlags flags (const QModelIndex& index) const;
-
-      virtual QVariant data (const QModelIndex& index, int role) const;
-      virtual bool setData (const QModelIndex& index, const QVariant& value, int role);
-      virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
-
-    private:
-      Database::Database* _database;
-      QString _id;
-      QList<Database::Position> _positions;
-    };
-
 
     /* Constructor */
     PointEditorModel::PointEditorModel (Database::Database* database, QObject* parent)
       : QAbstractItemModel (parent),
         _database  (database),
-        _id        (),
-        _positions ()
+        _point     ()
     {
+      connect (_database, &Database::Database::databaseChanged, this, &PointEditorModel::onDatabaseChanged);
     }
 
     /*! Destructor */
     PointEditorModel::~PointEditorModel ()
     {
-    }
-
-    /*! Reset model */
-    void PointEditorModel::reset ()
-    {
-      beginResetModel ();
-      endResetModel ();
-    }
-
-    /*! Get edited point */
-    const Database::Point& PointEditorModel::getPoint () const
-    {
-      return _database->getPoint (_id);
-    }
-
-    /*! Set point to be displayed */
-    void PointEditorModel::setPoint (const Database::Point& point)
-    {
-      beginResetModel ();
-
-      _id = point.getId ();
-      _positions = point.getPositions ();
-
-      endResetModel ();
-    }
-
-    /*! Get the model index of the given image */
-    QModelIndex PointEditorModel::getImageIndex (const QString& id) const
-    {
-      QModelIndex result;
-
-      for (int i=0; i < _positions.size () && !result.isValid (); ++i)
-        if (_positions[i].getImage () == id)
-          result = index (i, 0, QModelIndex ());
-
-      return result;
     }
 
     int PointEditorModel::columnCount (const QModelIndex& parent) const
@@ -143,7 +67,7 @@ namespace HIP {
 
     int PointEditorModel::rowCount (const QModelIndex& parent) const
     {
-      return !parent.isValid () ? _positions.size () : 0;
+      return _point.isValid () && !parent.isValid () ? _point.getPositions ().size () : 0;
     }
 
     QModelIndex PointEditorModel::index (int row, int column, const QModelIndex& parent) const
@@ -168,9 +92,9 @@ namespace HIP {
     {
       QVariant result;
 
-      if (index.isValid () && index.row () < _positions.size ())
+      if (index.isValid () && index.row () < _point.getPositions ().size ())
         {
-          const Database::Position& position = _positions[index.row ()];
+          const Database::Position& position = _point.getPositions ()[index.row ()];
 
           switch (role)
             {
@@ -194,34 +118,6 @@ namespace HIP {
       return result;
     }
 
-    bool PointEditorModel::setData (const QModelIndex& index, const QVariant& value, int role)
-    {
-      bool modified = false;
-
-      Q_UNUSED (value);
-      Q_UNUSED (role);
-
-      if (index.isValid () && index.row () < _positions.size ())
-        {
-          Database::Position position = _positions[index.row ()];
-          Q_UNUSED (position);
-
-          if (index.column () == Column::IMAGE)
-            {
-            }
-
-          if (role == Role::COORDINATE)
-            {
-              position.setCoordinate (value.value<QPointF> ());
-              _database->setPosition (_id, position);
-              emit dataChanged (this->index (index.row (), Column::IMAGE, QModelIndex ()),
-                                this->index (index.row (), Column::COORDINATE, QModelIndex ()));
-            }
-        }
-
-      return modified;
-    }
-
     QVariant PointEditorModel::headerData (int section, Qt::Orientation orientation, int role) const
     {
       QVariant data;
@@ -239,6 +135,35 @@ namespace HIP {
       return data;
     }
 
+    void PointEditorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    {
+      Q_UNUSED (id);
+
+      switch (reason)
+        {
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::SELECTION:
+        case Database::Database::Reason::DATA:
+          {
+            beginResetModel ();
+
+            QList<Database::Point> points;
+            foreach (const Database::Point& point, _database->getPoints ())
+              if (point.getSelected ())
+                points.push_back (point);
+
+            _point = points.size () == 1 ? points.front () : Database::Point ();
+
+            endResetModel ();
+          }
+          break;
+
+        case Database::Database::Reason::FILTER:
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          break;
+        }
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::Gui::PointEditor
@@ -250,7 +175,8 @@ namespace HIP {
         _ui       (new Ui::HIP_Gui_PointEditor),
         _database (database),
         _model    (new PointEditorModel (database, this)),
-        _iv       (0)
+        _iv       (0),
+        _point    ()
     {
       _ui->setupUi (this);
 
@@ -259,18 +185,18 @@ namespace HIP {
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::IMAGE, QHeaderView::ResizeToContents);
       _ui->_positions_w->header ()->setSectionResizeMode (PointEditorModel::Column::COORDINATE, QHeaderView::Stretch);
 
-      connect (_ui->_name_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
-      connect (_ui->_description_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
-      connect (_ui->_tags_w, SIGNAL (textChanged (const QString&)), SLOT (onCommit ()));
+      connect (_ui->_description_w, SIGNAL (textChanged (const QString&)), SLOT (onValueChanged ()));
+      connect (_ui->_tags_w, SIGNAL (textChanged (const QString&)), SLOT (onValueChanged ()));
       connect (_ui->_color_w, SIGNAL (clicked (bool)), SLOT (onSelectColor ()));
 
       connect (_ui->_add_w, SIGNAL (clicked (bool)), SLOT (onAdd ()));
       connect (_ui->_remove_w, SIGNAL (clicked (bool)), SLOT (onRemove ()));
       connect (_ui->_edit_w, SIGNAL (clicked (bool)), SLOT (onEdit ()));
 
+      connect (_database, &Database::Database::databaseChanged, this, &PointEditor::onDatabaseChanged);
       connect (_ui->_positions_w->selectionModel (),
                SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
-               SLOT (onPositionSelectionChanged (const QItemSelection&)));
+               SLOT (onSelectionChanged (const QItemSelection&)));
 
       updateSensitivity ();
     }
@@ -288,19 +214,16 @@ namespace HIP {
     }
 
     /*! Commit changes to database */
-    void PointEditor::onCommit ()
+    void PointEditor::onValueChanged ()
     {
-      Database::Point point = _model->getPoint ();
-
-      point.setDescription (_ui->_description_w->text ());
+      _point.setDescription (_ui->_description_w->text ());
 
       QStringList tags = _ui->_tags_w->text ().split (',');
       for (int i=0; i < tags.size (); ++i)
         tags[i] = tags[i].trimmed ();
 
-      point.setTags (tags);
-
-      _database->setPoint (point.getId (), point);
+      _point.setTags (tags);
+      _database->setPoint (_point);
     }
 
     /*! Called when a new point should be added */
@@ -317,18 +240,13 @@ namespace HIP {
       foreach (const QModelIndex& index, _ui->_positions_w->selectionModel ()->selectedRows ())
         ids.insert (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString ());
 
-      Database::Point point = _model->getPoint ();
-
       QList<Database::Position> positions;
-      foreach (const Database::Position& position, point.getPositions ())
+      foreach (const Database::Position& position, _point.getPositions ())
         if (!ids.contains (position.getImage ()))
           positions.push_back (position);
 
-      point.setPositions (positions);
-      _database->setPoint (point.getId (), point);
-      _model->reset ();
-
-      onPointSelectionChanged (point.getId ());
+      _point.setPositions (positions);
+      _database->setPoint (_point);
     }
 
     /*! Called when the coordinates of the current point should be edited */
@@ -339,82 +257,85 @@ namespace HIP {
       Q_ASSERT (_iv != 0);
 
       QModelIndex index = indices.front ();
+      QString image_id = _model->data (index, PointEditorModel::Role::IMAGE_ID).toString ();
 
       setEnabled (false);
 
       QPointF coordinate;
-      if (_iv->selectCoordinate (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString (), &coordinate))
+      if (_iv->selectCoordinate (image_id, &coordinate))
         {
-          _model->setData (index, qVariantFromValue (coordinate), PointEditorModel::Role::COORDINATE);
-          _database->setSelected (_model->getPoint ().getId (), Database::Database::SelectionMode::EXCLUSIV);
+          QList<Database::Position> positions;
+
+          for (int i=0; i < positions.size (); ++i)
+            if (positions[i].getImage () == image_id)
+              positions[i].setCoordinate (coordinate);
+
+          _point.setPositions (positions);
+          _database->setPoint (_point);
         }
 
       setEnabled (true);
-
       updateSensitivity ();
     }
 
     /*! Select point color */
     void PointEditor::onSelectColor ()
     {
-      Database::Point point = _model->getPoint ();
-
-      QColor color = QColorDialog::getColor (_model->getPoint ().getColor (), this, tr ("Select point color"));
+      QColor color = QColorDialog::getColor (_point.getColor (), this, tr ("Select point color"));
       if (color.isValid ())
         {
-          point.setColor (color);
-          _database->setPoint (point.getId (), point);
+          _point.setColor (color);
+          _database->setPoint (_point);
           updateColorButton ();
         }
     }
 
-    /*! Update editor content on point selection changes */
-    void PointEditor::onPointSelectionChanged (const QString& id)
+    void PointEditor::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
-      QSignalBlocker blocker (this);
-
-      const Database::Point& point = _database->getPoint (id);
-
-      QSignalBlocker name_blocker (_ui->_name_w);
-      _ui->_name_w->setText (point.getId ());
-
-      QSignalBlocker description_blocker (_ui->_description_w);
-      _ui->_description_w->setText (point.getDescription ());
-
-      QString tags;
-      QString separator;
-      foreach (const QString& tag, point.getTags ())
+      switch (reason)
         {
-          tags += separator + tag;
-          separator = ",";
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::SELECTION:
+        case Database::Database::Reason::POINT:
+          {
+            QList<Database::Point> points;
+
+            foreach (const Database::Point& point, _database->getPoints ())
+              if (point.getSelected ())
+                points.push_back (point);
+
+            _point = points.size () == 1 ? points.front () : Database::Point ();
+          }
+          break;
+
+        case Database::Database::Reason::FILTER:
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          break;
         }
 
-      QSignalBlocker tags_blocker (_ui->_tags_w);
-      _ui->_tags_w->setText (tags);
+      QSignalBlocker description_blocker (_ui->_description_w);
 
-      _model->setPoint (point);
+      if (_point.isValid ())
+        {
+          _ui->_name_w->setText (_point.getId ());
+          _ui->_description_w->setText (_point.getDescription ());
+        }
+      else
+        {
+          _ui->_name_w->clear ();
+          _ui->_description_w->clear ();
+        }
 
       updateColorButton ();
       updateSensitivity ();
     }
 
     /*! Called when the selection in the positions list changed */
-    void PointEditor::onPositionSelectionChanged (const QItemSelection& selected)
+    void PointEditor::onSelectionChanged (const QItemSelection& selected)
     {
-      foreach (const QModelIndex& index, selected.indexes ())
-        emit imageSelected (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString ());
-
+      Q_ASSERT (selected.indexes ().size () <= 1);
+      _database->setVisibleImage (_model->data (selected.indexes ().front (), PointEditorModel::Role::IMAGE_ID).toString ());
       updateSensitivity ();
-    }
-
-    /*! Called when the currently displayed image changed */
-    void PointEditor::onCurrentImageChanged (const QString& id)
-    {
-      QModelIndex index = _model->getImageIndex (id);
-      if (index.isValid ())
-        _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-      else
-        _ui->_positions_w->selectionModel ()->clear ();
     }
 
     /*! Update color displayed in the color selection button */
@@ -425,25 +346,21 @@ namespace HIP {
 
       {
         QPainter painter (&icon);
-        painter.fillRect (QRectF (0, 0, icon.width (), icon.height ()), _model->getPoint ().getColor ());
+        painter.fillRect (QRectF (0, 0, icon.width (), icon.height ()), _point.getColor ());
       }
 
+      QSignalBlocker blocker (_ui->_color_w);
       _ui->_color_w->setIcon (icon);
     }
 
     /*! Update widget sensitivities */
     void PointEditor::updateSensitivity ()
     {
-      bool position_selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
+      bool selected = !_ui->_positions_w->selectionModel ()->selectedRows ().isEmpty ();
 
-      bool point_selected = false;
-      foreach (const Database::Point& point, _database->getPoints ())
-        if (point.getSelected ())
-          point_selected = true;
-
-      _ui->_color_w->setEnabled (point_selected);
-      _ui->_remove_w->setEnabled (position_selected);
-      _ui->_edit_w->setEnabled (position_selected);
+      _ui->_color_w->setEnabled (_point.isValid ());
+      _ui->_remove_w->setEnabled (selected);
+      _ui->_edit_w->setEnabled (selected);
     }
 
   }

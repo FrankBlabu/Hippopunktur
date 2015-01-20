@@ -38,8 +38,8 @@ namespace HIP {
         _database            (database),
         _image               (image),
         _tag                 (),
-        _loader              (0),
         _pixmap              (),
+        _loader              (new Tools::ImageLoader (image.getPath (), this)),
         _viewport            (),
         _clicked_point       (),
         _dragged             (),
@@ -48,9 +48,8 @@ namespace HIP {
     {
       setMouseTracking (true);
 
-      _loader = new Tools::ImageLoader (image.getPath (), this);
-
       connect (_loader, SIGNAL (finished ()), SLOT (onImageLoaded ()), Qt::QueuedConnection);
+      connect (database, &Database::Database::databaseChanged, this, &ImageWidget::onDatabaseChanged);
     }
 
     /*! Destructor */
@@ -58,13 +57,23 @@ namespace HIP {
     {
     }
 
-    /* Set filter tag */
-    void ImageWidget::setTag (const QString& tag)
+    void ImageWidget::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
-      if (!_pixmap.isNull ())
+      switch (reason)
         {
-          _tag = tag;
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::SELECTION:
           update ();
+          break;
+
+        case Database::Database::Reason::FILTER:
+          _tag = id;
+          update ();
+          break;
+
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          break;
         }
     }
 
@@ -103,13 +112,6 @@ namespace HIP {
           _viewport = computeDefaultViewport ();
           update ();
         }
-    }
-
-    /* Called when a single point has been changed and needs an update */
-    void ImageWidget::updatePoint (const QString& id)
-    {
-      Q_UNUSED (id);
-      update ();
     }
 
     /* Compute pixmap point matching the given widget point */
@@ -415,8 +417,6 @@ namespace HIP {
       _ui->setupUi (this);
       _widget = Tools::addToParent (new ImageWidget (database, image, _ui->_view_w));
 
-      connect (_database, &Database::Database::pointChanged, this, &ImageView::onPointChanged);
-      connect (_database, &Database::Database::selectionChanged, this, &ImageView::onPointChanged);
       connect (_ui->_reset_zoom_w, SIGNAL (clicked ()), SLOT (onResetZoom ()));
     }
 
@@ -434,16 +434,6 @@ namespace HIP {
     void ImageView::onResetZoom ()
     {
       _widget->resetZoom ();
-    }
-
-    void ImageView::onPointChanged (const QString &id)
-    {
-      _widget->updatePoint (id);
-    }
-
-    void ImageView::onTagChanged (const QString &id)
-    {
-      _widget->setTag (id);
     }
 
   }

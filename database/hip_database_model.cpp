@@ -17,10 +17,11 @@ namespace HIP {
     //#**********************************************************************
 
     /* Constructor */
-    DatabaseFilterProxyModel::DatabaseFilterProxyModel (QObject* parent)
+    DatabaseFilterProxyModel::DatabaseFilterProxyModel (const Database* database, QObject* parent)
       : QSortFilterProxyModel (parent),
         _tag ()
     {
+      connect (database, &Database::databaseChanged, this, &DatabaseFilterProxyModel::onDatabaseChanged);
     }
 
     /* Destructor */
@@ -28,19 +29,22 @@ namespace HIP {
     {
     }
 
-    /*! Set filter tag */
-    void DatabaseFilterProxyModel::setTag (const QString& tag)
-    {
-      beginResetModel ();
-      _tag = tag;
-      endResetModel ();
-    }
-
     /* Check if row is filtered */
     bool DatabaseFilterProxyModel::filterAcceptsRow (int source_row, const QModelIndex& source_parent) const
     {
       QModelIndex index = sourceModel ()->index (source_row, 0, source_parent);
       return sourceModel ()->data (index, DatabaseModel::Role::POINT).value<Point> ().matches (_tag);
+    }
+
+    /* Database change listener */
+    void DatabaseFilterProxyModel::onDatabaseChanged (Database::Reason_t reason, const QString& id)
+    {
+      if (reason == Database::Reason::FILTER)
+        {
+          beginResetModel ();
+          _tag = id;
+          endResetModel ();
+        }
     }
 
 
@@ -53,6 +57,7 @@ namespace HIP {
       : QAbstractItemModel (parent),
         _database (database)
     {
+      connect (database, &Database::databaseChanged, this, &DatabaseModel::onDatabaseChanged);
     }
 
     /*! Destructor */
@@ -60,30 +65,15 @@ namespace HIP {
     {
     }
 
-    /*! Compute model matching the given point id */
     QModelIndex DatabaseModel::getIndex (const QString& id) const
     {
-      int row = -1;
-      for (int i=0; i < _database->getPoints ().size () && row == -1; ++i)
+      QModelIndex index;
+
+      for (int i=0; i < _database->getPoints ().size () && !index.isValid (); ++i)
         if (_database->getPoints ()[i].getId () == id)
-          row = i;
+          index = this->index (i, 0, QModelIndex ());
 
-      return index (row, 0, QModelIndex ());
-    }
-
-    /*! Reset whole model */
-    void DatabaseModel::reset ()
-    {
-      beginResetModel ();
-      endResetModel ();
-    }
-
-    /*! Notify change in a single row */
-    void DatabaseModel::onChanged (const QString &id)
-    {
-      QModelIndex index = getIndex (id);
-      if (index.isValid ())
-        emit dataChanged (index, index);
+      return index;
     }
 
     /*! Custom role names for QML interaction */
@@ -164,42 +154,6 @@ namespace HIP {
       return result;
     }
 
-    bool DatabaseModel::setData (const QModelIndex& index, const QVariant& value, int role)
-    {
-      bool modified = false;
-
-      const QList<Point>& points = _database->getPoints ();
-
-      if (index.isValid () && index.row () < points.size ())
-        {
-          const Point& point = points[index.row ()];
-
-          switch (role)
-            {
-            case Role::SELECTED:
-              {
-                _database->setSelected (point.getId (), value.toBool () ? Database::SelectionMode::SELECT : Database::SelectionMode::DESELECT) ;
-                emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
-              }
-              break;
-
-            case Role::POINT:
-              {
-                Point p = value.value<Point> ();
-                _database->setPoint (p.getId (), p);
-                emit dataChanged (index, index, QVector<int> (1, Role::SELECTED));
-              }
-              break;
-
-            default:
-              qWarning ("Setting role not allowed: " + roleNames ().value (role));
-              break;
-            }
-        }
-
-      return modified;
-    }
-
     QVariant DatabaseModel::headerData (int section, Qt::Orientation orientation, int role) const
     {
       QVariant data;
@@ -210,6 +164,37 @@ namespace HIP {
         data = QVariant (tr ("points"));
 
       return data;
+    }
+
+    void DatabaseModel::onDatabaseChanged (Database::Reason_t reason, const QString& id)
+    {
+      QModelIndex index;
+
+      for (int i=0; i < _database->getPoints ().size (); ++i)
+        if (_database->getPoints ()[i].getId () == id)
+          index = this->index (i, 0, QModelIndex ());
+
+      switch (reason)
+        {
+        case Database::Reason::DATA:
+          beginResetModel ();
+          endResetModel ();
+          break;
+
+        case Database::Reason::POINT:
+          Q_ASSERT (index.isValid ());
+          emit dataChanged (index, index);
+          break;
+
+        case Database::Reason::SELECTION:
+          Q_ASSERT (index.isValid ());
+          emit dataChanged (index, index);
+          break;
+
+        case Database::Reason::FILTER:
+        case Database::Reason::VISIBLE_IMAGE:
+          break;
+        }
     }
 
 

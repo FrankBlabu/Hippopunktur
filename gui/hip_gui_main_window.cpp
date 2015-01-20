@@ -96,20 +96,19 @@ namespace HIP {
     /*! Constructor */
     MainWindow::MainWindow (Database::Database* database, QWidget *parent)
       : QMainWindow (parent),
-      _ui           (new Ui::HIP_Gui_MainWindow),
-      _database     (database),
-      _point_editor (0)
+      _ui       (new Ui::HIP_Gui_MainWindow),
+      _database (database)
     {
       _ui->setupUi (this);
       new Tools::StatusBar (_ui->_status_bar_w);
 
-      Explorer::TagSelector* tag_selector = Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
+      Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
 
       Explorer::ExplorerView* explorer = Tools::addToParent (new Explorer::ExplorerView (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-      _point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
-      _point_editor->setImageViewInterface (new ImageViewInterfaceImpl (_ui->_tab_w, this));
+      Gui::PointEditor* point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
+      point_editor->setImageViewInterface (new ImageViewInterfaceImpl (_ui->_tab_w, this));
 
       _ui->_tab_w->clear ();
 
@@ -119,32 +118,11 @@ namespace HIP {
           _ui->_tab_w->addTab (view, image.getTitle ());
         }
 
-      for (int i=0; i < _ui->_tab_w->count (); ++i)
-        {
-          Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-          Q_ASSERT (view != 0);
-
-          connect (tag_selector, &Explorer::TagSelector::tagChanged, view, &Image::ImageView::onTagChanged);
-        }
-
-      connect (tag_selector, SIGNAL (tagChanged (const QString&)), explorer, SLOT (onTagChanged (const QString&)));
-      connect (tag_selector, SIGNAL (tagChanged (const QString&)), this, SLOT (onTagChanged (const QString&)));
-
-      connect (_database, SIGNAL (pointChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
-      connect (_database, SIGNAL (selectionChanged (const QString&)), explorer, SLOT (onPointChanged (const QString&)));
-      connect (_database, SIGNAL (dataChanged ()), explorer, SLOT (onDataChanged ()));
-      connect (_database, SIGNAL (selectionChanged (const QString&)), _point_editor, SLOT (onPointSelectionChanged (const QString&)));
-
-      connect (_point_editor, SIGNAL (imageSelected (const QString&)), SLOT (onImageSelected (const QString&)));
-
-      connect (_ui->_tab_w, SIGNAL (currentChanged (int)), SLOT (onCurrentTabChanged (int)));
-
+      connect (_database, &Database::Database::databaseChanged, this, &MainWindow::onDatabaseChanged);
+      connect (_ui->_tab_w, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
       connect (_ui->_action_export_database, SIGNAL (triggered (bool)), SLOT (onExportDatabase ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
-
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
-
-      onTagChanged ("");
     }
 
     /*! Destructor */
@@ -172,44 +150,57 @@ namespace HIP {
     }
 
 
-    /*! Adapt tab sensitivity to selector tag */
-    void MainWindow::onTagChanged (const QString& tag)
+    /*! React on database changes  */
+    void MainWindow::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
     {
-      QSet<QString> used_images;
-
-      foreach (const Database::Point& point, _database->getPoints ())
+      switch (reason)
         {
-          if (point.matches (tag))
-            {
-              foreach (const Database::Position& position, point.getPositions ())
-                used_images.insert (position.getImage ());
-            }
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::FILTER:
+          {
+            QSet<QString> used_images;
+
+            foreach (const Database::Point& point, _database->getPoints ())
+              {
+                if (point.matches (_database->getFilter ()))
+                  {
+                    foreach (const Database::Position& position, point.getPositions ())
+                      used_images.insert (position.getImage ());
+                  }
+              }
+
+            for (int i=0; i < _ui->_tab_w->count (); ++i)
+              {
+                Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
+                Q_ASSERT (view != 0);
+
+                _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
+              }
+          }
+          break;
+
+        case Database::Database::Reason::SELECTION:
+          break;
+
+        case Database::Database::Reason::VISIBLE_IMAGE:
+          {
+            Image::ImageView* view = 0;
+
+            for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
+              {
+                Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
+                if (candidate->getImage ().getId () == id)
+                  view = candidate;
+              }
+
+            Q_ASSERT (view != 0);
+
+            if (view != _ui->_tab_w->currentWidget ())
+              _ui->_tab_w->setCurrentWidget (view);
+          }
+          break;
         }
-
-      for (int i=0; i < _ui->_tab_w->count (); ++i)
-        {
-          Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-          Q_ASSERT (view != 0);
-
-          _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
-        }
-    }
-
-    /*! React on image entry selection in the point editor */
-    void MainWindow::onImageSelected (const QString& id)
-    {
-      Image::ImageView* view = 0;
-
-      for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
-        {
-          Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-          if (candidate->getImage ().getId () == id)
-            view = candidate;
-        }
-
-      Q_ASSERT (view != 0);
-
-      _ui->_tab_w->setCurrentWidget (view);
     }
 
     /*! Called when the currently visible image view tab changes */
@@ -218,7 +209,7 @@ namespace HIP {
       Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (index));
       Q_ASSERT (view != 0);
 
-      _point_editor->onCurrentImageChanged (view->getImage ().getId ());
+      _database->setVisibleImage (view->getImage ().getId ());
     }
 
     /*! Export current database into file */

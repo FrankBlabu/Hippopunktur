@@ -7,6 +7,8 @@
 #ifndef __HIPGuiMainWindow_h__
 #define __HIPGuiMainWindow_h__
 
+#include <database/HIPDatabase.h>
+
 #include <QMainWindow>
 
 namespace Ui {
@@ -20,8 +22,6 @@ namespace HIP {
   }
 
   namespace Gui {
-
-    class PointEditor;
 
     /*
      * Main window for the hippopunktur application
@@ -37,18 +37,14 @@ namespace HIP {
       virtual void setVisible (bool visible);
 
     private slots:
-      void onTagChanged (const QString& tag);
-      void onImageSelected (const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
       void onCurrentTabChanged (int index);
-
       void onExportDatabase ();
       void onAbout ();
 
     private:
       Ui::HIP_Gui_MainWindow* _ui;
       Database::Database* _database;
-
-      PointEditor* _point_editor;
     };
 
   } // namespace Gui
