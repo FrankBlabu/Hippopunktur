@@ -59,6 +59,17 @@ namespace HIP {
     {
     }
 
+    QModelIndex PointEditorModel::getIndex (const QString& image_id) const
+    {
+      QModelIndex index;
+
+      for (int i=0; i < _point.getPositions ().size () && !index.isValid (); ++i)
+        if (_point.getPositions ()[i].getImage () == image_id)
+          index = this->index (i, 0, QModelIndex ());
+
+      return index;
+    }
+
     int PointEditorModel::columnCount (const QModelIndex& parent) const
     {
       Q_UNUSED (parent);
@@ -262,7 +273,7 @@ namespace HIP {
       QPointF coordinate;
       if (_iv->selectCoordinate (image_id, &coordinate))
         {
-          QList<Database::Position> positions;
+          QList<Database::Position> positions = _point.getPositions ();
 
           for (int i=0; i < positions.size (); ++i)
             if (positions[i].getImage () == image_id)
@@ -270,6 +281,8 @@ namespace HIP {
 
           _point.setPositions (positions);
           _database->setPoint (_point);
+          _database->select (_point.getId (), Database::Database::SelectionMode::EXCLUSIV);
+          _database->setVisibleImage (image_id);
         }
 
       setEnabled (true);
@@ -309,7 +322,17 @@ namespace HIP {
           break;
 
         case Database::Database::Reason::FILTER:
+          break;
+
         case Database::Database::Reason::VISIBLE_IMAGE:
+          {
+            qDebug () << "Image: " << id;
+            QModelIndex index =  _model->getIndex (id);
+            if (index.isValid ())
+              _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+            else
+              _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::Rows);
+          }
           break;
         }
 

@@ -40,6 +40,8 @@ namespace HIP {
       PointEditorModel (Database::Database* database, QObject* parent);
       virtual ~PointEditorModel ();
 
+      QModelIndex getIndex (const QString& image_id) const;
+
       virtual int columnCount (const QModelIndex& parent) const;
       virtual int rowCount (const QModelIndex& parent) const;
 
