@@ -102,6 +102,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="_action_export_database"/>
     <addaction name="_action_exit"/>
    </widget>
    <widget class="QMenu" name="_menu_help_w">
@@ -139,6 +140,11 @@
    </property>
    <property name="shortcut">
     <string>A</string>
+   </property>
+  </action>
+  <action name="_action_export_database">
+   <property name="text">
+    <string>Export database</string>
    </property>
   </action>
  </widget>

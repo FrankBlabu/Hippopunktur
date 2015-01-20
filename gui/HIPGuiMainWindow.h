@@ -41,6 +41,7 @@ namespace HIP {
       void onImageSelected (const QString& id);
       void onCurrentTabChanged (int index);
 
+      void onExportDatabase ();
       void onAbout ();
 
     private:

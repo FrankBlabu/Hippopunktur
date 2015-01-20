@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QDomDocument>
 #include <QFile>
+#include <QXmlStreamWriter>
 
 namespace HIP {
 
@@ -49,11 +50,20 @@ namespace HIP {
 
     namespace {
 
+      //
+      // Current (written) XML file version
+      //
+      static const char* const XML_VERSION = "0.1";
+
+      //
+      // Tags used in the XML file
+      //
       namespace Tags
       {
         static const char* const DATABASE    = "database";
         static const char* const POINTS      = "points";
         static const char* const POINT       = "point";
+        static const char* const TAGS        = "tags";
         static const char* const TAG         = "tag";
         static const char* const POSITIONS   = "positions";
         static const char* const POSITION    = "position";
@@ -63,15 +73,19 @@ namespace HIP {
         static const char* const COLOR       = "color";
       };
 
+      //
+      // Attributes used in the XML file
+      //
       namespace Attributes
       {
-        static const char* const ID    = "id";
-        static const char* const NAME  = "name";
-        static const char* const X     = "x";
-        static const char* const Y     = "y";
-        static const char* const TITLE = "title";
-        static const char* const PATH  = "path";
-        static const char* const IMAGE = "image";
+        static const char* const VERSION = "version";
+        static const char* const ID      = "id";
+        static const char* const NAME    = "name";
+        static const char* const X       = "x";
+        static const char* const Y       = "y";
+        static const char* const TITLE   = "title";
+        static const char* const PATH    = "path";
+        static const char* const IMAGE   = "image";
       }
 
     }
@@ -321,6 +335,11 @@ namespace HIP {
         {
           if (doc.documentElement ().tagName () != Tags::DATABASE)
             throw Exception (tr ("Illegal points database format"));
+
+          if (!doc.documentElement ().hasAttribute (Attributes::NAME))
+            throw Exception (tr ("Database name missing"));
+
+          _name = doc.documentElement ().attribute (Attributes::NAME);
 
           for ( QDomNode top_n = doc.documentElement ().firstChild (); !top_n.isNull ();
                 top_n = top_n.nextSibling () )
@@ -622,8 +641,87 @@ namespace HIP {
     /*! Generate XML representation of the database */
     QString Database::toXML () const
     {
-      qWarning () << "Not implemented.";
-      return QString ();
+      QString text;
+
+      QXmlStreamWriter out (&text);
+      out.setAutoFormatting (true);
+
+      out.writeStartDocument ();
+      out.writeStartElement (Tags::DATABASE);
+      out.writeAttribute (Attributes::VERSION, QString (XML_VERSION));
+      out.writeAttribute (Attributes::NAME, _name);
+
+      out.writeComment (tr ("List of points"));
+
+      {
+        out.writeStartElement (Tags::POINTS);
+
+        foreach (const Point& point, _points)
+          {
+            out.writeStartElement (Tags::POINT);
+            out.writeAttribute (Attributes::ID, point.getId ());
+
+            {
+              out.writeStartElement (Tags::TAGS);
+
+              foreach (const QString& tag, point.getTags ())
+                {
+                  out.writeStartElement (Tags::TAG);
+                  out.writeAttribute (Attributes::NAME, tag);
+                  out.writeEndElement ();
+                }
+
+              out.writeEndElement ();
+
+              out.writeStartElement (Tags::POSITIONS);
+
+              foreach (const Position& position, point.getPositions ())
+                {
+                  out.writeStartElement (Tags::POSITION);
+                  out.writeAttribute (Attributes::IMAGE, position.getImage ());
+                  out.writeAttribute (Attributes::X, QString::number (position.getCoordinate ().x ()));
+                  out.writeAttribute (Attributes::Y, QString::number (position.getCoordinate ().y ()));
+                  out.writeEndElement ();
+                }
+
+              out.writeEndElement ();
+
+              out.writeStartElement (Tags::DESCRIPTION);
+              out.writeCharacters (point.getDescription ());
+              out.writeEndElement ();
+
+              out.writeStartElement (Tags::COLOR);
+              out.writeCharacters (point.getColor ().name ());
+              out.writeEndElement ();
+            }
+
+            out.writeEndElement ();
+          }
+
+        out.writeEndElement ();
+      }
+
+      out.writeComment (tr ("List of images"));
+
+      {
+        out.writeStartElement (Tags::IMAGES);
+
+        foreach (const Image& image, _images)
+          {
+            out.writeStartElement (Tags::IMAGE);
+            out.writeAttribute (Attributes::ID, image.getId ());
+            out.writeAttribute (Attributes::TITLE, image.getTitle ());
+            out.writeAttribute (Attributes::PATH, image.getPath ());
+            out.writeEndElement ();
+          }
+
+        out.writeEndElement ();
+      }
+
+      out.writeEndElement ();
+      out.writeEndDocument ();
+
+      return text;
     }
 
   }

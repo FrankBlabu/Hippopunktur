@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<database version="1.0">
+<database version="0.1" name="Horse">
 
   <!-- List of points -->
-  <points name="Horse">
+  <points>
     <point id="BI1">
       <tags>
         <tag name="Hip"/>

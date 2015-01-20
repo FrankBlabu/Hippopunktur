@@ -142,6 +142,9 @@ namespace HIP {
       Q_PROPERTY (QList<QString> tags READ getTags)
       Q_ENUMS (SelectionMode)
 
+    private:
+      Database (const Database& toCopy) { Q_UNUSED (toCopy); }
+
     public:
       Database () {}
       Database (const QString& path);
@@ -176,6 +179,8 @@ namespace HIP {
       int findIndex (const QString& id) const;
 
     private:
+      QString _name;
+
       QList<Point> _points;
       QList<QString> _tags;
       QList<Image> _images;

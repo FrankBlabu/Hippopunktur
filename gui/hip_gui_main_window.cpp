@@ -17,10 +17,15 @@
 #include "ui_hip_gui_main_window.h"
 
 #include <QApplication>
+#include <QDebug>
+#include <QFile>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QStandardPaths>
 #include <QTabWidget>
-#include <QDebug>
+#include <QTextStream>
+
 
 namespace HIP {
   namespace Gui {
@@ -134,8 +139,10 @@ namespace HIP {
 
       connect (_ui->_tab_w, SIGNAL (currentChanged (int)), SLOT (onCurrentTabChanged (int)));
 
-      connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
+      connect (_ui->_action_export_database, SIGNAL (triggered (bool)), SLOT (onExportDatabase ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
+
+      connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
 
       onTagChanged ("");
     }
@@ -212,6 +219,35 @@ namespace HIP {
       Q_ASSERT (view != 0);
 
       _point_editor->onCurrentImageChanged (view->getImage ().getId ());
+    }
+
+    /*! Export current database into file */
+    void MainWindow::onExportDatabase ()
+    {
+      QFileDialog dialog (this);
+      dialog.setFileMode (QFileDialog::AnyFile);
+      dialog.setAcceptMode (QFileDialog::AcceptSave);
+      dialog.setNameFilter (tr ("Database file (*.xml)"));
+      dialog.setDefaultSuffix (".xml");
+      dialog.setDirectory (QStandardPaths::writableLocation (QStandardPaths::DocumentsLocation));
+
+      qDebug () << QStandardPaths::writableLocation (QStandardPaths::DocumentsLocation);
+
+      if (dialog.exec ())
+        {
+          Q_ASSERT (dialog.selectedFiles ().size () == 1);
+
+          QFile file (dialog.selectedFiles ().front ());
+          if (file.open (QIODevice::WriteOnly | QIODevice::Text))
+            {
+              QTextStream out (&file);
+              out << _database->toXML ();
+
+              file.close ();
+            }
+          else
+            QMessageBox::critical (this, tr ("Cannot save database file"), file.errorString ());
+        }
     }
 
     /*! Show about dialog */
