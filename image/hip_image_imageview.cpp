@@ -266,6 +266,8 @@ namespace HIP {
                           _database->select (id);
                         }
                     }
+                  else
+                    _database->clearSelection ();
                 }
 
               //

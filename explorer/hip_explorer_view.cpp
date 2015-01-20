@@ -181,9 +181,9 @@ namespace HIP {
                 Q_ASSERT (index.isValid ());
 
                 if (_database->getPoint (id).getSelected ())
-                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
                 else
-                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect);
+                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
               }
               break;
 

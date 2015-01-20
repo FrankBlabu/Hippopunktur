@@ -557,7 +557,7 @@ namespace HIP {
       computeIndices ();
       computeTags ();
 
-      emit databaseChanged (Reason::POINT, point.getId ());
+      emit databaseChanged (Reason::DATA, "");
     }
 
     /*! Get image entry from database */
@@ -642,9 +642,15 @@ namespace HIP {
     void Database::clearSelection ()
     {
       for (int i=0; i < _points.size (); ++i)
-        _points[i].setSelected (false);
+        {
+          Point& point = _points[i];
 
-      emit databaseChanged (Reason::DATA, "");
+          if (point.getSelected ())
+            {
+              point.setSelected (false);
+              emit databaseChanged (Reason::SELECTION, point.getId ());
+            }
+        }
     }
 
     /*! Compute list of all existing tags */

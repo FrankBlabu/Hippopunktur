@@ -298,9 +298,12 @@ namespace HIP {
               positions[i].setCoordinate (coordinate);
 
           _point.setPositions (positions);
+
+          QString id = _point.getId ();
           _database->setPoint (_point);
+
           _database->clearSelection ();
-          _database->select (_point.getId ());
+          _database->select (id);
           _database->setVisibleImage (image_id);
         }
 
