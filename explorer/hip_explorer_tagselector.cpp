@@ -217,7 +217,7 @@ namespace HIP {
     {
       foreach (const Database::Point& point, _database->getPoints ())
         if (point.getSelected () && !point.matches (text))
-          _database->select (point.getId (), Database::Database::SelectionMode::DESELECT);
+          _database->deselect (point.getId ());
 
       if (_database->getFilter () != text)
         _database->setFilter (text);

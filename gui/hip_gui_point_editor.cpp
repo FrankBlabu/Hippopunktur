@@ -252,7 +252,8 @@ namespace HIP {
 
           _point.setPositions (positions);
           _database->setPoint (_point);
-          _database->select (_point.getId (), Database::Database::SelectionMode::EXCLUSIV);
+          _database->clearSelection ();
+          _database->select (_point.getId ());
           _database->setVisibleImage (image_id);
         }
 
@@ -298,7 +299,8 @@ namespace HIP {
 
           _point.setPositions (positions);
           _database->setPoint (_point);
-          _database->select (_point.getId (), Database::Database::SelectionMode::EXCLUSIV);
+          _database->clearSelection ();
+          _database->select (_point.getId ());
           _database->setVisibleImage (image_id);
         }
 

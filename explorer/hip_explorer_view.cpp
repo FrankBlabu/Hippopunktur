@@ -150,7 +150,7 @@ namespace HIP {
               QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
 
               if (!_database->getPoint (id).getSelected ())
-                _database->select (id, Database::Database::SelectionMode::SELECT);
+                _database->select (id);
             }
 
           foreach (QModelIndex index, deselected.indexes ())
@@ -158,7 +158,7 @@ namespace HIP {
               QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
 
               if (_database->getPoint (id).getSelected ())
-                _database->select (id, Database::Database::SelectionMode::DESELECT);
+                _database->deselect (id);
             }
 
           _update_in_progress = false;

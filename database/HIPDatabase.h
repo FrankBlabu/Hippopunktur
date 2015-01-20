@@ -164,10 +164,8 @@ namespace HIP {
       //
       // Point selection
       //
-      struct SelectionMode { enum Type_t { SELECT=0, DESELECT, EXCLUSIV }; };
-      typedef SelectionMode::Type_t SelectionMode_t;
-
-      void select (const QString& id, SelectionMode_t mode);
+      void select (const QString& id);
+      void deselect (const QString& id);
       void clearSelection ();
 
       const QString& getVisibleImage () const;
@@ -204,7 +202,6 @@ namespace HIP {
 
   QDebug operator<< (QDebug stream, const Database::Position& position);
   QDebug operator<< (QDebug stream, const Database::Point& point);
-  QDebug operator<< (QDebug stream, const Database::Database::SelectionMode_t mode);
   QDebug operator<< (QDebug stream, const Database::Database::Reason_t reason);
 }
 

@@ -253,19 +253,18 @@ namespace HIP {
                   QString id = getPointAt (event->pos ());
                   if (!id.isEmpty ())
                     {
-                      Database::Database::SelectionMode_t mode = Database::Database::SelectionMode::SELECT;
-
                       if (event->modifiers ().testFlag (Qt::ControlModifier))
                         {
                           if (_database->getPoint (id).getSelected ())
-                            mode = Database::Database::SelectionMode::DESELECT;
+                            _database->deselect (id);
                           else
-                            mode = Database::Database::SelectionMode::SELECT;
+                            _database->select (id);
                         }
                       else
-                        mode = Database::Database::SelectionMode::EXCLUSIV;
-
-                      _database->select (id, mode);
+                        {
+                          _database->clearSelection ();
+                          _database->select (id);
+                        }
                     }
                 }
 
