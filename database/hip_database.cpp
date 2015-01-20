@@ -587,8 +587,6 @@ namespace HIP {
 
       Point& point = _points[index];
 
-      qDebug () << "Select: id=" << id << ", mode=" << mode;
-
       switch (mode)
         {
         case SelectionMode::SELECT:

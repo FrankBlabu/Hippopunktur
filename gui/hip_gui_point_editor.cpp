@@ -60,6 +60,8 @@ namespace HIP {
       PointEditorModel (Database::Database* database, QObject* parent);
       virtual ~PointEditorModel ();
 
+      void reset ();
+
       const Database::Point& getPoint () const;
       void setPoint (const Database::Point& point);
 
@@ -95,6 +97,13 @@ namespace HIP {
     /*! Destructor */
     PointEditorModel::~PointEditorModel ()
     {
+    }
+
+    /*! Reset model */
+    void PointEditorModel::reset ()
+    {
+      beginResetModel ();
+      endResetModel ();
     }
 
     /*! Get edited point */
@@ -297,15 +306,29 @@ namespace HIP {
     /*! Called when a new point should be added */
     void PointEditor::onAdd ()
     {
-      QMessageBox::warning (this, tr ("Not implemented"), tr ("Adding points interactively is not implemented yet.<p>Export and edit database instead."));
+      QMessageBox::warning (this, tr ("Not implemented"), tr ("Adding image locations interactively is not implemented yet.<p>Export and edit database instead."));
       updateSensitivity ();
     }
 
     /*! Called when the current point shall be removed */
     void PointEditor::onRemove ()
     {
-      QMessageBox::warning (this, tr ("Not implemented"), tr ("Removing points interactively is not implemented yet.<p>Export and edit database instead."));
-      updateSensitivity ();
+      QSet<QString> ids;
+      foreach (const QModelIndex& index, _ui->_positions_w->selectionModel ()->selectedRows ())
+        ids.insert (_model->data (index, PointEditorModel::Role::IMAGE_ID).toString ());
+
+      Database::Point point = _model->getPoint ();
+
+      QList<Database::Position> positions;
+      foreach (const Database::Position& position, point.getPositions ())
+        if (!ids.contains (position.getImage ()))
+          positions.push_back (position);
+
+      point.setPositions (positions);
+      _database->setPoint (point.getId (), point);
+      _model->reset ();
+
+      onPointSelectionChanged (point.getId ());
     }
 
     /*! Called when the coordinates of the current point should be edited */
