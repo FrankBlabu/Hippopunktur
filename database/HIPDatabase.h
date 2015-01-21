@@ -148,9 +148,10 @@ namespace HIP {
       typedef Reason::Type_t Reason_t;
 
     public:
-      Database () {}
-      Database (const QString& path);
+      Database ();
       virtual ~Database ();
+
+      void load (const QString& data); // throws Exception
 
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }

@@ -6,6 +6,7 @@
 
 #include "HIPGuiMainWindow.h"
 
+#include "core/HIPException.h"
 #include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
@@ -18,10 +19,13 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QDragEnterEvent>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QStandardPaths>
 #include <QTabWidget>
 #include <QTextStream>
@@ -100,6 +104,9 @@ namespace HIP {
       _database (database)
     {
       _ui->setupUi (this);
+
+      setAcceptDrops (true);
+
       new Tools::StatusBar (_ui->_status_bar_w);
 
       Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
@@ -243,6 +250,45 @@ namespace HIP {
     void MainWindow::onAbout ()
     {
       QMessageBox::information (this, tr ("Hippopunktur V0.1"), Tools::loadResource<QString> (":/assets/about.html"));
+    }
+
+    /*! Handle drag events */
+    void MainWindow::dragEnterEvent (QDragEnterEvent* event)
+    {
+      bool accepted = false;
+
+      if (event->mimeData ()->hasText ())
+        {
+          QFileInfo info (event->mimeData ()->text ());
+          if ( info.isReadable () &&
+               info.suffix ().toLower () == "xml" )
+            accepted = true;
+        }
+
+      event->acceptProposedAction ();
+    }
+
+    void MainWindow::dragMoveEvent (QDragMoveEvent* event)
+    {
+        event->acceptProposedAction ();
+    }
+
+    void MainWindow::dropEvent (QDropEvent* event)
+    {
+      Q_ASSERT (event->mimeData ()->hasText ());
+      event->acceptProposedAction ();
+
+      try
+      {
+        _database->load (Tools::loadResource<QString> (QUrl (event->mimeData ()->text ()).path ()));
+      }
+      catch (const Exception& exception)
+      {
+        QMessageBox::critical (this, tr ("Load error"), tr ("Unable to load '%1':\n\n %2")
+                               .arg (event->mimeData ()->text ())
+                               .arg (exception.getText ()));
+      }
+
     }
 
   } // namespace Gui

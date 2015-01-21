@@ -12,18 +12,18 @@ INCLUDEPATH += $$PWD
 
 SOURCES += \
     main.cpp \
-    database/hip_database.cpp \
     core/hip_exception.cpp \
-    database/hip_database_model.cpp \
-    core/hip_tools.cpp \
-    explorer/hip_explorer_tagselector.cpp \
-    image/hip_image_imageview.cpp \
     core/hip_image_loader.cpp \
+    core/hip_status_bar.cpp \
+    core/hip_tools.cpp \
+    database/hip_database.cpp \
+    database/hip_database_model.cpp \
+    explorer/hip_explorer_tagselector.cpp \
+    explorer/hip_explorer_view.cpp \
+    gl/hip_gl_view.cpp \
     gui/hip_gui_point_editor.cpp \
     gui/hip_gui_main_window.cpp \
-    core/hip_status_bar.cpp \
-    explorer/hip_explorer_view.cpp \
-    gl/hip_gl_view.cpp
+    image/hip_image_imageview.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -34,26 +34,26 @@ OTHER_FILES += \
     explorer/*.qml
 
 HEADERS += \
-    database/HIPDatabase.h \
     core/HIPException.h \
-    database/HIPDatabaseModel.h \
-    core/HIPTools.h \
-    explorer/HIPExplorerTagSelector.h \
-    image/HIPImageImageView.h \
     core/HIPImageLoader.h \
+    core/HIPStatusBar.h \
+    core/HIPTools.h \
+    database/HIPDatabase.h \
+    database/HIPDatabaseModel.h \
+    explorer/HIPExplorerTagSelector.h \
+    explorer/HIPExplorerView.h \
     gui/HIPGuiMainWindow.h \
     gui/HIPGuiPointEditor.h \
-    core/HIPStatusBar.h \
-    explorer/HIPExplorerView.h \
-    gl/HIPGLView.h
+    gl/HIPGLView.h \
+    image/HIPImageImageView.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
-    image/hip_image_imageview.ui \
+    explorer/hip_explorer_view.ui \
     gui/hip_gui_pointeditor.ui \
     gui/hip_gui_main_window.ui \
-    explorer/hip_explorer_view.ui \
-    gl/hip_gl_view.ui
+    gl/hip_gl_view.ui \
+    image/hip_image_imageview.ui
 
 DISTFILES += \
     assets/* \

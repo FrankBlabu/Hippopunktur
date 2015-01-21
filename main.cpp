@@ -5,14 +5,25 @@
 ****************************************************************************/
 
 #include <QApplication>
-#include <QtQml>
+#include <QByteArray>
 #include <QDebug>
+#include <QtQml>
+#include <QFile>
 
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 #include "database/HIPDatabase.h"
 #include "gui/HIPGuiMainWindow.h"
 
+namespace {
+
+  static const char* const DATABASE_FILE = ":/data/database.xml";
+
+}
+
+/*
+ * MAIN
+ */
 int main (int argc, char* argv[])
 {
   bool ok = true;
@@ -20,12 +31,12 @@ int main (int argc, char* argv[])
   QApplication app (argc, argv);
 
   app.setStyleSheet (HIP::Tools::loadResource<QString> (":/assets/style/hippopunktur.css"));
-
   qmlRegisterType<HIP::Database::Database> ("com.blankenburg.hippopunktur", 1, 0, "Database");
 
   try
   {
-    HIP::Database::Database database (":/data/database.xml");
+    HIP::Database::Database database;
+    database.load (HIP::Tools::loadResource<QString> (DATABASE_FILE));
 
     HIP::Gui::MainWindow main_win (&database);
     main_win.resize (800, 600);

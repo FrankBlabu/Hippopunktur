@@ -11,6 +11,11 @@
 
 #include <QMainWindow>
 
+class QDragEnterEvent;
+class QDragMoveEvent;
+class QDropEvent;
+
+
 namespace Ui {
   class HIP_Gui_MainWindow;
 }
@@ -35,6 +40,11 @@ namespace HIP {
       virtual ~MainWindow ();
 
       virtual void setVisible (bool visible);
+
+    protected:
+      virtual void dragEnterEvent (QDragEnterEvent* event);
+      virtual void dragMoveEvent (QDragMoveEvent* event);
+      virtual void dropEvent (QDropEvent* event);
 
     private slots:
       void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);

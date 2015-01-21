@@ -341,23 +341,23 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
-    Database::Database (const QString& path)
+    Database::Database ()
       : _points        (),
         _tags          (),
         _images        (),
         _point_indices (),
         _visible_image ()
     {
-      QFile file (path);
+    }
 
-      QByteArray data;
-      if (file.open (QFile::ReadOnly))
-        {
-          data = file.readAll ();
-          file.close ();
-        }
-      else
-        throw Exception (tr ("Unable to open input file %1").arg (path));
+    /*! Load XML based database */
+    void Database::load (const QString& data)
+    {
+      _points.clear ();
+      _tags.clear ();
+      _images.clear ();
+      _point_indices.clear ();
+      _visible_image = QString ();
 
       QDomDocument doc;
 
@@ -526,6 +526,8 @@ namespace HIP {
 
       computeIndices ();
       computeTags ();
+
+      emit databaseChanged (Reason::DATA, "");
     }
 
     /*! Destructor */
