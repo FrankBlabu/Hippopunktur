@@ -260,9 +260,12 @@ namespace HIP {
       if (event->mimeData ()->hasText ())
         {
           QFileInfo info (event->mimeData ()->text ());
-          if ( info.isReadable () &&
-               info.suffix ().toLower () == "xml" )
-            accepted = true;
+          if (info.isReadable ())
+            {
+              if ( info.suffix ().toLower () == "xml" ||
+                   info.suffix ().toLower () == "css" )
+                accepted = true;
+            }
         }
 
       event->acceptProposedAction ();
@@ -284,7 +287,17 @@ namespace HIP {
 
       try
       {
-        _database->load (Tools::loadResource<QString> (path));
+        QFileInfo info (event->mimeData ()->text ());
+        if (info.suffix ().toLower () == "xml")
+          _database->load (Tools::loadResource<QString> (path));
+        else if (info.suffix ().toLower () == "css")
+          {
+            qDebug () << "Reapply style sheet";
+            qApp->setStyleSheet (Tools::loadResource<QString> (path));
+            update ();
+          }
+        else
+          Q_ASSERT (false && "Illegal file suffix, should be filtered.");
       }
       catch (const Exception& exception)
       {
