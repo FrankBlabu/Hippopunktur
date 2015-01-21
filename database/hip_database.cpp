@@ -131,7 +131,7 @@ namespace HIP {
         }
 
       private:
-        inline QPair<QString, QString> splitId (const Point& p) const
+        inline QPair<QString, int> splitId (const Point& p) const
         {
           QString id = p.getId ();
 
@@ -139,13 +139,15 @@ namespace HIP {
           while (index > 0 && id[index].isNumber ())
             --index;
 
-          index = qMax (index, 0);
+          bool ok = false;
+          int count = id.mid (index + 1).toInt (&ok);
 
-          return qMakePair (id.left (index), id.mid (index));
+          return ok ? qMakePair (id.left (index + 1), count) : qMakePair (id, 0);
         }
       };
 
     }
+
 
     //#**********************************************************************
     // CLASS HIP::Database::Position
@@ -439,7 +441,7 @@ namespace HIP {
                           Position position;
                           position.setImage (position_e.attribute (Attributes::IMAGE));
                           position.setCoordinate (QPointF (position_e.attribute (Attributes::X).toDouble (&x_ok),
-                                                           position_e.attribute (Attributes::X).toDouble (&y_ok)));
+                                                           position_e.attribute (Attributes::Y).toDouble (&y_ok)));
 
                           if (!x_ok)
                             throw Exception (tr ("X coordinate is not a number"));

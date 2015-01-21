@@ -1,83 +1,337 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <database version="0.1" name="Horse">
 
-  <!-- List of points -->
-  <points>
-    <point id="BI1">
-      <tags>
-        <tag name="Hip"/>
-        <tag name="Leg"/>
-        <tag name="Hoof"/>
-        <tag name="Snout"/>
-      </tags>
-      <positions>
-        <position image="left" x="1000" y="1000"/>
-        <position image="front" x="500" y="1500"/>
-        <position image="back" x="80" y="70"/>
-        <position image="top" x="50" y="20"/>
-      </positions>
-      <description>Pain in left ear; Nervus nervoesus</description>
-      <color>blue</color>
-    </point>
-    <point id="BI2">
-      <tags>
-        <tag name="Hoof"/>
-        <tag name="Snout"/>
-      </tags>
-      <positions>
-        <position image="left" x="1500" y="1500"/>
-        <position image="front" x="800" y="1500"/>
-        <position image="top" x="50" y="60"/>
-      </positions>
-      <description>Pain in right ear</description>
-      <color>blue</color>
-    </point>
-    <point id="BI3">
-      <tags>
-        <tag name="Leg"/>
-        <tag name="Back"/>
-      </tags>
-      <positions>
-        <position image="left" x="2500" y="2000"/>
-        <position image="back" x="20" y="80"/>
-      </positions>
-      <description>Mystic soul healing point</description>
-      <color>blue</color>
-    </point>
-    <point id="CI1">
-      <tags>
-        <tag name="Head"/>
-      </tags>
-      <positions>
-        <position image="left" x="500" y="800"/>
-        <position image="front" x="1800" y="2000"/>
-        <position image="bottom" x="80" y="50"/>
-      </positions>
-      <description>Do not touch this point, horse will explode !</description>
-      <color>green</color>
-    </point>
-    <point id="CI2">
-      <tags>
-        <tag name="Head"/>
-      </tags>
-      <positions>
-        <position image="left" x="100" y="400"/>
-        <position image="back" x="60" y="60"/>
-        <position image="bottom" x="20" y="10"/>
-      </positions>
-      <description>Horse gear shift</description>
-      <color>#ff0000</color>
-    </point>
-  </points>
+    <!--List of points-->
+    <points>
+        <point id="BI1">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="128.902" y="179.277"/>
+                <position image="front" x="233.7" y="143.86"/>
+                <position image="top" x="151.247" y="94.3405"/>
+            </positions>
+            <description>Pain in left ear; Nervus nervoesus</description>
+            <color>#0000ff</color>
+        </point>
+        <point id="BI2">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="173.556" y="94.0285"/>
+                <position image="front" x="233.7" y="98.5914"/>
+                <position image="top" x="143.302" y="134.066"/>
+            </positions>
+            <description>Pain in right ear</description>
+            <color>#0000ff</color>
+        </point>
+        <point id="BI3">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="45.0071" y="232.05"/>
+                <position image="front" x="216.599" y="156.938"/>
+                <position image="top" x="168.272" y="31.9152"/>
+            </positions>
+            <description>Mystic soul healing point</description>
+            <color>#0000ff</color>
+        </point>
+        <point id="BI4">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="218.21" y="80.497"/>
+                <position image="top" x="148.977" y="198.761"/>
+                <position image="front" x="226.658" y="86.5197"/>
+            </positions>
+            <description>Don't what this point does</description>
+            <color>#0000ff</color>
+        </point>
+        <point id="BI5">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="281.809" y="111.62"/>
+                <position image="top" x="156.922" y="264.591"/>
+            </positions>
+            <description>Only black needles here</description>
+            <color>#0000ff</color>
+        </point>
+        <point id="BI6">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="200.62" y="246.935"/>
+                <position image="bottom" x="260.361" y="159.755"/>
+                <position image="front" x="226.658" y="242.446"/>
+            </positions>
+            <description>Accelerate horse</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI7">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="311.578" y="367.365"/>
+                <position image="front" x="241.748" y="324.935"/>
+                <position image="bottom" x="283.491" y="182.885"/>
+            </positions>
+            <description>Ouch ! That hurt !</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI8">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="342.7" y="448.554"/>
+                <position image="front" x="245.772" y="362.157"/>
+            </positions>
+            <description>Apply with care</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI9">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="423.889" y="693.474"/>
+                <position image="front" x="289.029" y="598.56"/>
+            </positions>
+            <description>Point of no return</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI10">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="430.655" y="713.772"/>
+                <position image="front" x="278.969" y="616.668"/>
+            </positions>
+            <description>Mystic soul healing point</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI11">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="372.693" y="559.379"/>
+                <position image="bottom" x="331.744" y="216.449"/>
+                <position image="front" x="296.098" y="505.42"/>
+            </positions>
+            <description>Applying a needle here will color tail green</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="BI12">
+            <tags>
+                <tag name="Head"/>
+                <tag name="Snout"/>
+            </tags>
+            <positions>
+                <position image="left" x="440.38" y="854.103"/>
+                <position image="bottom" x="370.324" y="134.614"/>
+                <position image="front" x="291.013" y="741.343"/>
+            </positions>
+            <description>Stomach connection</description>
+            <color>#ff00ff</color>
+        </point>
+        <point id="CI1">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="1018.55" y="304.14"/>
+                <position image="top" x="126.764" y="888.191"/>
+                <position image="back" x="165.764" y="93.4275"/>
+            </positions>
+            <description>Do not touch this point, horse will explode !</description>
+            <color>#008000</color>
+        </point>
+        <point id="CI2">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="1021.37" y="526.945"/>
+                <position image="back" x="99.779" y="343.717"/>
+            </positions>
+            <description>Horse gear shift</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI3">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="926.886" y="259.015"/>
+                <position image="back" x="190.793" y="74.087"/>
+                <position image="top" x="171.511" y="876.717"/>
+            </positions>
+            <description>Horse USB port</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI4">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="926.886" y="376.058"/>
+                <position image="top" x="103.818" y="776.899"/>
+            </positions>
+            <description>Related to points BI2 and BI4</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI5">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="959.32" y="322.472"/>
+                <position image="back" x="136.185" y="119.594"/>
+                <position image="top" x="111.849" y="828.529"/>
+            </positions>
+            <description>The chinese would use this point</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI6">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="926.886" y="510.024"/>
+                <position image="bottom" x="332.913" y="627.966"/>
+            </positions>
+            <description>Horse gear shift</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI7">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="1015.73" y="397.211"/>
+                <position image="back" x="162.351" y="184.442"/>
+                <position image="top" x="146.269" y="874.423"/>
+            </positions>
+            <description>Horse left turn signal flasher</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="CI8">
+            <tags>
+                <tag name="Back"/>
+            </tags>
+            <positions>
+                <position image="left" x="1032.65" y="621.426"/>
+                <position image="back" x="124.808" y="579.217"/>
+            </positions>
+            <description>Horse right turn signal flashes</description>
+            <color>#ff0000</color>
+        </point>
+        <point id="DI1">
+            <tags>
+                <tag name="Spine"/>
+            </tags>
+            <positions>
+                <position image="left" x="616.651" y="280.167"/>
+                <position image="top" x="148.564" y="591.029"/>
+            </positions>
+            <description>Flip horse</description>
+            <color>#00ff00</color>
+        </point>
+        <point id="DI2">
+            <tags>
+                <tag name="Spine"/>
+            </tags>
+            <positions>
+                <position image="left" x="564.475" y="280.167"/>
+                <position image="top" x="137.091" y="564.64"/>
+            </positions>
+            <description>Main spine connection</description>
+            <color>#00ff00</color>
+        </point>
+        <point id="DI3">
+            <tags>
+                <tag name="Spine"/>
+            </tags>
+            <positions>
+                <position image="left" x="661.776" y="315.421"/>
+                <position image="top" x="129.059" y="616.271"/>
+            </positions>
+            <description>Connected to front left leg</description>
+            <color>#00ff00</color>
+        </point>
+        <point id="XP1">
+            <tags>
+                <tag name="Abdomen"/>
+            </tags>
+            <positions>
+                <position image="left" x="644.854" y="505.793"/>
+                <position image="bottom" x="306.024" y="429.222"/>
+            </positions>
+            <description>Horse will empty bowel. Step back first.</description>
+            <color>#00ffff</color>
+        </point>
+        <point id="XP2">
+            <tags>
+                <tag name="Abdomen"/>
+            </tags>
+            <positions>
+                <position image="left" x="715.362" y="494.512"/>
+                <position image="bottom" x="314.208" y="464.295"/>
+            </positions>
+            <description>Tickling here will make horse laughing.</description>
+            <color>#00ffff</color>
+        </point>
+        <point id="XP3">
+            <tags>
+                <tag name="Abdomen"/>
+            </tags>
+            <positions>
+                <position image="left" x="616.651" y="519.895"/>
+                <position image="bottom" x="320.053" y="397.657"/>
+            </positions>
+            <description>Honestly, we do not now what this point does.</description>
+            <color>#00ffff</color>
+        </point>
+        <point id="XP4">
+            <tags>
+                <tag name="Abdomen"/>
+            </tags>
+            <positions>
+                <position image="left" x="673.057" y="463.488"/>
+                <position image="bottom" x="320.053" y="446.758"/>
+            </positions>
+            <description>Point blank</description>
+            <color>#00ffff</color>
+        </point>
+    </points>
 
-  <!-- List of images -->
-  <images>
-    <image id="left"   title="Left"   path=":/assets/models/horse/left.jpg"/>
-    <!-- <image id="right"  title="Right"  path=":/assets/models/horse/right.jpg"/> -->
-    <image id="top"    title="Top"    path=":/assets/models/horse/top.jpg"/>
-    <image id="bottom" title="Bottom" path=":/assets/models/horse/bottom.jpg"/>
-    <image id="front"  title="Front"  path=":/assets/models/horse/front.jpg"/>
-    <image id="back"   title="Back"   path=":/assets/models/horse/back.jpg"/>
-  </images>
-
+    <!--List of images-->
+    <images>
+        <image id="left" title="Left" path=":/assets/models/horse/left.jpg"/>
+        <image id="top" title="Top" path=":/assets/models/horse/top.jpg"/>
+        <image id="bottom" title="Bottom" path=":/assets/models/horse/bottom.jpg"/>
+        <image id="front" title="Front" path=":/assets/models/horse/front.jpg"/>
+        <image id="back" title="Back" path=":/assets/models/horse/back.jpg"/>
+    </images>
 </database>

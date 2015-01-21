@@ -251,9 +251,12 @@ namespace HIP {
           positions.push_back (position);
 
           _point.setPositions (positions);
+
+          QString id = _point.getId ();
           _database->setPoint (_point);
+
           _database->clearSelection ();
-          _database->select (_point.getId ());
+          _database->select (id);
           _database->setVisibleImage (image_id);
         }
 
@@ -358,16 +361,19 @@ namespace HIP {
         }
 
       QSignalBlocker description_blocker (_ui->_description_w);
+      QSignalBlocker tags_blocker (_ui->_tags_w);
 
       if (_point.isValid ())
         {
           _ui->_name_w->setText (_point.getId ());
           _ui->_description_w->setText (_point.getDescription ());
+          _ui->_tags_w->setText (QStringList (_point.getTags ()).join (","));
         }
       else
         {
           _ui->_name_w->clear ();
           _ui->_description_w->clear ();
+          _ui->_tags_w->clear ();
         }
 
       updateColorButton ();

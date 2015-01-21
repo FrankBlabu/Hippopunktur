@@ -32,6 +32,15 @@ namespace HIP {
     /*! Point radius [STATIC] */
     const double ImageWidget::POINT_RADIUS = 5.0;
 
+    /*! Empty widget background color [STATIC] */
+    const QColor ImageWidget::BACKGROUND_COLOR (0x40, 0x40, 0x40);
+
+    /*! Color of the unselected points [STATIC] */
+    const QColor ImageWidget::UNSELECTED_POINT_COLOR (0x80, 0x80, 0x80, 0x80);
+
+    /*! Color of the unselected points [STATIC] */
+    const QColor ImageWidget::SELECTED_POINT_TEXT_COLOR (0xe0, 0xe0, 0xe0);
+
     /*! Constructor */
     ImageWidget::ImageWidget (Database::Database* database, const Database::Image& image, QWidget* parent)
       : QWidget (parent),
@@ -162,12 +171,12 @@ namespace HIP {
     void ImageWidget::paintEvent (QPaintEvent* event)
     {
       Q_UNUSED (event);
+      QWidget::paintEvent (event);
 
       if (!_pixmap.isNull ())
         {
-          QColor unselected_color (0x00, 0x00, 0x00, 0x33);
-
           QPainter painter (this);
+          painter.fillRect (rect (), BACKGROUND_COLOR);
           painter.drawPixmap (rect (), _pixmap, _viewport);
 
           painter.setFont (QFont ());
@@ -182,12 +191,12 @@ namespace HIP {
                         {
                           QPointF p = toWidgetPoint (position.getCoordinate ());
 
-                          painter.setPen (point.getSelected () ? point.getColor () : unselected_color);
-                          painter.setBrush (point.getSelected () ? point.getColor () : unselected_color);
+                          painter.setPen (point.getSelected () ? point.getColor () : UNSELECTED_POINT_COLOR);
+                          painter.setBrush (point.getSelected () ? point.getColor () : UNSELECTED_POINT_COLOR);
                           painter.drawEllipse (toWidgetPoint (position.getCoordinate ()),
                                                POINT_RADIUS, POINT_RADIUS);
 
-                          painter.setPen (point.getSelected () ? QColor ("black") : unselected_color);
+                          painter.setPen (point.getSelected () ? SELECTED_POINT_TEXT_COLOR : UNSELECTED_POINT_COLOR);
                           painter.drawText (p + QPointF (2.0 * POINT_RADIUS, POINT_RADIUS), point.getId ());
                         }
                     }

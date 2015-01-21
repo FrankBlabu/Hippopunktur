@@ -84,6 +84,9 @@ namespace HIP {
       QPointF _selected_coordinate;
 
       static const double POINT_RADIUS;
+      static const QColor BACKGROUND_COLOR;
+      static const QColor UNSELECTED_POINT_COLOR;
+      static const QColor SELECTED_POINT_TEXT_COLOR;
     };
 
     /*
