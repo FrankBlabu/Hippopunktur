@@ -278,14 +278,18 @@ namespace HIP {
       Q_ASSERT (event->mimeData ()->hasText ());
       event->acceptProposedAction ();
 
+      QString path = QUrl (event->mimeData ()->text ()).path ();
+      if (path.startsWith ('/') || path.startsWith ('\\'))
+        path.remove (0, 1);
+
       try
       {
-        _database->load (Tools::loadResource<QString> (QUrl (event->mimeData ()->text ()).path ()));
+        _database->load (Tools::loadResource<QString> (path));
       }
       catch (const Exception& exception)
       {
         QMessageBox::critical (this, tr ("Load error"), tr ("Unable to load '%1':\n\n %2")
-                               .arg (event->mimeData ()->text ())
+                               .arg (path)
                                .arg (exception.getText ()));
       }
 

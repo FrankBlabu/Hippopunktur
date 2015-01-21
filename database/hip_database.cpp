@@ -353,11 +353,10 @@ namespace HIP {
     /*! Load XML based database */
     void Database::load (const QString& data)
     {
-      _points.clear ();
-      _tags.clear ();
-      _images.clear ();
-      _point_indices.clear ();
-      _visible_image = QString ();
+      QString database_name;
+      QList<Point> database_points;
+      QList<QString> database_tags;
+      QList<Image> database_images;
 
       QDomDocument doc;
 
@@ -367,12 +366,12 @@ namespace HIP {
       if (doc.setContent (data, &error_message, &error_line, &error_column))
         {
           if (doc.documentElement ().tagName () != Tags::DATABASE)
-            throw Exception (tr ("Illegal points database format"));
+            throwDOMException (doc.documentElement (), tr ("Illegal points database format"));
 
           if (!doc.documentElement ().hasAttribute (Attributes::NAME))
-            throw Exception (tr ("Database name missing"));
+            throwDOMException (doc.documentElement (), tr ("Database name missing"));
 
-          _name = doc.documentElement ().attribute (Attributes::NAME);
+          database_name = doc.documentElement ().attribute (Attributes::NAME);
 
           for ( QDomNode top_n = doc.documentElement ().firstChild (); !top_n.isNull ();
                 top_n = top_n.nextSibling () )
@@ -392,9 +391,9 @@ namespace HIP {
                       //
                       QDomElement point_e = point_n.toElement ();
                       if (point_e.tagName () != Tags::POINT)
-                        throw Exception (tr ("Point element expected, but got %1").arg (point_e.tagName ()));
+                        throwDOMException (point_e, tr ("Point element expected, but got %1").arg (point_e.tagName ()));
                       if (!point_e.hasAttribute (Attributes::ID))
-                        throw Exception (tr ("Point entry does not have an id"));
+                        throwDOMException (point_e, tr ("Point entry does not have an id"));
 
                       Point point;
                       point.setId (point_e.attribute (Attributes::ID));
@@ -409,7 +408,7 @@ namespace HIP {
                         {
                           QDomElement tag_e = tags_l.at (i).toElement ();
                           if (!tag_e.hasAttribute (Attributes::NAME))
-                            throw Exception (tr ("Tag entry does not have an name"));
+                            throwDOMException (tag_e, tr ("Tag entry does not have an name"));
 
                           tags.push_back (tag_e.attribute (Attributes::NAME));
                         }
@@ -423,17 +422,17 @@ namespace HIP {
 
                       QDomNodeList positions_l = point_e.elementsByTagName (Tags::POSITION);
                       if (positions_l.isEmpty ())
-                        throw Exception (tr ("Point entry does not have a position"));
+                        throwDOMException (point_e, tr ("Point entry does not have a position"));
 
                       for (int i=0; i < positions_l.count (); ++i)
                         {
                           QDomElement position_e = positions_l.at (i).toElement ();
                           if (!position_e.hasAttribute (Attributes::IMAGE))
-                            throw Exception (tr ("Position must specify an image"));
+                            throwDOMException (position_e, tr ("Position must specify an image"));
                           if (!position_e.hasAttribute (Attributes::X))
-                            throw Exception (tr ("Position must specify an x coordinate"));
+                            throwDOMException (position_e, tr ("Position must specify an x coordinate"));
                           if (!position_e.hasAttribute (Attributes::Y))
-                            throw Exception (tr ("Position must specify a y coordinate"));
+                            throwDOMException (position_e, tr ("Position must specify a y coordinate"));
 
                           bool x_ok = true;
                           bool y_ok = true;
@@ -444,9 +443,9 @@ namespace HIP {
                                                            position_e.attribute (Attributes::Y).toDouble (&y_ok)));
 
                           if (!x_ok)
-                            throw Exception (tr ("X coordinate is not a number"));
+                            throwDOMException (position_e, tr ("X coordinate is not a number"));
                           if (!y_ok)
-                            throw Exception (tr ("Y coordinate is not a number"));
+                            throwDOMException (position_e, tr ("Y coordinate is not a number"));
 
                           positions.push_back (position);
                         }
@@ -458,9 +457,9 @@ namespace HIP {
                       //
                       QDomElement description_e = point_e.namedItem (Tags::DESCRIPTION).toElement ();
                       if (description_e.isNull ())
-                        throw Exception (tr ("Point entry does not have a description"));
+                        throwDOMException (description_e, tr ("Point entry does not have a description"));
                       if (!description_e.firstChild ().isCharacterData ())
-                        throw Exception (tr ("Character data expected for point description"));
+                        throwDOMException (description_e, tr ("Character data expected for point description"));
 
 
                       point.setDescription (description_e.firstChild ().toCharacterData ().data ());
@@ -470,18 +469,18 @@ namespace HIP {
                       //
                       QDomElement color_e = point_e.namedItem (Tags::COLOR).toElement ();
                       if (color_e.isNull ())
-                        throw Exception (tr ("Point entry does not have a color"));
+                        throwDOMException (color_e, tr ("Point entry does not have a color"));
                       if (!color_e.firstChild ().isCharacterData ())
-                        throw Exception (tr ("Character data expected for point color"));
+                        throwDOMException (color_e, tr ("Character data expected for point color"));
 
                       QString color_name = color_e.firstChild ().toCharacterData ().data ();
                       QColor color (color_name);
                       if (!color.isValid ())
-                        throw Exception (tr ("Invalid point color '%1'").arg (color_name));
+                        throwDOMException (color_e, tr ("Invalid point color '%1'").arg (color_name));
 
                       point.setColor (color);
 
-                      _points.push_back (point);
+                      database_points.push_back (point);
                     }
                 }
 
@@ -497,18 +496,18 @@ namespace HIP {
                       if (image_e.tagName () == Tags::IMAGE)
                         {
                           if (!image_e.hasAttribute (Attributes::ID))
-                            throw Exception (tr ("Image entry does not have an id"));
+                            throwDOMException (image_e, tr ("Image entry does not have an id"));
                           if (!image_e.hasAttribute (Attributes::TITLE))
-                            throw Exception (tr ("Image entry does not have a title"));
+                            throwDOMException (image_e, tr ("Image entry does not have a title"));
                           if (!image_e.hasAttribute (Attributes::PATH))
-                            throw Exception (tr ("Image entry does not have a path"));
+                            throwDOMException (image_e, tr ("Image entry does not have a path"));
 
                           Image image;
                           image.setId (image_e.attribute (Attributes::ID));
                           image.setTitle (image_e.attribute (Attributes::TITLE));
                           image.setPath (image_e.attribute (Attributes::PATH));
 
-                          _images.append (image);
+                          database_images.append (image);
                         }
                     }
                 }
@@ -517,11 +516,18 @@ namespace HIP {
       else
         throw Exception (tr ("Error parsing points database in line %1: %2").arg (error_line).arg (error_message));
 
-      std::sort (_points.begin (), _points.end (), PointComparator ());
+      std::sort (database_points.begin (), database_points.end (), PointComparator ());
 
-      if (_images.isEmpty ())
+      if (database_images.isEmpty ())
         throw Exception (tr ("No images found in database."));
 
+      //
+      // At this point everything went OK, loaded data can be assigned
+      //
+      _name = database_name;
+      _points = database_points;
+      _tags = database_tags;
+      _images = database_images;
       _visible_image = _images.front ().getId ();
 
       computeIndices ();
@@ -779,6 +785,21 @@ namespace HIP {
 
       return text;
     }
+
+    /*
+     * Throw exception with node related error information
+     */
+    void Database::throwDOMException (const QDomNode& node, const QString& message) const
+    {
+      if (node.lineNumber () >= 0)
+        throw Exception (tr ("Error in line %1: %2")
+                         .arg (node.lineNumber ())
+                         .arg (message));
+      else
+        throw Exception (message);
+
+    }
+
 
   }
 }

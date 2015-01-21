@@ -15,7 +15,7 @@
 #include <QFile>
 #include <QPointF>
 
-class QDomDocument;
+class QDomNode;
 
 namespace HIP {
   namespace Database {
@@ -183,19 +183,29 @@ namespace HIP {
     private:
       void computeTags ();
       void computeIndices ();
+      void throwDOMException (const QDomNode& node, const QString& message) const;
 
       int findIndex (const QString& id) const;
 
     private:
+      //
+      // Database data
+      //
       QString _name;
 
       QList<Point> _points;
       QList<QString> _tags;
       QList<Image> _images;
 
+      //
+      // Database cached data
+      //
       typedef QMap<QString, int> PointIndexMap;
       PointIndexMap _point_indices;
 
+      //
+      // Database state
+      //
       QString _visible_image;
       QString _filter;
     };
