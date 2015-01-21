@@ -5,11 +5,6 @@
         <file>core/AboutDialog.qml</file>
         <file>data/database.xml</file>
         <file>assets/about.html</file>
-        <file>assets/images/main.jpg</file>
-        <file>assets/images/front.jpg</file>
-        <file>assets/images/back.jpg</file>
-        <file>assets/images/top.jpg</file>
-        <file>assets/images/bottom.jpg</file>
         <file>assets/icons/busy_indicator.png</file>
         <file>assets/style/branch_closed.png</file>
         <file>assets/style/branch_closed-on.png</file>
