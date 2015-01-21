@@ -665,6 +665,7 @@ namespace HIP {
       std::sort (_tags.begin (), _tags.end ());
     }
 
+
     /*! Compute point index list */
     void Database::computeIndices ()
     {
