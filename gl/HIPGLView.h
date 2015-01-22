@@ -7,6 +7,8 @@
 #ifndef __HIPGLView_h__
 #define __HIPGLView_h__
 
+#include "database/HIPDatabase.h"
+
 #include <QWidget>
 
 namespace Ui {
@@ -26,8 +28,11 @@ namespace HIP {
       Q_OBJECT
 
     public:
-      explicit View (const QString& model_path, QWidget* parent);
+      explicit View (const Database::Database* database, const QString& model_path, QWidget* parent);
       virtual ~View ();
+
+    private slots:
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
 
     private:
       Ui::HIP_GL_View* _ui;

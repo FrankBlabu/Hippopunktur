@@ -120,6 +120,9 @@ namespace HIP {
     {
       _ui->setupUi (this);
 
+      setWindowTitle (QString ("%1 V%2")
+                      .arg (qApp->applicationName ())
+                      .arg (qApp->applicationVersion ()));
       setAcceptDrops (true);
 
       new Tools::StatusBar (_ui->_status_bar_w);
@@ -135,7 +138,7 @@ namespace HIP {
       _ui->_tab_w->clear ();
 
 #ifdef HIP_USE_3D_VIEW
-      _ui->_tab_w->addTab (new GL::View (MODEL_PATH, _ui->_tab_w), tr ("3D model"));
+      _ui->_tab_w->addTab (new GL::View (database, MODEL_PATH, _ui->_tab_w), tr ("3D model"));
 #endif
 
       foreach (const Database::Image& image, database->getImages ())

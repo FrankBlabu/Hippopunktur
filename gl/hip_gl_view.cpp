@@ -35,6 +35,7 @@ namespace HIP {
       Model* _model;
     };
 
+
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
@@ -60,13 +61,15 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
-    View::View (const QString& model_path, QWidget* parent)
+    View::View (const Database::Database* database, const QString& model_path, QWidget* parent)
       : QWidget(parent),
         _ui     (new Ui::HIP_GL_View),
         _widget (0)
     {
       _ui->setupUi (this);
       _widget = Tools::addToParent (new Widget (model_path, _ui->_view_w));
+
+      connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
     }
 
     /*! Destructor */
@@ -74,6 +77,18 @@ namespace HIP {
     {
       delete _ui;
     }
+
+    /*! React on database changes */
+    void View::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    {
+      Q_UNUSED (id);
+
+      if (reason == Database::Database::Reason::DATA)
+        {
+
+        }
+    }
+
 
   }
 }
