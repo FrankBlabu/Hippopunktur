@@ -58,8 +58,6 @@ namespace HIP {
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
 
-      qDebug () << "* Load model, path=" << path;
-
       QTextStream file (&content, QIODevice::ReadOnly);
 
       for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
@@ -131,6 +129,7 @@ namespace HIP {
         }
 
 #if 0
+      qDebug () << "* Load model, path=" << path;
       qDebug () << "  name=" << _name;
       qDebug () << "  " << _vertices.size () << " vertices";
       qDebug () << "  " << _normals.size () << " normals";
