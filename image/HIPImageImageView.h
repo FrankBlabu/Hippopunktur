@@ -58,7 +58,7 @@ namespace HIP {
 
     private slots:
       void onImageLoaded ();
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       QString getPointAt (const QPointF& pos) const;

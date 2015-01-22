@@ -32,7 +32,7 @@ namespace HIP {
       virtual ~View ();
 
     private slots:
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       Ui::HIP_GL_View* _ui;

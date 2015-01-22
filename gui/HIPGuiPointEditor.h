@@ -53,7 +53,7 @@ namespace HIP {
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
 
     private slots:
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       Database::Database* _database;
@@ -97,7 +97,7 @@ namespace HIP {
       void imageSelected (const QString& id);
 
     private slots:
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       void updateColorButton ();

@@ -40,7 +40,7 @@ namespace HIP {
 
     private slots:
       void onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected);
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       Ui::HIP_Explorer_ExplorerView* _ui;

@@ -79,13 +79,11 @@ namespace HIP {
     }
 
     /*! React on database changes */
-    void View::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void View::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
-      Q_UNUSED (id);
-
       if (reason == Database::Database::Reason::DATA)
         {
-
+          Q_ASSERT (!data.isValid ());
         }
     }
 

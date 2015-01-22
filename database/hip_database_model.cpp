@@ -37,12 +37,14 @@ namespace HIP {
     }
 
     /* Database change listener */
-    void DatabaseFilterProxyModel::onDatabaseChanged (Database::Reason_t reason, const QString& id)
+    void DatabaseFilterProxyModel::onDatabaseChanged (Database::Reason_t reason, const QVariant& data)
     {
       if (reason == Database::Reason::FILTER)
         {
+          Q_ASSERT (data.type () == QVariant::String);
+
           beginResetModel ();
-          _tag = id;
+          _tag = data.toString ();
           endResetModel ();
         }
     }
@@ -166,17 +168,21 @@ namespace HIP {
       return data;
     }
 
-    void DatabaseModel::onDatabaseChanged (Database::Reason_t reason, const QString& id)
+    void DatabaseModel::onDatabaseChanged (Database::Reason_t reason, const QVariant& data)
     {
       QModelIndex index;
 
-      for (int i=0; i < _database->getPoints ().size (); ++i)
-        if (_database->getPoints ()[i].getId () == id)
-          index = this->index (i, 0, QModelIndex ());
+      if (data.type () == QVariant::String)
+        {
+          for (int i=0; i < _database->getPoints ().size (); ++i)
+            if (_database->getPoints ()[i].getId () == data.toString ())
+              index = this->index (i, 0, QModelIndex ());
+        }
 
       switch (reason)
         {
         case Database::Reason::DATA:
+          Q_ASSERT (!data.isValid ());
           beginResetModel ();
           endResetModel ();
           break;

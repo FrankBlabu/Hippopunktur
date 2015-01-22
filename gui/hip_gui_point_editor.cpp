@@ -145,9 +145,9 @@ namespace HIP {
       return data;
     }
 
-    void PointEditorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void PointEditorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
-      Q_UNUSED (id);
+      Q_UNUSED (data);
 
       switch (reason)
         {
@@ -326,9 +326,9 @@ namespace HIP {
         }
     }
 
-    void PointEditor::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void PointEditor::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
-      Q_UNUSED (id);
+      Q_UNUSED (data);
 
       switch (reason)
         {
@@ -351,7 +351,9 @@ namespace HIP {
 
         case Database::Database::Reason::VISIBLE_IMAGE:
           {
-            QModelIndex index =  _model->getIndex (id);
+            Q_ASSERT (data.type () == QVariant::String);
+
+            QModelIndex index =  _model->getIndex (data.toString ());
             if (index.isValid ())
               _ui->_positions_w->selectionModel ()->select (index, QItemSelectionModel::Clear | QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
             else

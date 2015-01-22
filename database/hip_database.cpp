@@ -533,7 +533,7 @@ namespace HIP {
       computeIndices ();
       computeTags ();
 
-      emit databaseChanged (Reason::DATA, "");
+      emit databaseChanged (Reason::DATA, QVariant ());
     }
 
     /*! Destructor */
@@ -567,7 +567,7 @@ namespace HIP {
       computeIndices ();
       computeTags ();
 
-      emit databaseChanged (Reason::DATA, "");
+      emit databaseChanged (Reason::DATA, QVariant ());
     }
 
     /*! Get image entry from database */
@@ -595,7 +595,7 @@ namespace HIP {
       if (!point.getSelected ())
         {
           point.setSelected (true);
-          emit databaseChanged (Reason::SELECTION, point.getId ());
+          emit databaseChanged (Reason::SELECTION, qVariantFromValue (point.getId ()));
         }
     }
 
@@ -610,7 +610,7 @@ namespace HIP {
       if (point.getSelected ())
         {
           point.setSelected (false);
-          emit databaseChanged (Reason::SELECTION, point.getId ());
+          emit databaseChanged (Reason::SELECTION, qVariantFromValue (point.getId ()));
         }
     }
 
@@ -632,7 +632,7 @@ namespace HIP {
 
       _visible_image = id;
 
-      emit databaseChanged (Reason::VISIBLE_IMAGE, _visible_image);
+      emit databaseChanged (Reason::VISIBLE_IMAGE, qVariantFromValue (_visible_image));
     }
 
     /*! Return the current filter configuration */
@@ -645,7 +645,7 @@ namespace HIP {
     void Database::setFilter (const QString &filter)
     {
       _filter = filter;
-      emit databaseChanged (Reason::FILTER, _filter);
+      emit databaseChanged (Reason::FILTER, qVariantFromValue (_filter));
     }
 
     /*! Clear selection */
@@ -658,7 +658,7 @@ namespace HIP {
           if (point.getSelected ())
             {
               point.setSelected (false);
-              emit databaseChanged (Reason::SELECTION, point.getId ());
+              emit databaseChanged (Reason::SELECTION, qVariantFromValue (point.getId ()));
             }
         }
     }

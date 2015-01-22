@@ -47,7 +47,7 @@ namespace HIP {
       virtual void dropEvent (QDropEvent* event);
 
     private slots:
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
       void onCurrentTabChanged (int index);
       void onExportDatabase ();
       void onAbout ();

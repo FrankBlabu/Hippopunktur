@@ -32,7 +32,7 @@ namespace HIP {
       virtual bool	filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
     private slots:
-      void onDatabaseChanged (Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Reason_t reason, const QVariant& data);
 
     private:
       QString _tag;
@@ -74,7 +74,7 @@ namespace HIP {
       virtual QVariant headerData (int section, Qt::Orientation orientation, int role) const;
 
     private slots:
-      void onDatabaseChanged (Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Reason_t reason, const QVariant& data);
 
     private:
       Database* _database;

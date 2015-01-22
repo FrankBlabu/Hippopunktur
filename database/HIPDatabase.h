@@ -178,7 +178,7 @@ namespace HIP {
       QString toXML () const;
 
     signals:
-      void databaseChanged (Reason_t reason, const QString& id);
+      void databaseChanged (Reason_t reason, const QVariant& data);
 
     private:
       void computeTags ();

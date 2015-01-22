@@ -66,7 +66,7 @@ namespace HIP {
     {
     }
 
-    void ImageWidget::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void ImageWidget::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
       switch (reason)
         {
@@ -77,7 +77,8 @@ namespace HIP {
           break;
 
         case Database::Database::Reason::FILTER:
-          _tag = id;
+          Q_ASSERT (data.type () == QVariant::String);
+          _tag = data.toString ();
           update ();
           break;
 

@@ -88,9 +88,9 @@ namespace HIP {
       return result;
     }
 
-    void TagSelectorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void TagSelectorModel::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
-      Q_UNUSED (id);
+      Q_UNUSED (data);
 
       switch (reason)
         {

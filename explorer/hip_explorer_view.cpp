@@ -165,7 +165,7 @@ namespace HIP {
         }
     }
 
-    void ExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void ExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
       if (!_update_in_progress)
         {
@@ -175,6 +175,9 @@ namespace HIP {
             {
             case Database::Database::Reason::SELECTION:
               {
+                Q_ASSERT (data.type () == QVariant::String);
+
+                QString id = data.toString ();
                 Q_ASSERT (!id.isEmpty ());
 
                 QModelIndex index = _filter->mapFromSource (_model->getIndex (id));

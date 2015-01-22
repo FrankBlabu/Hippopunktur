@@ -45,7 +45,7 @@ namespace HIP {
       virtual QVariant data (const QModelIndex& index, int role) const;
 
     private slots:
-      void onDatabaseChanged (Database::Database::Reason_t reason, const QString& id);
+      void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       Database::Database* _database;

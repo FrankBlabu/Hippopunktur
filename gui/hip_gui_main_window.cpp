@@ -180,7 +180,7 @@ namespace HIP {
 
 
     /*! React on database changes  */
-    void MainWindow::onDatabaseChanged (Database::Database::Reason_t reason, const QString& id)
+    void MainWindow::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
       switch (reason)
         {
@@ -213,12 +213,14 @@ namespace HIP {
 
         case Database::Database::Reason::VISIBLE_IMAGE:
           {
+            Q_ASSERT (data.type () == QVariant::String);
+
             Image::ImageView* view = 0;
 
             for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
               {
                 Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-                if (candidate != 0 && candidate->getImage ().getId () == id)
+                if (candidate != 0 && candidate->getImage ().getId () == data.toString ())
                   view = candidate;
               }
 
