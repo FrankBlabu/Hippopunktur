@@ -5,33 +5,68 @@
  */
 
 #include "HIPGLView.h"
+#include "HIPGLModel.h"
 #include "ui_hip_gl_view.h"
 
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 
-#include <QQuickWidget>
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+
 
 namespace HIP {
   namespace GL {
+
+    //#**********************************************************************
+    // CLASS HIP::GL::Widget
+    //#**********************************************************************
+
+    /*
+     * Widget displaying an open GL scene
+     */
+    class Widget : public QOpenGLWidget, protected QOpenGLFunctions
+    {
+    public:
+      Widget (const QString& model_path, QWidget* parent);
+      virtual ~Widget ();
+
+    private:
+      Model* _model;
+    };
+
+    /*! Constructor */
+    Widget::Widget (const QString& model_path, QWidget* parent)
+      : QOpenGLWidget (parent),
+        _model (new Model (model_path))
+    {
+    }
+
+    /*! Destructor */
+    Widget::~Widget ()
+    {
+      makeCurrent ();
+
+      // Delete GL related structures
+
+      doneCurrent ();
+
+      delete _model;
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::GL::View
     //#**********************************************************************
 
     /*! Constructor */
-    View::View (QWidget* parent)
+    View::View (const QString& model_path, QWidget* parent)
       : QWidget(parent),
-        _ui (new Ui::HIP_GL_View)
+        _ui     (new Ui::HIP_GL_View),
+        _widget (0)
     {
       _ui->setupUi (this);
-
-      QQuickWidget* content = Tools::addToParent (new QQuickWidget (_ui->_view_w));
-
-      content->setSource (QUrl ("qrc:/gl/View.qml"));
-
-      if (content->status () != QQuickWidget::Ready)
-        throw Exception (Tools::toString (content->errors ()));
+      _widget = Tools::addToParent (new Widget (model_path, _ui->_view_w));
     }
 
     /*! Destructor */

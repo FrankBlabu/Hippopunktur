@@ -23,7 +23,8 @@ SOURCES += \
     gl/hip_gl_view.cpp \
     gui/hip_gui_point_editor.cpp \
     gui/hip_gui_main_window.cpp \
-    image/hip_image_imageview.cpp
+    image/hip_image_imageview.cpp \
+    gl/hip_gl_model.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -45,7 +46,8 @@ HEADERS += \
     gui/HIPGuiMainWindow.h \
     gui/HIPGuiPointEditor.h \
     gl/HIPGLView.h \
-    image/HIPImageImageView.h
+    image/HIPImageImageView.h \
+    gl/HIPGLModel.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \

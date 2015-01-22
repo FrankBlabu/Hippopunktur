@@ -39,5 +39,7 @@
         <file>assets/models/horse/left.jpg</file>
         <file>assets/models/horse/right.jpg</file>
         <file>assets/models/horse/top.jpg</file>
+        <file>assets/models/horse/horse.mtl</file>
+        <file>assets/models/horse/horse.obj</file>
     </qresource>
 </RCC>

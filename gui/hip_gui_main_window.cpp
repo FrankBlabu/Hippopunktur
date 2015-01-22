@@ -12,6 +12,7 @@
 #include "database/HIPDatabase.h"
 #include "explorer/HIPExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
+#include "gl/HIPGLView.h"
 #include "gui/HIPGuiPointEditor.h"
 #include "image/HIPImageImageView.h"
 
@@ -30,9 +31,23 @@
 #include <QTabWidget>
 #include <QTextStream>
 
+//
+// If defined, the experimental 3D view is displayed in addition to the regular image views
+//
+#undef HIP_USE_3D_VIEW
+#define HIP_USE_3D_VIEW
 
 namespace HIP {
   namespace Gui {
+
+    //#**********************************************************************
+    // Local data
+    //#**********************************************************************
+
+    namespace {
+      static const char* const MODEL_PATH = ":/assets/models/horse/horse.obj";
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::GUI::ImageViewInterfaceImpl
@@ -119,6 +134,10 @@ namespace HIP {
 
       _ui->_tab_w->clear ();
 
+#ifdef HIP_USE_3D_VIEW
+      _ui->_tab_w->addTab (new GL::View (MODEL_PATH, _ui->_tab_w), tr ("3D model"));
+#endif
+
       foreach (const Database::Image& image, database->getImages ())
         {
           Image::ImageView* view = new Image::ImageView (database, image, _ui->_tab_w);
@@ -180,9 +199,8 @@ namespace HIP {
             for (int i=0; i < _ui->_tab_w->count (); ++i)
               {
                 Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-                Q_ASSERT (view != 0);
-
-                _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
+                if (view != 0)
+                  _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
               }
           }
           break;
@@ -197,7 +215,7 @@ namespace HIP {
             for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
               {
                 Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-                if (candidate->getImage ().getId () == id)
+                if (candidate != 0 && candidate->getImage ().getId () == id)
                   view = candidate;
               }
 
@@ -214,9 +232,8 @@ namespace HIP {
     void MainWindow::onCurrentTabChanged (int index)
     {
       Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (index));
-      Q_ASSERT (view != 0);
-
-      _database->setVisibleImage (view->getImage ().getId ());
+      if (view != 0)
+        _database->setVisibleImage (view->getImage ().getId ());
     }
 
     /*! Export current database into file */

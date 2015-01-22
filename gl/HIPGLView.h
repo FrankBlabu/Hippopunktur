@@ -16,6 +16,8 @@ namespace Ui {
 namespace HIP {
   namespace GL {
 
+    class Widget;
+
     /*
      * View displaying a GL scene
      */
@@ -24,11 +26,12 @@ namespace HIP {
       Q_OBJECT
 
     public:
-      explicit View (QWidget* parent);
+      explicit View (const QString& model_path, QWidget* parent);
       virtual ~View ();
 
     private:
       Ui::HIP_GL_View* _ui;
+      Widget* _widget;
     };
 
   }
