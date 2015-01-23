@@ -60,6 +60,6 @@ FORMS += \
 DISTFILES += \
     assets/* \
     gl/View.qml \
-    gl/vshader.glsl \
-    gl/fshader.glsl
+    gl/FragmentShader.glsl \
+    gl/VertexShader.glsl
 

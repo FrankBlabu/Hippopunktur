@@ -41,7 +41,7 @@
         <file>assets/models/horse/top.jpg</file>
         <file>assets/models/horse/horse.mtl</file>
         <file>assets/models/horse/horse.obj</file>
-        <file>gl/vshader.glsl</file>
-        <file>gl/fshader.glsl</file>
+        <file>gl/FragmentShader.glsl</file>
+        <file>gl/VertexShader.glsl</file>
     </qresource>
 </RCC>

@@ -68,6 +68,7 @@ namespace HIP {
       QVector3D toVector3d (const QString& x, const QString& y, const QString& z) const; // throws Exception
       QVector2D toVector2d (const QString& x, const QString& y) const; // throws Exception
       double toDouble (const QString& v) const; // throws Exception
+      int toInt (const QString& v) const; // throws Exception
 
     private:
       QString _name;

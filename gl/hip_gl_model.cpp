@@ -152,13 +152,10 @@ namespace HIP {
           foreach (const Face::Point& point, face.getPoints ())
             {
               Q_ASSERT (point.getVertexIndex () >= -1 &&
-                        point.getVertexIndex () != 0 &&
                         point.getVertexIndex () <= _vertices.size ());
               Q_ASSERT (point.getNormalIndex () >= -1 &&
-                        point.getNormalIndex () != 0 &&
                         point.getNormalIndex () <= _normals.size ());
-              Q_ASSERT (point.getTextureIndex () >= 1 &&
-                        point.getTextureIndex () != 0 &&
+              Q_ASSERT (point.getTextureIndex () >= -1 &&
                         point.getTextureIndex () <= _textures.size ());
             }
         }
@@ -213,6 +210,18 @@ namespace HIP {
         throw Exception (QObject::tr ("Double value expected"));
 
       return d;
+    }
+
+    /* Convert string into integer value */
+    int Model::toInt (const QString& v) const // throws Exception
+    {
+      bool ok = false;
+      int i = v.toInt (&ok);
+
+      if (!ok)
+        throw Exception (QObject::tr ("Double value expected"));
+
+      return i;
     }
 
   }
