@@ -1,10 +1,14 @@
-#version 330 core
+#ifdef GL_ES
+precision mediump int;
+precision mediump float;
+#endif
 
-// Ouput data
-out vec3 color;
+uniform sampler2D texture;
+varying vec2 v_texcoord;
 
 void main()
 {
-  // Output color = red
-  color = vec3(1,0,0);
+    // Set fragment color from texture
+    gl_FragColor = texture2D(texture, v_texcoord);
 }
+

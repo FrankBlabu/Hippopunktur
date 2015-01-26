@@ -19,11 +19,18 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
 #include <QQuaternion>
 #include <QPainter>
 #include <QPixmap>
+#include <QScopedArrayPointer>
 #include <QWheelEvent>
 
+//
+// If set, GL shader will be used to render the model
+//
+#undef HIP_USE_SHADER
+//#define HIP_USE_SHADER
 
 namespace HIP {
   namespace GL {
@@ -32,16 +39,20 @@ namespace HIP {
     // CLASS HIP::GL::VertexData
     //#**********************************************************************
 
-    struct VertexData
-    {
-      VertexData ()
-        : _position (0, 0, 0), _texture (0, 0) {}
-      VertexData (const QVector3D& position, const QVector2D& texture)
-        : _position (position), _texture (texture) {}
+    namespace {
 
-      QVector3D _position;
-      QVector2D _texture;
-    };
+      struct VertexData
+      {
+        VertexData ()
+          : _position (0, 0, 0), _texture (0, 0) {}
+        VertexData (const QVector3D& position, const QVector2D& texture)
+          : _position (position), _texture (texture) {}
+
+        QVector3D _position;
+        QVector2D _texture;
+      };
+
+    }
 
 
     //#**********************************************************************
@@ -74,10 +85,14 @@ namespace HIP {
 
     private:
       Model* _model;
-
       QOpenGLShaderProgram _shader;
+      QOpenGLTexture* _texture;
+
       QMatrix4x4 _projection;
       QMatrix4x4 _mvp;
+
+      QOpenGLBuffer _array_buffer;
+      QOpenGLBuffer _index_buffer;
 
       QVector3D _translation;
       QVector3D _rotation;
@@ -93,6 +108,7 @@ namespace HIP {
       : QOpenGLWidget (parent),
         _model             (new Model (model_path)),
         _shader            (),
+        _texture           (0),
         _projection        (),
         _mvp               (),
         _translation       (0, 0, 0),
@@ -110,33 +126,23 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
+      delete _texture;
 
       doneCurrent ();
 
       delete _model;
     }
 
+    /*
+     * Initialize GL widget
+     */
     void Widget::initializeGL ()
     {
       initializeOpenGLFunctions ();
+
       glClearColor (0, 0, 0, 1);
 
-      glEnable (GL_DEPTH_TEST);
-      glEnable (GL_CULL_FACE);
-      glShadeModel (GL_SMOOTH);
-      glEnable (GL_LIGHTING);
-      glEnable (GL_LIGHT0);
-
-      static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
-      glLightfv (GL_LIGHT0, GL_POSITION, lightPosition);
-
-      // XXX: Horse model setup
-      _translation = QVector3D (-0.2f, -3.1f, -16.7f);
-      _rotation = QVector3D (-177, 215, -87);
-      _scaling = 0.165;
-
-#if 0
-
+#ifdef HIP_USE_SHADER
       //
       // Init shaders
       //
@@ -147,18 +153,119 @@ namespace HIP {
         throw Exception (tr ("Unable to initialize fragment shader."));
 
       if (!_shader.link ())
-        throw Exception (tr ("Shader setup failed."));
+        throw Exception (tr ("Shader linking failed."));
 
       if (!_shader.bind ())
-        throw Exception (tr ("Shader setup failed."));
-#endif
+        throw Exception (tr ("Shader binding failed."));
 
       glEnable (GL_DEPTH_TEST);
       glEnable (GL_CULL_FACE);
+
+      // XXX
+      _translation = QVector3D (0.0, 0.0, -5.0);
+      //_scaling = 0.05;
+#else
+      glEnable (GL_DEPTH_TEST);
+      glEnable (GL_CULL_FACE);
+      glShadeModel (GL_SMOOTH);
+      glEnable (GL_LIGHTING);
+      glEnable (GL_LIGHT0);
+
+      static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
+      glLightfv (GL_LIGHT0, GL_POSITION, lightPosition);
+
+      _translation = QVector3D (-0.2f, -3.1f, -16.7f);
+      _rotation = QVector3D (-177, 215, -87);
+      _scaling = 0.165;
+#endif
+
+      //
+      // Init texture
+      //
+      Q_ASSERT (_texture == 0);
+
+      _texture = new QOpenGLTexture (QImage (":/assets/models/horse/texture.png"));
+      _texture->setMinificationFilter (QOpenGLTexture::Nearest);
+      _texture->setMagnificationFilter (QOpenGLTexture::Linear);
+      _texture->setWrapMode (QOpenGLTexture::Repeat);
+
+      //
+      // Initialize vertex buffer
+      //
+      _array_buffer.create ();
+      _array_buffer.bind ();
+
+#if 0
+      {
+        QScopedArrayPointer<VertexData> vertices (new VertexData[_model->getVertices ().size ()]);
+
+        for (int i=0; i < _model->getVertices ().size (); ++i)
+          {
+            const QVector3D& vertex = _model->getVertices ()[i];
+            vertices[i] = VertexData (vertex, QVector2D (0, 0));
+            qDebug () << "  " << vertex;
+          }
+
+        _array_buffer.allocate (vertices.data (), _model->getVertices ().size () * sizeof (VertexData));
+      }
+#else
+      VertexData vertices[] = {
+        VertexData (QVector3D (+0.0f, +1.0f,  0.0f), QVector2D (0.0f, 0.0f)),
+        VertexData (QVector3D (+1.0f, -1.0f,  0.0f), QVector2D (0.0f, 0.0f)),
+        VertexData (QVector3D (-1.0f, -1.0f,  0.0f), QVector2D (0.0f, 0.0f))
+      };
+
+      _array_buffer.allocate (vertices, 3 * sizeof (VertexData));
+#endif
+
+      //
+      // Initialize index buffer
+      //
+      _index_buffer.create ();
+      _index_buffer.bind ();
+
+#if 0
+      {
+        QScopedArrayPointer<GLushort> faces (new GLushort[_model->getFaces ().size () * 3]);
+        int index = 0;
+
+        foreach (const Face& face, _model->getFaces ())
+          {
+            const QList<Face::Point>& points = face.getPoints ();
+            Q_ASSERT (points.size () == 3 && "Only triangles supported.");
+
+            foreach (const Face::Point& point, points)
+              faces[index++] = point.getVertexIndex () - 1;
+          }
+
+        for (int i=0; i < _model->getFaces ().size () * 3; ++i)
+          qDebug () << faces[i];
+
+        _index_buffer.allocate (faces.data (), _model->getFaces ().size () * 3 * sizeof (GLushort));
+      }
+#else
+      GLushort indices[] = { 0,  1,  2 };
+
+      _index_buffer.allocate (indices, 3 * sizeof (GLushort));
+
+#endif
+
+      resizeGL (width (), height ());
     }
 
+    /*
+     * Resize GL widget
+     */
     void Widget::resizeGL (int width, int height)
     {
+#ifdef HIP_USE_SHADER
+      qreal aspect = qreal (width) / qreal (qMax (height, 1));
+      const qreal zNear = 1, zFar = 7, fov = 45.0;
+
+      _projection.setToIdentity ();
+      _projection.perspective (fov, aspect, zNear, zFar);
+
+#else
       int side = qMin (width, height);
 
       glViewport ((width - side) / 2, (height - side) / 2, side, side);
@@ -166,12 +273,45 @@ namespace HIP {
       glLoadIdentity ();
       glOrtho (-2, +2, -2, +2, 1.0, 15.0);
       glMatrixMode (GL_MODELVIEW);
+#endif
     }
 
+    /*
+     * Paint GL widget
+     */
     void Widget::paintGL ()
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifdef HIP_USE_SHADER
+      Q_ASSERT (_texture != 0);
+      _texture->bind ();
+
+      _mvp.setToIdentity ();
+      _mvp.translate (0, 0, -5);
+      //_mvp.translate (_translation);
+      //_mvp.rotate (QQuaternion (1.0, _rotation.x (), _rotation.y (), _rotation.z ()));
+
+      _shader.setUniformValue ("mvp_matrix", _projection * _mvp);
+      _shader.setUniformValue ("texture", 0);
+
+      _array_buffer.bind ();
+      _index_buffer.bind ();
+
+      int vertex_location = _shader.attributeLocation ("a_position");
+      _shader.enableAttributeArray (vertex_location);
+      _shader.setAttributeBuffer (vertex_location, GL_FLOAT, 0, 3, sizeof (VertexData));
+
+      int texcoord_location = _shader.attributeLocation ("a_texcoord");
+      _shader.enableAttributeArray (texcoord_location);
+      _shader.setAttributeBuffer (texcoord_location, GL_FLOAT, sizeof (QVector3D), 2, sizeof (VertexData));
+
+      //
+      // Draw model using indices from VBO 1
+      //
+      glDrawElements (GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0);
+
+#else
       glLoadIdentity ();
       glScalef (_scaling, _scaling, _scaling);
       glTranslatef (_translation.x (), _translation.y (), _translation.z ());
@@ -182,13 +322,9 @@ namespace HIP {
       foreach (const Face& face, _model->getFaces ())
         {
           const QList<Face::Point>& points = face.getPoints ();
+          Q_ASSERT (points.size () == 3);
 
-          if (points.size () == 4)
-            glBegin (GL_QUADS);
-          else if (points.size () == 3)
-            glBegin (GL_TRIANGLES);
-          else
-            throw Exception (tr ("Only 3 or 4 points per vertex supported."));
+          glBegin (GL_TRIANGLES);
 
           glNormal3f (_model->getNormals ()[points.front ().getNormalIndex () - 1].x (),
               _model->getNormals ()[points.front ().getNormalIndex () - 1].y (),
@@ -203,6 +339,7 @@ namespace HIP {
 
           glEnd ();
         }
+#endif
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
@@ -251,12 +388,12 @@ namespace HIP {
         {
           if (event->modifiers ().testFlag (Qt::ControlModifier))
             {
-              _rotation.setX (normalizeAngle (_rotation.x () - delta.y ()));
+              _rotation.setX (normalizeAngle (_rotation.x () + delta.y ()));
               _rotation.setZ (normalizeAngle (_rotation.z () - delta.x ()));
             }
           else
             {
-              _rotation.setX (normalizeAngle (_rotation.x () - delta.y ()));
+              _rotation.setX (normalizeAngle (_rotation.x () + delta.y ()));
               _rotation.setY (normalizeAngle (_rotation.y () - delta.x ()));
             }
         }
@@ -272,7 +409,9 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      Q_UNUSED (event);
+      double factor = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      _scaling *= (1.0 - factor);
+      update ();
     }
 
     double Widget::normalizeAngle (double angle) const

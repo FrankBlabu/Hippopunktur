@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QtQml>
 #include <QFile>
+#include <QSurfaceFormat>
 
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
@@ -33,6 +34,12 @@ int main (int argc, char* argv[])
   app.setApplicationName (QObject::tr ("Hippopunktur"));
   app.setApplicationVersion (QObject::tr ("0.1"));
   app.setStyleSheet (HIP::Tools::loadResource<QString> (":/assets/style/hippopunktur.css"));
+
+#if 0
+  QSurfaceFormat format;
+  format.setDepthBufferSize (24);
+  QSurfaceFormat::setDefaultFormat (format);
+#endif
 
   qmlRegisterType<HIP::Database::Database> ("com.blankenburg.hippopunktur", 1, 0, "Database");
 

@@ -35,7 +35,7 @@
 // If defined, the experimental 3D view is displayed in addition to the regular image views
 //
 #undef HIP_USE_3D_VIEW
-#define HIP_USE_3D_VIEW
+//#define HIP_USE_3D_VIEW
 
 namespace HIP {
   namespace Gui {
@@ -96,9 +96,7 @@ namespace HIP {
       for (int i=0; i < _tabs->count () && view == 0; ++i)
         {
           Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_tabs->widget (i));
-          Q_ASSERT (candidate != 0);
-
-          if (candidate->getImage ().getId () == id)
+          if (candidate != 0 && candidate->getImage ().getId () == id)
             view = candidate;
         }
 
