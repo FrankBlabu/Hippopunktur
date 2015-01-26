@@ -56,6 +56,7 @@ namespace HIP {
         _selected_coordinate ()
     {
       setMouseTracking (true);
+      setFocusPolicy (Qt::WheelFocus);
 
       connect (_loader, SIGNAL (finished ()), SLOT (onImageLoaded ()), Qt::QueuedConnection);
       connect (database, &Database::Database::databaseChanged, this, &ImageWidget::onDatabaseChanged);
@@ -332,23 +333,32 @@ namespace HIP {
     {
       if (!_pixmap.isNull ())
         {
-          double scaling = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
-          QPointF delta (_viewport.width () * scaling, _viewport.height () * scaling);
-
-          QRectF v = _viewport;
-          v.setTopLeft (_viewport.topLeft () + delta);
-          v.setBottomRight (_viewport.bottomRight () - delta);
-
-          if (v.width () > 64 && v.height () > 64)
-            {
-              _viewport = v;
-              ensureBounds ();
-              update ();
-            }
+          zoomViewport (0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8));
+          ensureBounds ();
+          update ();
         }
     }
 
-    /*
+    void ImageWidget::keyPressEvent (QKeyEvent* event)
+    {
+      if (event->key () == Qt::Key_Up)
+        _viewport.moveCenter (_viewport.center () + QPointF (0, -_viewport.height () / 10));
+      else if (event->key () == Qt::Key_Down)
+        _viewport.moveCenter (_viewport.center () + QPointF (0, +_viewport.height () / 10));
+      else if (event->key () == Qt::Key_Left)
+        _viewport.moveCenter (_viewport.center () + QPointF (-_viewport.width () / 10, 0));
+      else if (event->key () == Qt::Key_Right)
+        _viewport.moveCenter (_viewport.center () + QPointF (+_viewport.width () / 10, 0));
+      else if (event->key () == Qt::Key_Plus)
+        zoomViewport (0.1);
+      else if (event->key () == Qt::Key_Minus)
+        zoomViewport (-0.1);
+
+      ensureBounds ();
+      update ();
+    }
+
+      /*
      * Called when the image has been loaded
      */
     void ImageWidget::onImageLoaded ()
@@ -361,6 +371,23 @@ namespace HIP {
 
       resetZoom ();
     }
+
+
+    /*
+     * Zoom viewport
+     */
+    void ImageWidget::zoomViewport (double scaling)
+    {
+      QPointF delta (_viewport.width () * scaling, _viewport.height () * scaling);
+
+      QRectF v = _viewport;
+      v.setTopLeft (_viewport.topLeft () + delta);
+      v.setBottomRight (_viewport.bottomRight () - delta);
+
+      if (v.width () > 64 && v.height () > 64)
+        _viewport = v;
+    }
+
 
     /*
      * Ensure that the viewportvrect is within pixmap bounds

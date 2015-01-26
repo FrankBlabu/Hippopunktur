@@ -333,6 +333,5 @@
         <image id="bottom" title="Bottom" path=":/assets/models/horse/bottom.jpg"/>
         <image id="front" title="Front" path=":/assets/models/horse/front.jpg"/>
         <image id="back" title="Back" path=":/assets/models/horse/back.jpg"/>
-        <image id="berit" title="Berit" path=":/assets/normal.jpg"/>
     </images>
 </database>

@@ -56,12 +56,16 @@ namespace HIP {
       virtual void mouseReleaseEvent (QMouseEvent* event);
       virtual void wheelEvent (QWheelEvent* event);
 
+      virtual void keyPressEvent (QKeyEvent* event);
+
     private slots:
       void onImageLoaded ();
       void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
       QString getPointAt (const QPointF& pos) const;
+
+      void zoomViewport (double scaling);
       void ensureBounds ();
 
       QRectF computeDefaultViewport () const;

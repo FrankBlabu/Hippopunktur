@@ -44,6 +44,5 @@
         <file>gl/FragmentShader.glsl</file>
         <file>gl/VertexShader.glsl</file>
         <file>assets/models/horse/texture.png</file>
-        <file>assets/normal.jpg</file>
     </qresource>
 </RCC>

@@ -151,6 +151,7 @@ namespace HIP {
 
           foreach (const Face::Point& point, face.getPoints ())
             {
+              Q_UNUSED (point);
               Q_ASSERT (point.getVertexIndex () >= -1 &&
                         point.getVertexIndex () <= _vertices.size ());
               Q_ASSERT (point.getNormalIndex () >= -1 &&
