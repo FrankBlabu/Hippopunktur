@@ -137,6 +137,18 @@ namespace HIP {
       qDebug () << "  " << _faces.size () << " faces";
 #endif
 
+#if 0
+      //
+      // Normalize model
+      //
+      float max_length = 0.0f;
+      foreach (const QVector3D& v, _vertices)
+        max_length = qMax (max_length, v.length ());
+
+      for (int i=0; i < _vertices.size (); ++i)
+        _vertices[i] /= max_length;
+#endif
+
       //
       // Sanity check
       //
@@ -153,11 +165,11 @@ namespace HIP {
             {
               Q_UNUSED (point);
               Q_ASSERT (point.getVertexIndex () >= -1 &&
-                        point.getVertexIndex () <= _vertices.size ());
+                        point.getVertexIndex () < _vertices.size ());
               Q_ASSERT (point.getNormalIndex () >= -1 &&
-                        point.getNormalIndex () <= _normals.size ());
+                        point.getNormalIndex () < _normals.size ());
               Q_ASSERT (point.getTextureIndex () >= -1 &&
-                        point.getTextureIndex () <= _textures.size ());
+                        point.getTextureIndex () < _textures.size ());
             }
         }
     }
@@ -176,15 +188,15 @@ namespace HIP {
 
       int vertex_index = -1;
       if (parts.size () > 0 && !parts[0].isEmpty ())
-        vertex_index = toDouble (parts[0]);
+        vertex_index = toInt (parts[0]) - 1;
 
       int texture_index = -1;
       if (parts.size () > 1 && !parts[1].isEmpty ())
-        texture_index = toDouble (parts[1]);
+        texture_index = toInt (parts[1]) - 1;
 
       int normal_index = -1;
       if (parts.size () > 2 && !parts[2].isEmpty ())
-        normal_index = toDouble (parts[2]);
+        normal_index = toInt (parts[2]) - 1;
 
       return Face::Point (vertex_index, normal_index, texture_index);
     }
@@ -192,20 +204,20 @@ namespace HIP {
     /* Convert string tuple into 3d vector */
     QVector3D Model::toVector3d (const QString& x, const QString& y, const QString& z) const // throws Exception
     {
-      return QVector3D (toDouble (x), toDouble (y), toDouble (z));
+      return QVector3D (toReal (x), toReal (y), toReal (z));
     }
 
     /* Convert string tuple into 2d vector */
     QVector2D Model::toVector2d (const QString& x, const QString& y) const // throws Exception
     {
-      return QVector2D (toDouble (x), toDouble (y));
+      return QVector2D (toReal (x), toReal (y));
     }
 
     /* Convert string into double value */
-    double Model::toDouble (const QString& v) const // throws Exception
+    qreal Model::toReal (const QString& v) const // throws Exception
     {
       bool ok = false;
-      double d = v.toDouble (&ok);
+      qreal d = v.toFloat (&ok);
 
       if (!ok)
         throw Exception (QObject::tr ("Double value expected"));

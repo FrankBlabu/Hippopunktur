@@ -14,46 +14,148 @@
 #include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include <QOpenGLBuffer>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
-#include <QOpenGLTexture>
-#include <QOpenGLVertexArrayObject>
-#include <QQuaternion>
-#include <QPainter>
-#include <QPixmap>
-#include <QScopedArrayPointer>
+#include <QSurfaceFormat>
 #include <QWheelEvent>
-
-//
-// If set, GL shader will be used to render the model
-//
-#undef HIP_USE_SHADER
-//#define HIP_USE_SHADER
 
 namespace HIP {
   namespace GL {
 
     //#**********************************************************************
-    // CLASS HIP::GL::VertexData
+    // DEBUG
     //#**********************************************************************
 
+#if 0
     namespace {
 
-      struct VertexData
+      void GLWidget::createGeometry()
       {
-        VertexData ()
-          : _position (0, 0, 0), _texture (0, 0) {}
-        VertexData (const QVector3D& position, const QVector2D& texture)
-          : _position (position), _texture (texture) {}
+        vertices.clear();
+        normals.clear();
 
-        QVector3D _position;
-        QVector2D _texture;
-      };
+        qreal x1 = +0.06f;
+        qreal y1 = -0.14f;
+        qreal x2 = +0.14f;
+        qreal y2 = -0.06f;
+        qreal x3 = +0.08f;
+        qreal y3 = +0.00f;
+        qreal x4 = +0.30f;
+        qreal y4 = +0.22f;
+
+        quad(x1, y1, x2, y2, y2, x2, y1, x1);
+        quad(x3, y3, x4, y4, y4, x4, y3, x3);
+
+        extrude(x1, y1, x2, y2);
+        extrude(x2, y2, y2, x2);
+        extrude(y2, x2, y1, x1);
+        extrude(y1, x1, x1, y1);
+        extrude(x3, y3, x4, y4);
+        extrude(x4, y4, y4, x4);
+        extrude(y4, x4, y3, x3);
+
+        const qreal Pi = 3.14159f;
+        const int NumSectors = 100;
+
+        for (int i = 0; i < NumSectors; ++i) {
+            qreal angle1 = (i * 2 * Pi) / NumSectors;
+            qreal x5 = 0.30 * sin(angle1);
+            qreal y5 = 0.30 * cos(angle1);
+            qreal x6 = 0.20 * sin(angle1);
+            qreal y6 = 0.20 * cos(angle1);
+
+            qreal angle2 = ((i + 1) * 2 * Pi) / NumSectors;
+            qreal x7 = 0.20 * sin(angle2);
+            qreal y7 = 0.20 * cos(angle2);
+            qreal x8 = 0.30 * sin(angle2);
+            qreal y8 = 0.30 * cos(angle2);
+
+            quad(x5, y5, x6, y6, x7, y7, x8, y8);
+
+            extrude(x6, y6, x7, y7);
+            extrude(x8, y8, x5, y5);
+          }
+
+        for (int i = 0;i < vertices.size();i++)
+          vertices[i] *= 2.0f;
+
+        qDebug () << "* Render data:";
+        qDebug () << "  " << vertices.size () << " vertices";
+        qDebug () << "  " << normals.size () << "  normals";
+
+        foreach (const QVector3D& v, vertices)
+          qDebug () << "  v=" << v;
+
+        foreach (const QVector3D& n, normals)
+          qDebug () << "  n=" << n;
+      }
+
+      void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4)
+      {
+        vertices << QVector3D(x1, y1, -0.05f);
+        vertices << QVector3D(x2, y2, -0.05f);
+        vertices << QVector3D(x4, y4, -0.05f);
+
+        vertices << QVector3D(x3, y3, -0.05f);
+        vertices << QVector3D(x4, y4, -0.05f);
+        vertices << QVector3D(x2, y2, -0.05f);
+
+        QVector3D n = QVector3D::normal
+            (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(x4 - x1, y4 - y1, 0.0f));
+
+        normals << n;
+        normals << n;
+        normals << n;
+
+        normals << n;
+        normals << n;
+        normals << n;
+
+        vertices << QVector3D(x4, y4, 0.05f);
+        vertices << QVector3D(x2, y2, 0.05f);
+        vertices << QVector3D(x1, y1, 0.05f);
+
+        vertices << QVector3D(x2, y2, 0.05f);
+        vertices << QVector3D(x4, y4, 0.05f);
+        vertices << QVector3D(x3, y3, 0.05f);
+
+        n = QVector3D::normal
+            (QVector3D(x2 - x4, y2 - y4, 0.0f), QVector3D(x1 - x4, y1 - y4, 0.0f));
+
+        normals << n;
+        normals << n;
+        normals << n;
+
+        normals << n;
+        normals << n;
+        normals << n;
+      }
+
+      void extrude(qreal x1, qreal y1, qreal x2, qreal y2)
+      {
+        vertices << QVector3D(x1, y1, +0.05f);
+        vertices << QVector3D(x2, y2, +0.05f);
+        vertices << QVector3D(x1, y1, -0.05f);
+
+        vertices << QVector3D(x2, y2, -0.05f);
+        vertices << QVector3D(x1, y1, -0.05f);
+        vertices << QVector3D(x2, y2, +0.05f);
+
+        QVector3D n = QVector3D::normal
+            (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(0.0f, 0.0f, -0.1f));
+
+        normals << n;
+        normals << n;
+        normals << n;
+
+        normals << n;
+        normals << n;
+        normals << n;
+      }
 
     }
-
+#endif
 
     //#**********************************************************************
     // CLASS HIP::GL::Widget
@@ -81,43 +183,36 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
-      double normalizeAngle (double angle) const;
-
-    private:
       Model* _model;
       QOpenGLShaderProgram _shader;
-      QOpenGLTexture* _texture;
 
       QMatrix4x4 _projection;
       QMatrix4x4 _mvp;
 
-      QOpenGLBuffer _array_buffer;
-      QOpenGLBuffer _index_buffer;
+      QVector<QVector3D> _vertices;
+      QVector<QVector3D> _normals;
 
-      QVector3D _translation;
-      QVector3D _rotation;
-      double _scaling;
       QPointF _last_pos;
-
-      int _number_of_indices;
     };
 
 
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
-        _model             (new Model (model_path)),
-        _shader            (),
-        _texture           (0),
-        _projection        (),
-        _mvp               (),
-        _translation       (0, 0, 0),
-        _rotation          (0, 0, 0),
-        _scaling           (1.0),
-        _last_pos          (0, 0),
-        _number_of_indices (0)
+        _model      (new Model (model_path)),
+        _shader     (),
+        _projection (),
+        _mvp        (),
+        _vertices   (),
+        _normals    (),
+        _last_pos   (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
+
+      QSurfaceFormat format;
+      format.setDepthBufferSize (24);
+      format.setStencilBufferSize (8);
+      setFormat (format);
     }
 
     /*! Destructor */
@@ -126,7 +221,6 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
-      delete _texture;
 
       doneCurrent ();
 
@@ -140,9 +234,11 @@ namespace HIP {
     {
       initializeOpenGLFunctions ();
 
-      glClearColor (0, 0, 0, 1);
+      glClearColor (0.1f, 0.1f, 0.1f, 1.0f);
+      glFrontFace (GL_CW);
+      glEnable (GL_CULL_FACE);
+      glEnable (GL_DEPTH_TEST);
 
-#ifdef HIP_USE_SHADER
       //
       // Init shaders
       //
@@ -158,97 +254,22 @@ namespace HIP {
       if (!_shader.bind ())
         throw Exception (tr ("Shader binding failed."));
 
-      glEnable (GL_DEPTH_TEST);
-      glEnable (GL_CULL_FACE);
-
-      // XXX
-      _translation = QVector3D (0.0, 0.0, -5.0);
-      //_scaling = 0.05;
-#else
-      glEnable (GL_DEPTH_TEST);
-      glEnable (GL_CULL_FACE);
-      glShadeModel (GL_SMOOTH);
-      glEnable (GL_LIGHTING);
-      glEnable (GL_LIGHT0);
-
-      static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
-      glLightfv (GL_LIGHT0, GL_POSITION, lightPosition);
-
-      _translation = QVector3D (-0.2f, -3.1f, -16.7f);
-      _rotation = QVector3D (-177, 215, -87);
-      _scaling = 0.165;
-#endif
-
       //
-      // Init texture
+      // Init render data
       //
-      Q_ASSERT (_texture == 0);
+      qDebug () << "* Render data:";
+      foreach (const Face& face, _model->getFaces ())
+        {
+          Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
 
-      _texture = new QOpenGLTexture (QImage (":/assets/models/horse/texture.png"));
-      _texture->setMinificationFilter (QOpenGLTexture::Nearest);
-      _texture->setMagnificationFilter (QOpenGLTexture::Linear);
-      _texture->setWrapMode (QOpenGLTexture::Repeat);
+          foreach (const Face::Point& point, face.getPoints ())
+            {
+              _vertices.push_back (_model->getVertices ()[point.getVertexIndex ()] / 10.0);
+              _normals.push_back (_model->getNormals ()[point.getNormalIndex ()]);
 
-      //
-      // Initialize vertex buffer
-      //
-      _array_buffer.create ();
-      _array_buffer.bind ();
-
-#if 0
-      {
-        QScopedArrayPointer<VertexData> vertices (new VertexData[_model->getVertices ().size ()]);
-
-        for (int i=0; i < _model->getVertices ().size (); ++i)
-          {
-            const QVector3D& vertex = _model->getVertices ()[i];
-            vertices[i] = VertexData (vertex, QVector2D (0, 0));
-            qDebug () << "  " << vertex;
-          }
-
-        _array_buffer.allocate (vertices.data (), _model->getVertices ().size () * sizeof (VertexData));
-      }
-#else
-      VertexData vertices[] = {
-        VertexData (QVector3D (+0.0f, +1.0f,  0.0f), QVector2D (0.0f, 0.0f)),
-        VertexData (QVector3D (+1.0f, -1.0f,  0.0f), QVector2D (0.0f, 0.0f)),
-        VertexData (QVector3D (-1.0f, -1.0f,  0.0f), QVector2D (0.0f, 0.0f))
-      };
-
-      _array_buffer.allocate (vertices, 3 * sizeof (VertexData));
-#endif
-
-      //
-      // Initialize index buffer
-      //
-      _index_buffer.create ();
-      _index_buffer.bind ();
-
-#if 0
-      {
-        QScopedArrayPointer<GLushort> faces (new GLushort[_model->getFaces ().size () * 3]);
-        int index = 0;
-
-        foreach (const Face& face, _model->getFaces ())
-          {
-            const QList<Face::Point>& points = face.getPoints ();
-            Q_ASSERT (points.size () == 3 && "Only triangles supported.");
-
-            foreach (const Face::Point& point, points)
-              faces[index++] = point.getVertexIndex () - 1;
-          }
-
-        for (int i=0; i < _model->getFaces ().size () * 3; ++i)
-          qDebug () << faces[i];
-
-        _index_buffer.allocate (faces.data (), _model->getFaces ().size () * 3 * sizeof (GLushort));
-      }
-#else
-      GLushort indices[] = { 0,  1,  2 };
-
-      _index_buffer.allocate (indices, 3 * sizeof (GLushort));
-
-#endif
+              qDebug () << "  v=" << _vertices.back () << ", " << _normals.back ();
+            }
+        }
 
       resizeGL (width (), height ());
     }
@@ -258,21 +279,16 @@ namespace HIP {
      */
     void Widget::resizeGL (int width, int height)
     {
-#ifdef HIP_USE_SHADER
+      Q_UNUSED (width);
+      Q_UNUSED (height);
+
+#if 0
       qreal aspect = qreal (width) / qreal (qMax (height, 1));
-      const qreal zNear = 1, zFar = 7, fov = 45.0;
+      //const qreal zNear = 1, zFar = 7, fov = 45.0;
+      const qreal zNear = 0.1, zFar = 90, fov = 90.0;
 
       _projection.setToIdentity ();
-      _projection.perspective (fov, aspect, zNear, zFar);
-
-#else
-      int side = qMin (width, height);
-
-      glViewport ((width - side) / 2, (height - side) / 2, side, side);
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
-      glOrtho (-2, +2, -2, +2, 1.0, 15.0);
-      glMatrixMode (GL_MODELVIEW);
+      //_projection.perspective (fov, aspect, zNear, zFar);
 #endif
     }
 
@@ -281,65 +297,30 @@ namespace HIP {
      */
     void Widget::paintGL ()
     {
+      glClearColor (.2f, .2f, .2f, 1.0f);
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#ifdef HIP_USE_SHADER
-      Q_ASSERT (_texture != 0);
-      _texture->bind ();
+      int vertex_attr = _shader.attributeLocation ("vertex");
+      int normal_attr = _shader.attributeLocation ("normal");
+      int matrix_attr = _shader.attributeLocation ("matrix");
 
-      _mvp.setToIdentity ();
-      _mvp.translate (0, 0, -5);
-      //_mvp.translate (_translation);
-      //_mvp.rotate (QQuaternion (1.0, _rotation.x (), _rotation.y (), _rotation.z ()));
+      qDebug () << _mvp;
 
-      _shader.setUniformValue ("mvp_matrix", _projection * _mvp);
-      _shader.setUniformValue ("texture", 0);
+      _shader.bind ();
+      _shader.setUniformValue(matrix_attr, _projection * _mvp);
 
-      _array_buffer.bind ();
-      _index_buffer.bind ();
+      _shader.enableAttributeArray (vertex_attr);
+      _shader.setAttributeArray (vertex_attr, _vertices.constData ());
 
-      int vertex_location = _shader.attributeLocation ("a_position");
-      _shader.enableAttributeArray (vertex_location);
-      _shader.setAttributeBuffer (vertex_location, GL_FLOAT, 0, 3, sizeof (VertexData));
+      _shader.enableAttributeArray (normal_attr);
+      _shader.setAttributeArray (normal_attr, _normals.constData ());
 
-      int texcoord_location = _shader.attributeLocation ("a_texcoord");
-      _shader.enableAttributeArray (texcoord_location);
-      _shader.setAttributeBuffer (texcoord_location, GL_FLOAT, sizeof (QVector3D), 2, sizeof (VertexData));
+      glDrawArrays (GL_TRIANGLES, 0, _vertices.size ());
 
-      //
-      // Draw model using indices from VBO 1
-      //
-      glDrawElements (GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0);
+      _shader.disableAttributeArray (normal_attr);
+      _shader.disableAttributeArray (vertex_attr);
 
-#else
-      glLoadIdentity ();
-      glScalef (_scaling, _scaling, _scaling);
-      glTranslatef (_translation.x (), _translation.y (), _translation.z ());
-      glRotatef (_rotation.x (), 1.0, 0.0, 0.0);
-      glRotatef (_rotation.y (), 0.0, 1.0, 0.0);
-      glRotatef (_rotation.z (), 0.0, 0.0, 1.0);
-
-      foreach (const Face& face, _model->getFaces ())
-        {
-          const QList<Face::Point>& points = face.getPoints ();
-          Q_ASSERT (points.size () == 3);
-
-          glBegin (GL_TRIANGLES);
-
-          glNormal3f (_model->getNormals ()[points.front ().getNormalIndex () - 1].x (),
-              _model->getNormals ()[points.front ().getNormalIndex () - 1].y (),
-              _model->getNormals ()[points.front ().getNormalIndex () - 1].z ());
-
-          foreach (const Face::Point& point, face.getPoints ())
-            {
-              glVertex3f (_model->getVertices ()[point.getVertexIndex () - 1].x (),
-                  _model->getVertices ()[point.getVertexIndex () - 1].y (),
-                  _model->getVertices ()[point.getVertexIndex () - 1].z ());
-            }
-
-          glEnd ();
-        }
-#endif
+      _shader.release ();
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
@@ -349,28 +330,28 @@ namespace HIP {
       if (event->key () == Qt::Key_X)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation.setX (_translation.x () - step);
+            _mvp.translate (QVector3D (-step, 0, 0));
           else
-            _translation.setX (_translation.x () + step);
+            _mvp.translate (QVector3D (+step, 0, 0));
         }
       else if (event->key () == Qt::Key_Y)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation.setY (_translation.y () - step);
+            _mvp.translate (QVector3D (0, -step, 0));
           else
-            _translation.setY (_translation.y () + step);
+            _mvp.translate (QVector3D (0, +step, 0));
         }
       else if (event->key () == Qt::Key_Z)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation.setZ (_translation.z () - step);
+            _mvp.translate (QVector3D (0, 0, -step));
           else
-            _translation.setZ (_translation.z () + step);
+            _mvp.translate (QVector3D (0, 0, +step));
         }
       else if (event->key () == Qt::Key_Plus)
-        _scaling *= 1.1;
+        _mvp.scale (QVector3D (1.1f, 1.1f, 1.1f));
       else if (event->key () == Qt::Key_Minus)
-        _scaling /= 1.1;
+        _mvp.scale (QVector3D (0.9f, 0.9f, 0.9f));
 
       update ();
     }
@@ -383,22 +364,14 @@ namespace HIP {
     void Widget::mouseMoveEvent (QMouseEvent* event)
     {
       QPointF delta = event->pos () - _last_pos;
+      _last_pos = event->pos ();
 
       if (event->buttons ().testFlag (Qt::LeftButton))
         {
-          if (event->modifiers ().testFlag (Qt::ControlModifier))
-            {
-              _rotation.setX (normalizeAngle (_rotation.x () + delta.y ()));
-              _rotation.setZ (normalizeAngle (_rotation.z () - delta.x ()));
-            }
-          else
-            {
-              _rotation.setX (normalizeAngle (_rotation.x () + delta.y ()));
-              _rotation.setY (normalizeAngle (_rotation.y () - delta.x ()));
-            }
+          _mvp.rotate (delta.x (), QVector3D (0.0, 1.0, 0.0));
+          _mvp.rotate (delta.y (), QVector3D (1.0, 0.0, 0.0));
         }
 
-      _last_pos = event->pos ();
       update ();
     }
 
@@ -409,19 +382,15 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
+#if 0
       double factor = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
-      _scaling *= (1.0 - factor);
+      _mvp.scale (QVector3D (1.0 - factor, 1.0 - factor, 1.0 - factor));
+#else
+      double step = event->angleDelta ().y () > 0 ? 1.0 : -1.0;
+      _mvp.translate (QVector3D (0.0, 0.0, step));
+#endif
+
       update ();
-    }
-
-    double Widget::normalizeAngle (double angle) const
-    {
-        while (angle < 0)
-          angle += 360 * 16;
-        while (angle > 360)
-          angle -= 360 * 16;
-
-        return angle;
     }
 
 

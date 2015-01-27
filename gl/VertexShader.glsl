@@ -1,21 +1,14 @@
-#ifdef GL_ES
-precision mediump int;
-precision mediump float;
-#endif
+attribute highp vec4 vertex;
+attribute mediump vec3 normal;
+uniform mediump mat4 matrix;
+varying mediump vec4 color;
 
-uniform mat4 mvp_matrix;
-
-attribute vec4 a_position;
-attribute vec2 a_texcoord;
-
-varying vec2 v_texcoord;
-
-void main()
+void main(void)
 {
-    // Calculate vertex position in screen space
-    gl_Position = mvp_matrix * a_position;
-
-    // Pass texture coordinate to fragment shader
-    // Value will be automatically interpolated to fragments inside polygon faces
-    v_texcoord = a_texcoord;
+    vec3 toLight = normalize (vec3 (0.0, 0.3, 1.0));
+    float angle = max (dot (normal, toLight), 0.0);
+    vec3 col = vec3 (0.40, 1.0, 0.0);
+    color = vec4 (col * 0.2 + col * 0.8 * angle, 1.0);
+    color = clamp (color, 0.0, 1.0);
+    gl_Position = matrix * vertex;
 }

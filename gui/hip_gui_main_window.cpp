@@ -35,7 +35,7 @@
 // If defined, the experimental 3D view is displayed in addition to the regular image views
 //
 #undef HIP_USE_3D_VIEW
-//#define HIP_USE_3D_VIEW
+#define HIP_USE_3D_VIEW
 
 namespace HIP {
   namespace Gui {

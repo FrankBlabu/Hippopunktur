@@ -1,14 +1,7 @@
-#ifdef GL_ES
-precision mediump int;
-precision mediump float;
-#endif
+varying mediump vec4 color;
 
-uniform sampler2D texture;
-varying vec2 v_texcoord;
-
-void main()
+void main(void)
 {
-    // Set fragment color from texture
-    gl_FragColor = texture2D(texture, v_texcoord);
+    //gl_FragColor = color;
+    gl_FragColor = vec4 (1.0, 0.0, 0.0, 1.0);
 }
-
