@@ -144,7 +144,9 @@ namespace HIP {
       QOpenGLShaderProgram _shader;
 
       QMatrix4x4 _projection;
-      QMatrix4x4 _mvp;
+      QMatrix4x4 _rotation;
+      QVector3D _translation;
+      float _scaling;
 
       QVector<QVector3D> _vertices;
       QVector<QVector3D> _normals;
@@ -163,7 +165,9 @@ namespace HIP {
         _model       (new Model (model_path)),
         _shader      (),
         _projection  (),
-        _mvp         (),
+        _rotation    (),
+        _translation (0.0, 0.0, 0.0),
+        _scaling     (1.0),
         _vertices    (),
         _normals     (),
         _vertex_attr (-1),
@@ -265,8 +269,12 @@ namespace HIP {
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      QMatrix4x4 mvp = _rotation;
+      mvp.translate (_translation);
+      mvp.scale (_scaling);
+
       _shader.bind ();
-      _shader.setUniformValue (_matrix_attr, _projection * _mvp);
+      _shader.setUniformValue (_matrix_attr, _projection * mvp);
 
       _shader.setAttributeArray (_vertex_attr, _vertices.constData ());
       _shader.setAttributeArray (_normal_attr, _normals.constData ());
@@ -289,28 +297,28 @@ namespace HIP {
       if (event->key () == Qt::Key_X)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _mvp.translate (QVector3D (-step, 0, 0));
+            _translation += QVector3D (-step, 0, 0);
           else
-            _mvp.translate (QVector3D (+step, 0, 0));
+            _translation += QVector3D (+step, 0, 0);
         }
       else if (event->key () == Qt::Key_Y)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _mvp.translate (QVector3D (0, -step, 0));
+            _translation += QVector3D (0, -step, 0);
           else
-            _mvp.translate (QVector3D (0, +step, 0));
+            _translation += QVector3D (0, +step, 0);
         }
       else if (event->key () == Qt::Key_Z)
         {
           if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _mvp.translate (QVector3D (0, 0, -step));
+            _translation += QVector3D (0, 0, -step);
           else
-            _mvp.translate (QVector3D (0, 0, +step));
+            _translation += QVector3D (0, 0, +step);
         }
       else if (event->key () == Qt::Key_Plus)
-        _mvp.scale (QVector3D (1.1f, 1.1f, 1.1f));
+        _scaling *= 1.1f;
       else if (event->key () == Qt::Key_Minus)
-        _mvp.scale (QVector3D (0.9f, 0.9f, 0.9f));
+        _scaling *= 0.9f;
 
       update ();
     }
@@ -327,9 +335,12 @@ namespace HIP {
 
       if (event->buttons ().testFlag (Qt::LeftButton))
         {
-          _mvp.rotate (delta.x (), QVector3D (0.0, 1.0, 0.0));
-          _mvp.rotate (delta.y (), QVector3D (1.0, 0.0, 0.0));
+          _rotation.rotate (-delta.x (), QVector3D (0.0, 1.0, 0.0));
+          _rotation.rotate (-delta.y (), QVector3D (1.0, 0.0, 0.0));
         }
+      else if (event->buttons ().testFlag (Qt::MiddleButton))
+        _translation += QVector3D (+delta.x () * _scaling / width (),
+                                   -delta.y () * _scaling / height (), 0.0);
 
       update ();
     }
@@ -341,9 +352,7 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      double factor = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
-      _mvp.scale (QVector3D (1.0 - factor, 1.0 - factor, 1.0 - factor));
-
+      _scaling *= 1.0 - 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
       update ();
     }
 
