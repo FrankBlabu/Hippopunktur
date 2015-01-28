@@ -27,135 +27,92 @@ namespace HIP {
     // DEBUG
     //#**********************************************************************
 
-#if 0
     namespace {
 
-      void GLWidget::createGeometry()
-      {
-        vertices.clear();
-        normals.clear();
+      static GLfloat cube_vertices[] = {
+        -0.5, 0.5, 0.5,
+        0.5,-0.5,0.5,
+        -0.5,-0.5,0.5,
+        0.5, -0.5, 0.5,
+        -0.5,0.5,0.5,
+        0.5,0.5,0.5,
+        -0.5, -0.5, -0.5,
+        0.5,-0.5,-0.5,
+        -0.5,0.5,-0.5,
+        0.5, 0.5, -0.5,
+        -0.5,0.5,-0.5,
+        0.5,-0.5,-0.5,
 
-        qreal x1 = +0.06f;
-        qreal y1 = -0.14f;
-        qreal x2 = +0.14f;
-        qreal y2 = -0.06f;
-        qreal x3 = +0.08f;
-        qreal y3 = +0.00f;
-        qreal x4 = +0.30f;
-        qreal y4 = +0.22f;
+        0.5, -0.5, -0.5,
+        0.5,-0.5,0.5,
+        0.5,0.5,-0.5,
+        0.5, 0.5, 0.5,
+        0.5,0.5,-0.5,
+        0.5,-0.5,0.5,
+        -0.5, 0.5, -0.5,
+        -0.5,-0.5,0.5,
+        -0.5,-0.5,-0.5,
+        -0.5, -0.5, 0.5,
+        -0.5,0.5,-0.5,
+        -0.5,0.5,0.5,
 
-        quad(x1, y1, x2, y2, y2, x2, y1, x1);
-        quad(x3, y3, x4, y4, y4, x4, y3, x3);
+        0.5, 0.5,  -0.5,
+        -0.5, 0.5,  0.5,
+        -0.5,  0.5,  -0.5,
+        -0.5,  0.5,  0.5,
+        0.5,  0.5,  -0.5,
+        0.5, 0.5,  0.5,
+        -0.5,  -0.5, -0.5,
+        -0.5, -0.5, 0.5,
+        0.5, -0.5, -0.5,
+        0.5, -0.5, 0.5,
+        0.5,  -0.5, -0.5,
+        -0.5,  -0.5, 0.5
+      };
 
-        extrude(x1, y1, x2, y2);
-        extrude(x2, y2, y2, x2);
-        extrude(y2, x2, y1, x1);
-        extrude(y1, x1, x1, y1);
-        extrude(x3, y3, x4, y4);
-        extrude(x4, y4, y4, x4);
-        extrude(y4, x4, y3, x3);
+      static GLfloat cube_normals[] = {
 
-        const qreal Pi = 3.14159f;
-        const int NumSectors = 100;
+        0,0,-1,
+        0,0,-1,
+        0,0,-1,
+        0,0,-1,
+        0,0,-1,
+        0,0,-1,
+        0,0,1,
+        0,0,1,
+        0,0,1,
+        0,0,1,
+        0,0,1,
+        0,0,1,
 
-        for (int i = 0; i < NumSectors; ++i) {
-            qreal angle1 = (i * 2 * Pi) / NumSectors;
-            qreal x5 = 0.30 * sin(angle1);
-            qreal y5 = 0.30 * cos(angle1);
-            qreal x6 = 0.20 * sin(angle1);
-            qreal y6 = 0.20 * cos(angle1);
+        -1,0,0,
+        -1,0,0,
+        -1,0,0,
+        -1,0,0,
+        -1,0,0,
+        -1,0,0,
+        1,0,0,
+        1,0,0,
+        1,0,0,
+        1,0,0,
+        1,0,0,
+        1,0,0,
 
-            qreal angle2 = ((i + 1) * 2 * Pi) / NumSectors;
-            qreal x7 = 0.20 * sin(angle2);
-            qreal y7 = 0.20 * cos(angle2);
-            qreal x8 = 0.30 * sin(angle2);
-            qreal y8 = 0.30 * cos(angle2);
-
-            quad(x5, y5, x6, y6, x7, y7, x8, y8);
-
-            extrude(x6, y6, x7, y7);
-            extrude(x8, y8, x5, y5);
-          }
-
-        for (int i = 0;i < vertices.size();i++)
-          vertices[i] *= 2.0f;
-
-        qDebug () << "* Render data:";
-        qDebug () << "  " << vertices.size () << " vertices";
-        qDebug () << "  " << normals.size () << "  normals";
-
-        foreach (const QVector3D& v, vertices)
-          qDebug () << "  v=" << v;
-
-        foreach (const QVector3D& n, normals)
-          qDebug () << "  n=" << n;
-      }
-
-      void quad(qreal x1, qreal y1, qreal x2, qreal y2, qreal x3, qreal y3, qreal x4, qreal y4)
-      {
-        vertices << QVector3D(x1, y1, -0.05f);
-        vertices << QVector3D(x2, y2, -0.05f);
-        vertices << QVector3D(x4, y4, -0.05f);
-
-        vertices << QVector3D(x3, y3, -0.05f);
-        vertices << QVector3D(x4, y4, -0.05f);
-        vertices << QVector3D(x2, y2, -0.05f);
-
-        QVector3D n = QVector3D::normal
-            (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(x4 - x1, y4 - y1, 0.0f));
-
-        normals << n;
-        normals << n;
-        normals << n;
-
-        normals << n;
-        normals << n;
-        normals << n;
-
-        vertices << QVector3D(x4, y4, 0.05f);
-        vertices << QVector3D(x2, y2, 0.05f);
-        vertices << QVector3D(x1, y1, 0.05f);
-
-        vertices << QVector3D(x2, y2, 0.05f);
-        vertices << QVector3D(x4, y4, 0.05f);
-        vertices << QVector3D(x3, y3, 0.05f);
-
-        n = QVector3D::normal
-            (QVector3D(x2 - x4, y2 - y4, 0.0f), QVector3D(x1 - x4, y1 - y4, 0.0f));
-
-        normals << n;
-        normals << n;
-        normals << n;
-
-        normals << n;
-        normals << n;
-        normals << n;
-      }
-
-      void extrude(qreal x1, qreal y1, qreal x2, qreal y2)
-      {
-        vertices << QVector3D(x1, y1, +0.05f);
-        vertices << QVector3D(x2, y2, +0.05f);
-        vertices << QVector3D(x1, y1, -0.05f);
-
-        vertices << QVector3D(x2, y2, -0.05f);
-        vertices << QVector3D(x1, y1, -0.05f);
-        vertices << QVector3D(x2, y2, +0.05f);
-
-        QVector3D n = QVector3D::normal
-            (QVector3D(x2 - x1, y2 - y1, 0.0f), QVector3D(0.0f, 0.0f, -0.1f));
-
-        normals << n;
-        normals << n;
-        normals << n;
-
-        normals << n;
-        normals << n;
-        normals << n;
-      }
+        0,-1,0,
+        0,-1,0,
+        0,-1,0,
+        0,-1,0,
+        0,-1,0,
+        0,-1,0,
+        0,1,0,
+        0,1,0,
+        0,1,0,
+        0,1,0,
+        0,1,0,
+        0,1,0
+      };
 
     }
-#endif
 
     //#**********************************************************************
     // CLASS HIP::GL::Widget
@@ -192,6 +149,10 @@ namespace HIP {
       QVector<QVector3D> _vertices;
       QVector<QVector3D> _normals;
 
+      int _vertex_attr;
+      int _normal_attr;
+      int _matrix_attr;
+
       QPointF _last_pos;
     };
 
@@ -199,13 +160,16 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
-        _model      (new Model (model_path)),
-        _shader     (),
-        _projection (),
-        _mvp        (),
-        _vertices   (),
-        _normals    (),
-        _last_pos   (0, 0)
+        _model       (new Model (model_path)),
+        _shader      (),
+        _projection  (),
+        _mvp         (),
+        _vertices    (),
+        _normals     (),
+        _vertex_attr (-1),
+        _normal_attr (-1),
+        _matrix_attr (-1),
+        _last_pos    (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
 
@@ -234,8 +198,8 @@ namespace HIP {
     {
       initializeOpenGLFunctions ();
 
-      glClearColor (0.1f, 0.1f, 0.1f, 1.0f);
-      glFrontFace (GL_CW);
+      glClearColor (.2f, .2f, .2f, 1.0f);
+      glCullFace (GL_FRONT);
       glEnable (GL_CULL_FACE);
       glEnable (GL_DEPTH_TEST);
 
@@ -243,35 +207,37 @@ namespace HIP {
       // Init shaders
       //
       if (!_shader.addShaderFromSourceFile (QOpenGLShader::Vertex, ":/gl/VertexShader.glsl"))
-        throw Exception (tr ("Unable to initialize vertex shader."));
+        throw Exception (tr ("Unable to initialize vertex shader: %1")
+                         .arg (_shader.log ()));
 
       if (!_shader.addShaderFromSourceFile (QOpenGLShader::Fragment, ":/gl/FragmentShader.glsl"))
-        throw Exception (tr ("Unable to initialize fragment shader."));
+        throw Exception (tr ("Unable to initialize fragment shader: %1")
+                         .arg (_shader.log ()));
 
       if (!_shader.link ())
-        throw Exception (tr ("Shader linking failed."));
+        throw Exception (tr ("Shader linking failed: %1")
+                         .arg (_shader.log ()));
 
-      if (!_shader.bind ())
-        throw Exception (tr ("Shader binding failed."));
+      _vertex_attr = _shader.attributeLocation ("vertex");
+      _normal_attr = _shader.attributeLocation ("normal");
+      _matrix_attr = _shader.uniformLocation ("matrix");
 
       //
       // Init render data
       //
-      qDebug () << "* Render data:";
+      _vertices.clear ();
+      _normals.clear ();
+
       foreach (const Face& face, _model->getFaces ())
         {
           Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
 
           foreach (const Face::Point& point, face.getPoints ())
             {
-              _vertices.push_back (_model->getVertices ()[point.getVertexIndex ()] / 10.0);
+              _vertices.push_back (_model->getVertices ()[point.getVertexIndex ()]);
               _normals.push_back (_model->getNormals ()[point.getNormalIndex ()]);
-
-              qDebug () << "  v=" << _vertices.back () << ", " << _normals.back ();
             }
         }
-
-      resizeGL (width (), height ());
     }
 
     /*
@@ -288,7 +254,7 @@ namespace HIP {
       const qreal zNear = 0.1, zFar = 90, fov = 90.0;
 
       _projection.setToIdentity ();
-      //_projection.perspective (fov, aspect, zNear, zFar);
+      _projection.perspective (fov, aspect, zNear, zFar);
 #endif
     }
 
@@ -297,28 +263,21 @@ namespace HIP {
      */
     void Widget::paintGL ()
     {
-      glClearColor (.2f, .2f, .2f, 1.0f);
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      int vertex_attr = _shader.attributeLocation ("vertex");
-      int normal_attr = _shader.attributeLocation ("normal");
-      int matrix_attr = _shader.attributeLocation ("matrix");
-
-      qDebug () << _mvp;
-
       _shader.bind ();
-      _shader.setUniformValue(matrix_attr, _projection * _mvp);
+      _shader.setUniformValue (_matrix_attr, _projection * _mvp);
 
-      _shader.enableAttributeArray (vertex_attr);
-      _shader.setAttributeArray (vertex_attr, _vertices.constData ());
+      _shader.setAttributeArray (_vertex_attr, _vertices.constData ());
+      _shader.setAttributeArray (_normal_attr, _normals.constData ());
 
-      _shader.enableAttributeArray (normal_attr);
-      _shader.setAttributeArray (normal_attr, _normals.constData ());
+      _shader.enableAttributeArray (_vertex_attr);
+      _shader.enableAttributeArray (_normal_attr);
 
       glDrawArrays (GL_TRIANGLES, 0, _vertices.size ());
 
-      _shader.disableAttributeArray (normal_attr);
-      _shader.disableAttributeArray (vertex_attr);
+      _shader.disableAttributeArray (_normal_attr);
+      _shader.disableAttributeArray (_vertex_attr);
 
       _shader.release ();
     }
@@ -382,13 +341,8 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-#if 0
       double factor = 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
       _mvp.scale (QVector3D (1.0 - factor, 1.0 - factor, 1.0 - factor));
-#else
-      double step = event->angleDelta ().y () > 0 ? 1.0 : -1.0;
-      _mvp.translate (QVector3D (0.0, 0.0, step));
-#endif
 
       update ();
     }
