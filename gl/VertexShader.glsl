@@ -5,7 +5,7 @@ varying mediump vec4 color;
 
 void main(void)
 {
-    vec3 toLight = normalize (vec3 (0.0, 0.3, 1.0));
+    vec3 toLight = normalize (vec3 (0.0, 0.3, -1.0));
     float angle = max (dot (normal, toLight), 0.0);
     vec3 col = vec3 (0.8, 0.8, 0.8);
     color = vec4 (col * 0.2 + col * 0.8 * angle, 1.0);
