@@ -52,17 +52,15 @@ namespace HIP {
       Model* _model;
       QOpenGLShaderProgram _shader;
 
-      QMatrix4x4 _projection;
-      QMatrix4x4 _rotation;
-      QVector3D _translation;
-      float _scaling;
-
       QVector<QVector3D> _vertices;
       QVector<QVector3D> _normals;
 
       int _vertex_attr;
       int _normal_attr;
       int _matrix_attr;
+
+      QVector3D _translation;
+      QVector3D _rotation;
 
       QPointF _last_pos;
     };
@@ -73,15 +71,13 @@ namespace HIP {
       : QOpenGLWidget (parent),
         _model       (new Model (model_path)),
         _shader      (),
-        _projection  (),
-        _rotation    (),
-        _translation (0.0, 0.0, 0.0),
-        _scaling     (1.0),
         _vertices    (),
         _normals     (),
         _vertex_attr (-1),
         _normal_attr (-1),
         _matrix_attr (-1),
+        _translation (0, 0, 5),
+        _rotation    (0, 0, 0),
         _last_pos    (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
@@ -112,8 +108,6 @@ namespace HIP {
       initializeOpenGLFunctions ();
 
       glClearColor (.2f, .2f, .2f, 1.0f);
-      glCullFace (GL_FRONT);
-      glEnable (GL_CULL_FACE);
       glEnable (GL_DEPTH_TEST);
 
       //
@@ -160,15 +154,6 @@ namespace HIP {
     {
       Q_UNUSED (width);
       Q_UNUSED (height);
-
-#if 0
-      qreal aspect = qreal (width) / qreal (qMax (height, 1));
-      const qreal zNear = 0.01, zFar = 100, fov = 45.0;
-      //const qreal zNear = 0.1, zFar = 90, fov = 90.0;
-
-      _projection.setToIdentity ();
-      _projection.perspective (fov, aspect, zNear, zFar);
-#endif
     }
 
     /*
@@ -178,12 +163,16 @@ namespace HIP {
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      QMatrix4x4 mvp = _rotation;
-      mvp.translate (_translation);
-      mvp.scale (_scaling);
+      QMatrix4x4 projection;
+      projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
+
+      QMatrix4x4 camera;
+      camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
+      camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
+      camera.translate (_translation);
 
       _shader.bind ();
-      _shader.setUniformValue (_matrix_attr, _projection * mvp);
+      _shader.setUniformValue (_matrix_attr, projection * camera.inverted ());
 
       _shader.setAttributeArray (_vertex_attr, _vertices.constData ());
       _shader.setAttributeArray (_normal_attr, _normals.constData ());
@@ -201,35 +190,7 @@ namespace HIP {
 
     void Widget::keyPressEvent (QKeyEvent* event)
     {
-      const double step = 0.1;
-
-      if (event->key () == Qt::Key_X)
-        {
-          if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation += QVector3D (-step, 0, 0);
-          else
-            _translation += QVector3D (+step, 0, 0);
-        }
-      else if (event->key () == Qt::Key_Y)
-        {
-          if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation += QVector3D (0, -step, 0);
-          else
-            _translation += QVector3D (0, +step, 0);
-        }
-      else if (event->key () == Qt::Key_Z)
-        {
-          if (event->modifiers ().testFlag (Qt::ShiftModifier))
-            _translation += QVector3D (0, 0, -step);
-          else
-            _translation += QVector3D (0, 0, +step);
-        }
-      else if (event->key () == Qt::Key_Plus)
-        _scaling *= 1.1f;
-      else if (event->key () == Qt::Key_Minus)
-        _scaling *= 0.9f;
-
-      update ();
+      Q_UNUSED (event);
     }
 
     void Widget::mousePressEvent (QMouseEvent* event)
@@ -244,12 +205,9 @@ namespace HIP {
 
       if (event->buttons ().testFlag (Qt::LeftButton))
         {
-          _rotation.rotate (-delta.x (), QVector3D (0.0, 1.0, 0.0));
-          _rotation.rotate (-delta.y (), QVector3D (1.0, 0.0, 0.0));
+          _rotation.setY (_rotation.y () - delta.x ());
+          _rotation.setX (_rotation.x () - delta.y ());
         }
-      else if (event->buttons ().testFlag (Qt::MiddleButton))
-        _translation += QVector3D (+delta.x () * _scaling / width (),
-                                   -delta.y () * _scaling / height (), 0.0);
 
       update ();
     }
@@ -261,7 +219,9 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      _scaling *= 1.0 - 0.1 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      float step = 0.08 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      _translation.setZ (_translation.z () + step * _translation.length ());
+
       update ();
     }
 
