@@ -208,6 +208,11 @@ namespace HIP {
           _rotation.setY (_rotation.y () - delta.x ());
           _rotation.setX (_rotation.x () - delta.y ());
         }
+      else if (event->buttons ().testFlag (Qt::MidButton))
+        {
+          _translation.setX (_translation.x () - delta.x () / (width () / _translation.length ()));
+          _translation.setY (_translation.y () + delta.y () / (height () / _translation.length ()));
+        }
 
       update ();
     }
