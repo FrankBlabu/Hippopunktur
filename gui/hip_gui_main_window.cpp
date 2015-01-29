@@ -9,6 +9,7 @@
 #include "core/HIPException.h"
 #include "core/HIPStatusBar.h"
 #include "core/HIPTools.h"
+#include "core/HIPVersion.h"
 #include "database/HIPDatabase.h"
 #include "explorer/HIPExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
@@ -118,9 +119,10 @@ namespace HIP {
     {
       _ui->setupUi (this);
 
-      setWindowTitle (QString ("%1 V%2")
+      setWindowTitle (QString ("%1 V%2 - Rev. %3")
                       .arg (qApp->applicationName ())
-                      .arg (qApp->applicationVersion ()));
+                      .arg (qApp->applicationVersion ())
+                      .arg (REVISION));
       setAcceptDrops (true);
 
       new Tools::StatusBar (_ui->_status_bar_w);

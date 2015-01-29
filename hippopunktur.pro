@@ -47,7 +47,8 @@ HEADERS += \
     gui/HIPGuiPointEditor.h \
     gl/HIPGLView.h \
     image/HIPImageImageView.h \
-    gl/HIPGLModel.h
+    gl/HIPGLModel.h \
+    core/HIPVersion.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
