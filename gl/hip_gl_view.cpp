@@ -14,6 +14,7 @@
 #include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QMouseEvent>
+#include <QOpenGLBuffer>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -22,6 +23,39 @@
 
 namespace HIP {
   namespace GL {
+
+    //#**********************************************************************
+    // Local functions
+    //#**********************************************************************
+
+    namespace {
+
+      float random ()
+      {
+        return static_cast<float> (rand ()) / RAND_MAX;
+      }
+
+    }
+
+    //#**********************************************************************
+    // CLASS HIP::GL::VertexData
+    //#**********************************************************************
+
+    namespace {
+
+      struct VertexData
+      {
+        VertexData () {}
+        VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color)
+          : _vertex (vertex), _normal (normal), _color (color) {}
+
+        QVector3D _vertex;
+        QVector3D _normal;
+        QVector3D _color;
+      };
+
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::GL::Widget
@@ -50,13 +84,14 @@ namespace HIP {
 
     private:
       Model* _model;
-      QOpenGLShaderProgram _shader;
 
-      QVector<QVector3D> _vertices;
-      QVector<QVector3D> _normals;
+      QOpenGLShaderProgram _shader;
+      QOpenGLBuffer _vertex_buffer;
+      QOpenGLBuffer _index_buffer;
 
       int _vertex_attr;
       int _normal_attr;
+      int _color_attr;
       int _matrix_attr;
 
       QVector3D _translation;
@@ -69,16 +104,17 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
-        _model       (new Model (model_path)),
-        _shader      (),
-        _vertices    (),
-        _normals     (),
-        _vertex_attr (-1),
-        _normal_attr (-1),
-        _matrix_attr (-1),
-        _translation (0, 0, 5),
-        _rotation    (0, 0, 0),
-        _last_pos    (0, 0)
+        _model         (new Model (model_path)),
+        _shader        (),
+        _vertex_buffer (QOpenGLBuffer::VertexBuffer),
+        _index_buffer  (QOpenGLBuffer::IndexBuffer),
+        _vertex_attr   (-1),
+        _normal_attr   (-1),
+        _color_attr    (-1),
+        _matrix_attr   (-1),
+        _translation   (0, 0, 5),
+        _rotation      (0, 0, 0),
+        _last_pos      (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
 
@@ -94,6 +130,8 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
+      _index_buffer.destroy ();
+      _vertex_buffer.destroy ();
 
       doneCurrent ();
 
@@ -125,26 +163,38 @@ namespace HIP {
         throw Exception (tr ("Shader linking failed: %1")
                          .arg (_shader.log ()));
 
-      _vertex_attr = _shader.attributeLocation ("vertex");
-      _normal_attr = _shader.attributeLocation ("normal");
-      _matrix_attr = _shader.uniformLocation ("matrix");
+      _vertex_attr = _shader.attributeLocation ("in_vertex");
+      _normal_attr = _shader.attributeLocation ("in_normal");
+      _color_attr = _shader.attributeLocation ("in_color");
+      _matrix_attr = _shader.uniformLocation ("in_matrix");
 
       //
       // Init render data
       //
-      _vertices.clear ();
-      _normals.clear ();
+      QVector<VertexData> vertex_data;
+
+      foreach (const QVector3D& vertex, _model->getVertices ())
+        vertex_data.push_back (VertexData (vertex,
+                                           QVector3D (),
+                                           QVector3D (random (), random (), random ())));
+
+      _vertex_buffer.create ();
+      _vertex_buffer.bind ();
+      _vertex_buffer.allocate (vertex_data.constData (), vertex_data.size () * sizeof (VertexData));
+
+      QVector<GLushort> index_data;
 
       foreach (const Face& face, _model->getFaces ())
         {
           Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
 
           foreach (const Face::Point& point, face.getPoints ())
-            {
-              _vertices.push_back (_model->getVertices ()[point.getVertexIndex ()]);
-              _normals.push_back (_model->getNormals ()[point.getNormalIndex ()]);
-            }
+            index_data.push_back (point.getVertexIndex ());
         }
+
+      _index_buffer.create ();
+      _index_buffer.bind ();
+      _index_buffer.allocate (index_data.constData (), index_data.size () * sizeof (GLushort));
     }
 
     /*
@@ -174,14 +224,24 @@ namespace HIP {
       _shader.bind ();
       _shader.setUniformValue (_matrix_attr, projection * camera.inverted ());
 
-      _shader.setAttributeArray (_vertex_attr, _vertices.constData ());
-      _shader.setAttributeArray (_normal_attr, _normals.constData ());
+      int offset = 0;
 
       _shader.enableAttributeArray (_vertex_attr);
+      _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+      offset += sizeof (QVector3D);
+
       _shader.enableAttributeArray (_normal_attr);
+      _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
 
-      glDrawArrays (GL_TRIANGLES, 0, _vertices.size ());
+      offset += sizeof (QVector3D);
 
+      _shader.enableAttributeArray (_color_attr);
+      _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+      glDrawElements (GL_TRIANGLES, _model->getFaces ().size () * 3, GL_UNSIGNED_SHORT, 0);
+
+      _shader.disableAttributeArray (_color_attr);
       _shader.disableAttributeArray (_normal_attr);
       _shader.disableAttributeArray (_vertex_attr);
 

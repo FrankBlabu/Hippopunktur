@@ -9,6 +9,7 @@
 
 #include <QList>
 #include <QString>
+#include <QVector>
 #include <QVector2D>
 #include <QVector3D>
 
@@ -58,9 +59,9 @@ namespace HIP {
       ~Model ();
 
       const QString& getName () const { return _name; }
-      const QList<QVector3D>& getVertices () const { return _vertices; }
-      const QList<QVector3D>& getNormals () const { return _normals; }
-      const QList<QVector2D>& getTextures () const { return _textures; }
+      const QVector<QVector3D>& getVertices () const { return _vertices; }
+      const QVector<QVector3D>& getNormals () const { return _normals; }
+      const QVector<QVector2D>& getTextures () const { return _textures; }
       const QList<Face>& getFaces () const { return _faces; }
 
     private:
@@ -72,9 +73,9 @@ namespace HIP {
 
     private:
       QString _name;
-      QList<QVector3D> _vertices;
-      QList<QVector3D> _normals;
-      QList<QVector2D> _textures;
+      QVector<QVector3D> _vertices;
+      QVector<QVector3D> _normals;
+      QVector<QVector2D> _textures;
       QList<Face> _faces;
     };
 
