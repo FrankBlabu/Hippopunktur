@@ -130,10 +130,12 @@ namespace HIP {
 
     /*! Constructor */
     Model::Model (const QString& path)
-      : _name (),
-        _vertices (),
-        _normals  (),
-        _textures ()
+      : _name      (),
+        _vertices  (),
+        _normals   (),
+        _textures  (),
+        _groups    (),
+        _materials ()
     {
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
@@ -298,7 +300,7 @@ namespace HIP {
           if (tag == "newmtl")
             {
               if (!material.getName ().isEmpty ())
-                _materials.push_back (material);
+                _materials.insert (material.getName (), material);
               material = Material ();
 
               QString name;
@@ -338,7 +340,7 @@ namespace HIP {
         }
 
       if (!material.getName ().isEmpty ())
-        _materials.push_back (material);
+        _materials.insert (material.getName (), material);
     }
 
 

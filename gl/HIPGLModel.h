@@ -123,7 +123,9 @@ namespace HIP {
       QVector<QVector3D> _normals;
       QVector<QVector2D> _textures;
       QVector<Group> _groups;
-      QVector<Material> _materials;
+
+      typedef QMap<QString, Material> MaterialMap;
+      MaterialMap _materials;
     };
 
   }
