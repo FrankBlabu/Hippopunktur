@@ -88,40 +88,15 @@ namespace HIP {
     }
 
     //#**********************************************************************
-    // CLASS HIP::GL::Material::Info
-    //#**********************************************************************
-
-    /*! Constructor */
-    Material::Info::Info ()
-      : _name     (""),
-        _ambient  (),
-        _diffuse  (),
-        _specular ()
-    {
-    }
-
-    /*! Constructor */
-    Material::Info::Info (const QString& name, const QVector3D& ambient, const QVector3D& diffuse, const QVector3D& specular)
-      : _name     (name),
-        _ambient  (ambient),
-        _diffuse  (diffuse),
-        _specular (specular)
-    {
-    }
-
-    /*! Destructor */
-    Material::Info::~Info ()
-    {
-    }
-
-
-    //#**********************************************************************
     // CLASS HIP::GL::Material
     //#**********************************************************************
 
     /*! Constructor */
     Material::Material ()
-      : _infos ()
+      : _name     (""),
+        _ambient  (),
+        _diffuse  (),
+        _specular ()
     {
     }
 
@@ -130,84 +105,22 @@ namespace HIP {
     {
     }
 
-    /*! Check if a material with the given name exists */
-    bool Material::exists (const QString& name) const
+
+    //#**********************************************************************
+    // CLASS HIP::GL::Model::Group
+    //#**********************************************************************
+
+    /*! Constructor */
+    Model::Group::Group ()
+      : _name     (),
+        _material (),
+        _faces    ()
     {
-      return _infos.contains (name);
     }
 
-    /*! Get material info with the given name */
-    const Material::Info& Material::getInfo (const QString& name) const
+    /*! Destructor */
+    Model::Group::~Group ()
     {
-      InfoMap::const_iterator pos = _infos.find (name);
-      Q_ASSERT (pos != _infos.end ());
-
-      return pos.value ();
-    }
-
-    /*! Load material from file */
-    void Material::load (const QString& path)
-    {
-      QString content = Tools::loadResource<QString> (path);
-      QTextStream file (&content, QIODevice::ReadOnly);
-
-      QString info_name;
-      QVector3D info_ambient;
-      QVector3D info_diffuse;
-      QVector3D info_specular;
-
-      for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
-        {
-          QTextStream in (&line, QIODevice::ReadOnly);
-
-          QString tag;
-          in >> tag;
-          tag = tag.toLower ();
-
-          //
-          // Related material library
-          //
-          if (tag == "newmtl")
-            {
-              if (!info_name.isEmpty ())
-                _infos.insert (info_name, Info  (info_name, info_ambient, info_diffuse, info_specular));
-
-              in >> info_name;
-            }
-
-          //
-          // Ambient
-          //
-          else if (tag == "Ka")
-            {
-              QString x, y, z;
-              in >> x >> y >> z;
-              info_ambient = toVector3d (x, y, z);
-            }
-
-          //
-          // Diffuse
-          //
-          else if (tag == "Kd")
-            {
-              QString x, y, z;
-              in >> x >> y >> z;
-              info_diffuse = toVector3d (x, y, z);
-            }
-
-          //
-          // Specular
-          //
-          else if (tag == "Ks")
-            {
-              QString x, y, z;
-              in >> x >> y >> z;
-              info_specular = toVector3d (x, y, z);
-            }
-        }
-
-      if (!info_name.isEmpty ())
-        _infos.insert (info_name, Info  (info_name, info_ambient, info_diffuse, info_specular));
     }
 
 
@@ -217,17 +130,17 @@ namespace HIP {
 
     /*! Constructor */
     Model::Model (const QString& path)
-      : _name     (),
+      : _name (),
         _vertices (),
         _normals  (),
-        _textures (),
-        _faces    (),
-        _material ()
+        _textures ()
     {
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
 
       QTextStream file (&content, QIODevice::ReadOnly);
+
+      Group group;
 
       for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
         {
@@ -238,17 +151,9 @@ namespace HIP {
           tag = tag.toLower ();
 
           //
-          // Related material library
-          //
-          if (tag == "mtllib")
-            {
-              in >> material_library;
-            }
-
-          //
           // Object name
           //
-          else if (tag == "o")
+          if (tag == "o")
             {
               in >> _name;
             }
@@ -293,9 +198,44 @@ namespace HIP {
               for (in >> tag; !tag.isNull (); in >> tag)
                 points.push_back (toPoint (tag));
 
-              _faces.push_back (Face (points));
+             group.addFace (Face (points));
+            }
+
+          //
+          // Group
+          //
+          else if (tag == "g")
+            {
+              QString name;
+              in >> name;
+
+              if (!group.getFaces ().isEmpty ())
+                _groups.push_back (group);
+
+              group = Group ();
+              group.setName (name);
+            }
+
+          //
+          // Used material
+          //
+          else if (tag == "usemtl")
+            {
+              QString material;
+              in >> material;
+              group.setMaterial (material);
+            }
+
+          //
+          // Related material library
+          //
+          else if (tag == "mtllib")
+            {
+              in >> material_library;
             }
         }
+
+      _groups.push_back (group);
 
       //
       // Sanity check
@@ -303,21 +243,23 @@ namespace HIP {
       Q_ASSERT (!_vertices.isEmpty ());
       Q_ASSERT (!_normals.isEmpty ());
       Q_ASSERT (!_textures.isEmpty ());
-      Q_ASSERT (!_faces.isEmpty ());
 
-      foreach (const Face& face, _faces)
+      foreach (const Model::Group& group, _groups)
         {
-          Q_ASSERT (!face.getPoints ().isEmpty ());
-
-          foreach (const Face::Point& point, face.getPoints ())
+          foreach (const Face& face, group.getFaces ())
             {
-              Q_UNUSED (point);
-              Q_ASSERT (point.getVertexIndex () >= -1 &&
-                        point.getVertexIndex () < _vertices.size ());
-              Q_ASSERT (point.getNormalIndex () >= -1 &&
-                        point.getNormalIndex () < _normals.size ());
-              Q_ASSERT (point.getTextureIndex () >= -1 &&
-                        point.getTextureIndex () < _textures.size ());
+              Q_ASSERT (!face.getPoints ().isEmpty ());
+
+              foreach (const Face::Point& point, face.getPoints ())
+                {
+                  Q_UNUSED (point);
+                  Q_ASSERT (point.getVertexIndex () >= -1 &&
+                            point.getVertexIndex () < _vertices.size ());
+                  Q_ASSERT (point.getNormalIndex () >= -1 &&
+                            point.getNormalIndex () < _normals.size ());
+                  Q_ASSERT (point.getTextureIndex () >= -1 &&
+                            point.getTextureIndex () < _textures.size ());
+                }
             }
         }
 
@@ -330,9 +272,75 @@ namespace HIP {
           Q_ASSERT (!p.isEmpty ());
           p[p.size () - 1] = material_library;
 
-          _material.load (p.join ('/'));
+          loadMaterial (p.join ('/'));
         }
     }
+
+    /*! Load material library */
+    void Model::loadMaterial (const QString& path)
+    {
+      QString content = Tools::loadResource<QString> (path);
+      QTextStream file (&content, QIODevice::ReadOnly);
+
+      Material material;
+
+      for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
+        {
+          QTextStream in (&line, QIODevice::ReadOnly);
+
+          QString tag;
+          in >> tag;
+          tag = tag.toLower ();
+
+          //
+          // Related material library
+          //
+          if (tag == "newmtl")
+            {
+              if (!material.getName ().isEmpty ())
+                _materials.push_back (material);
+              material = Material ();
+
+              QString name;
+              in >> name;
+              material.setName (name);
+            }
+
+          //
+          // Ambient
+          //
+          else if (tag == "Ka")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              material.setAmbient (toVector3d (x, y, z));
+            }
+
+          //
+          // Diffuse
+          //
+          else if (tag == "Kd")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              material.setDiffuse (toVector3d (x, y, z));
+            }
+
+          //
+          // Specular
+          //
+          else if (tag == "Ks")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              material.setSpecular (toVector3d (x, y, z));
+            }
+        }
+
+      if (!material.getName ().isEmpty ())
+        _materials.push_back (material);
+    }
+
 
     /*! Destructor */
     Model::~Model ()

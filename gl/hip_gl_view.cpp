@@ -174,17 +174,20 @@ namespace HIP {
       typedef QMap<int, QVector3D> VertexNormalMap;
       VertexNormalMap normals;
 
-      foreach (const Face& face, _model->getFaces ())
+      foreach (const Model::Group& group, _model->getGroups ())
         {
-          foreach (const Face::Point& point, face.getPoints ())
+          foreach (const Face& face, group.getFaces ())
             {
-              int vi = point.getVertexIndex ();
-              int ni = point.getNormalIndex ();
+              foreach (const Face::Point& point, face.getPoints ())
+                {
+                  int vi = point.getVertexIndex ();
+                  int ni = point.getNormalIndex ();
 
-              if (normals.contains (vi))
-                normals[vi] += _model->getNormals ()[ni];
-              else
-                normals[vi] = _model->getNormals ()[ni];
+                  if (normals.contains (vi))
+                    normals[vi] += _model->getNormals ()[ni];
+                  else
+                    normals[vi] = _model->getNormals ()[ni];
+                }
             }
         }
 
@@ -208,12 +211,15 @@ namespace HIP {
 
       QVector<GLushort> index_data;
 
-      foreach (const Face& face, _model->getFaces ())
+      foreach (const Model::Group& group, _model->getGroups ())
         {
-          Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
+          foreach (const Face& face, group.getFaces ())
+            {
+              Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
 
-          foreach (const Face::Point& point, face.getPoints ())
-            index_data.push_back (point.getVertexIndex ());
+              foreach (const Face::Point& point, face.getPoints ())
+                index_data.push_back (point.getVertexIndex ());
+            }
         }
 
       _index_buffer.create ();
@@ -263,7 +269,11 @@ namespace HIP {
       _shader.enableAttributeArray (_color_attr);
       _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
 
-      glDrawElements (GL_TRIANGLES, _model->getFaces ().size () * 3, GL_UNSIGNED_SHORT, 0);
+      int number_of_points = 0;
+      foreach (const Model::Group& group, _model->getGroups ())
+        number_of_points += group.getFaces ().size () * 3;
+
+      glDrawElements (GL_TRIANGLES, number_of_points, GL_UNSIGNED_SHORT, 0);
 
       _shader.disableAttributeArray (_color_attr);
       _shader.disableAttributeArray (_normal_attr);
