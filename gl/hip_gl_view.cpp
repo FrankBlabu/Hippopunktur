@@ -169,14 +169,38 @@ namespace HIP {
       _matrix_attr = _shader.uniformLocation ("in_matrix");
 
       //
+      // Compute normal for every vertex
+      //
+      typedef QMap<int, QVector3D> VertexNormalMap;
+      VertexNormalMap normals;
+
+      foreach (const Face& face, _model->getFaces ())
+        {
+          foreach (const Face::Point& point, face.getPoints ())
+            {
+              int vi = point.getVertexIndex ();
+              int ni = point.getNormalIndex ();
+
+              if (normals.contains (vi))
+                normals[vi] += _model->getNormals ()[ni];
+              else
+                normals[vi] = _model->getNormals ()[ni];
+            }
+        }
+
+      //
       // Init render data
       //
       QVector<VertexData> vertex_data;
 
-      foreach (const QVector3D& vertex, _model->getVertices ())
-        vertex_data.push_back (VertexData (vertex,
-                                           QVector3D (),
-                                           QVector3D (random (), random (), random ())));
+      for (int i=0; i < _model->getVertices ().size (); ++i)
+        {
+          const QVector3D& vertex = _model->getVertices ()[i];
+          Q_ASSERT (normals.contains (i));
+
+          vertex_data.push_back (VertexData (vertex, normals[i],
+                                             QVector3D (random (), random (), random ())));
+        }
 
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
