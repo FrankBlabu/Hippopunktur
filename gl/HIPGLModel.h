@@ -8,6 +8,7 @@
 #define __HIPGLModel_h__
 
 #include <QList>
+#include <QMap>
 #include <QString>
 #include <QVector>
 #include <QVector2D>
@@ -50,6 +51,46 @@ namespace HIP {
 
 
     /*!
+     * Class keeping material information
+     */
+    class Material
+    {
+    public:
+      class Info
+      {
+      public:
+        Info ();
+        Info (const QString& name, const QVector3D& ambient, const QVector3D& diffuse, const QVector3D& specular);
+        ~Info ();
+
+        const QString& getName () const { return _name; }
+        const QVector3D& getAmbient () const { return _ambient; }
+        const QVector3D& getDiffuse () const { return _diffuse; }
+        const QVector3D& getSpecular () const { return _specular; }
+
+      private:
+        QString _name;
+        QVector3D _ambient;
+        QVector3D _diffuse;
+        QVector3D _specular;
+      };
+
+    public:
+      Material ();
+      ~Material ();
+
+      bool exists (const QString& name) const;
+      const Info& getInfo (const QString& name) const;
+
+      void load (const QString& path); // throws Exception
+
+    private:
+      typedef QMap<QString, Info> InfoMap;
+      InfoMap _infos;
+    };
+
+
+    /*!
      * Class for loading and keeping a GL model
      */
     class Model
@@ -66,10 +107,6 @@ namespace HIP {
 
     private:
       Face::Point toPoint (const QString& t) const; // throws Exception
-      QVector3D toVector3d (const QString& x, const QString& y, const QString& z) const; // throws Exception
-      QVector2D toVector2d (const QString& x, const QString& y) const; // throws Exception
-      qreal toReal (const QString& v) const; // throws Exception
-      int toInt (const QString& v) const; // throws Exception
 
     private:
       QString _name;
@@ -77,6 +114,7 @@ namespace HIP {
       QVector<QVector3D> _normals;
       QVector<QVector2D> _textures;
       QList<Face> _faces;
+      Material _material;
     };
 
   }

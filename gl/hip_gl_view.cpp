@@ -169,7 +169,7 @@ namespace HIP {
       _matrix_attr = _shader.uniformLocation ("in_matrix");
 
       //
-      // Compute normal for every vertex
+      // Compute normal for each vertex
       //
       typedef QMap<int, QVector3D> VertexNormalMap;
       VertexNormalMap normals;
@@ -308,7 +308,7 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      float step = 0.08 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
+      float step = -0.08 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
       _translation.setZ (_translation.z () + step * _translation.length ());
 
       update ();

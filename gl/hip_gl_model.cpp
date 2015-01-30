@@ -15,6 +15,51 @@ namespace HIP {
   namespace GL {
 
     //#**********************************************************************
+    // Local functions
+    //#**********************************************************************
+
+    namespace {
+
+      /* Convert string into double value */
+      qreal toReal (const QString& v) // throws Exception
+      {
+        bool ok = false;
+        qreal d = v.toFloat (&ok);
+
+        if (!ok)
+          throw Exception (QObject::tr ("Double value expected"));
+
+        return d;
+      }
+
+      /* Convert string into integer value */
+      int toInt (const QString& v) // throws Exception
+      {
+        bool ok = false;
+        int i = v.toInt (&ok);
+
+        if (!ok)
+          throw Exception (QObject::tr ("Double value expected"));
+
+        return i;
+      }
+
+      /* Convert string tuple into 3d vector */
+      QVector3D toVector3d (const QString& x, const QString& y, const QString& z) // throws Exception
+      {
+        return QVector3D (toReal (x), toReal (y), toReal (z));
+      }
+
+      /* Convert string tuple into 2d vector */
+      QVector2D toVector2d (const QString& x, const QString& y) // throws Exception
+      {
+        return QVector2D (toReal (x), toReal (y));
+      }
+
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::GL::Face::Point
     //#**********************************************************************
 
@@ -42,6 +87,129 @@ namespace HIP {
     {
     }
 
+    //#**********************************************************************
+    // CLASS HIP::GL::Material::Info
+    //#**********************************************************************
+
+    /*! Constructor */
+    Material::Info::Info ()
+      : _name     (""),
+        _ambient  (),
+        _diffuse  (),
+        _specular ()
+    {
+    }
+
+    /*! Constructor */
+    Material::Info::Info (const QString& name, const QVector3D& ambient, const QVector3D& diffuse, const QVector3D& specular)
+      : _name     (name),
+        _ambient  (ambient),
+        _diffuse  (diffuse),
+        _specular (specular)
+    {
+    }
+
+    /*! Destructor */
+    Material::Info::~Info ()
+    {
+    }
+
+
+    //#**********************************************************************
+    // CLASS HIP::GL::Material
+    //#**********************************************************************
+
+    /*! Constructor */
+    Material::Material ()
+      : _infos ()
+    {
+    }
+
+    /*! Destructor */
+    Material::~Material ()
+    {
+    }
+
+    /*! Check if a material with the given name exists */
+    bool Material::exists (const QString& name) const
+    {
+      return _infos.contains (name);
+    }
+
+    /*! Get material info with the given name */
+    const Material::Info& Material::getInfo (const QString& name) const
+    {
+      InfoMap::const_iterator pos = _infos.find (name);
+      Q_ASSERT (pos != _infos.end ());
+
+      return pos.value ();
+    }
+
+    /*! Load material from file */
+    void Material::load (const QString& path)
+    {
+      QString content = Tools::loadResource<QString> (path);
+      QTextStream file (&content, QIODevice::ReadOnly);
+
+      QString info_name;
+      QVector3D info_ambient;
+      QVector3D info_diffuse;
+      QVector3D info_specular;
+
+      for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
+        {
+          QTextStream in (&line, QIODevice::ReadOnly);
+
+          QString tag;
+          in >> tag;
+          tag = tag.toLower ();
+
+          //
+          // Related material library
+          //
+          if (tag == "newmtl")
+            {
+              if (!info_name.isEmpty ())
+                _infos.insert (info_name, Info  (info_name, info_ambient, info_diffuse, info_specular));
+
+              in >> info_name;
+            }
+
+          //
+          // Ambient
+          //
+          else if (tag == "Ka")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              info_ambient = toVector3d (x, y, z);
+            }
+
+          //
+          // Diffuse
+          //
+          else if (tag == "Kd")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              info_diffuse = toVector3d (x, y, z);
+            }
+
+          //
+          // Specular
+          //
+          else if (tag == "Ks")
+            {
+              QString x, y, z;
+              in >> x >> y >> z;
+              info_specular = toVector3d (x, y, z);
+            }
+        }
+
+      if (!info_name.isEmpty ())
+        _infos.insert (info_name, Info  (info_name, info_ambient, info_diffuse, info_specular));
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::GL::Model
@@ -53,7 +221,8 @@ namespace HIP {
         _vertices (),
         _normals  (),
         _textures (),
-        _faces    ()
+        _faces    (),
+        _material ()
     {
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
@@ -128,27 +297,6 @@ namespace HIP {
             }
         }
 
-#if 0
-      qDebug () << "* Load model, path=" << path;
-      qDebug () << "  name=" << _name;
-      qDebug () << "  " << _vertices.size () << " vertices";
-      qDebug () << "  " << _normals.size () << " normals";
-      qDebug () << "  " << _textures.size () << "  textures";
-      qDebug () << "  " << _faces.size () << " faces";
-#endif
-
-#if 0
-      //
-      // Normalize model
-      //
-      float max_length = 0.0f;
-      foreach (const QVector3D& v, _vertices)
-        max_length = qMax (max_length, v.length ());
-
-      for (int i=0; i < _vertices.size (); ++i)
-        _vertices[i] /= max_length;
-#endif
-
       //
       // Sanity check
       //
@@ -171,6 +319,18 @@ namespace HIP {
               Q_ASSERT (point.getTextureIndex () >= -1 &&
                         point.getTextureIndex () < _textures.size ());
             }
+        }
+
+      //
+      // Load material
+      //
+      if (!material_library.isEmpty ())
+        {
+          QStringList p = path.split ('/');
+          Q_ASSERT (!p.isEmpty ());
+          p[p.size () - 1] = material_library;
+
+          _material.load (p.join ('/'));
         }
     }
 
@@ -199,42 +359,6 @@ namespace HIP {
         normal_index = toInt (parts[2]) - 1;
 
       return Face::Point (vertex_index, normal_index, texture_index);
-    }
-
-    /* Convert string tuple into 3d vector */
-    QVector3D Model::toVector3d (const QString& x, const QString& y, const QString& z) const // throws Exception
-    {
-      return QVector3D (toReal (x), toReal (y), toReal (z));
-    }
-
-    /* Convert string tuple into 2d vector */
-    QVector2D Model::toVector2d (const QString& x, const QString& y) const // throws Exception
-    {
-      return QVector2D (toReal (x), toReal (y));
-    }
-
-    /* Convert string into double value */
-    qreal Model::toReal (const QString& v) const // throws Exception
-    {
-      bool ok = false;
-      qreal d = v.toFloat (&ok);
-
-      if (!ok)
-        throw Exception (QObject::tr ("Double value expected"));
-
-      return d;
-    }
-
-    /* Convert string into integer value */
-    int Model::toInt (const QString& v) const // throws Exception
-    {
-      bool ok = false;
-      int i = v.toInt (&ok);
-
-      if (!ok)
-        throw Exception (QObject::tr ("Double value expected"));
-
-      return i;
     }
 
   }
