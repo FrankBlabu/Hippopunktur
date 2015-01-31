@@ -18,6 +18,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
 #include <QSurfaceFormat>
 #include <QWheelEvent>
 
@@ -47,13 +48,21 @@ namespace HIP {
       struct VertexData
       {
         VertexData () {}
-        VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color)
-          : _vertex (vertex), _normal (normal), _color (color) {}
+        VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color, const QVector3D& texture);
 
         QVector3D _vertex;
         QVector3D _normal;
         QVector3D _color;
+        QVector2D _texture;
       };
+
+      VertexData::VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color, const QVector3D& texture)
+        : _vertex  (vertex),
+          _normal  (normal),
+          _color   (color),
+          _texture (texture)
+      {
+      }
 
     }
 
@@ -93,11 +102,13 @@ namespace HIP {
       QOpenGLShaderProgram _shader;
       QOpenGLBuffer _vertex_buffer;
       QOpenGLBuffer _index_buffer;
+      QOpenGLTexture* _texture;
 
       int _vertex_attr;
       int _normal_attr;
       int _color_attr;
       int _matrix_attr;
+      int _texture_attr;
 
       QVector3D _translation;
       QVector3D _rotation;
@@ -113,10 +124,12 @@ namespace HIP {
         _shader        (),
         _vertex_buffer (QOpenGLBuffer::VertexBuffer),
         _index_buffer  (QOpenGLBuffer::IndexBuffer),
+        _texture       (0),
         _vertex_attr   (-1),
         _normal_attr   (-1),
         _color_attr    (-1),
         _matrix_attr   (-1),
+        _texture_attr  (-1),
         _translation   (0, 0, 5),
         _rotation      (0, 0, 0),
         _last_pos      (0, 0)
@@ -135,6 +148,7 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
+      delete _texture;
       _index_buffer.destroy ();
       _vertex_buffer.destroy ();
 
@@ -172,6 +186,12 @@ namespace HIP {
       _normal_attr = _shader.attributeLocation ("in_normal");
       _color_attr = _shader.attributeLocation ("in_color");
       _matrix_attr = _shader.uniformLocation ("in_matrix");
+      _texture_attr = _shader.attributeLocation ("in_texture");
+
+      _texture = new QOpenGLTexture (QImage (":/assets/models/horse/texture.png").mirrored ());
+      _texture->setMinificationFilter (QOpenGLTexture::Nearest);
+      _texture->setMagnificationFilter (QOpenGLTexture::Linear);
+      _texture->setWrapMode (QOpenGLTexture::Repeat);
 
       //
       // Init render data
@@ -195,7 +215,8 @@ namespace HIP {
                     {
                       vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
                                                          _model->getNormals ()[point.getNormalIndex ()],
-                                                         QVector3D (random (), random (), random ())));
+                                                         QVector3D (random (), random (), random ()),
+                                                         _model->getTextures ()[point.getTextureIndex ()]));
                       point_indices.insert (point, vertex_data.size () - 1);
                       index_data.push_back (vertex_data.size () - 1);
                     }
@@ -258,12 +279,21 @@ namespace HIP {
       _shader.enableAttributeArray (_color_attr);
       _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
 
+      offset += sizeof (QVector3D);
+
+      _shader.enableAttributeArray (_texture_attr);
+      _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
+
       int number_of_points = 0;
       foreach (const Model::Group& group, _model->getGroups ())
         number_of_points += group.getFaces ().size () * 3;
 
+      _texture->bind ();
+      _shader.setUniformValue ("texture", 0);
+
       glDrawElements (GL_TRIANGLES, number_of_points, GL_UNSIGNED_SHORT, 0);
 
+      _shader.disableAttributeArray (_texture_attr);
       _shader.disableAttributeArray (_color_attr);
       _shader.disableAttributeArray (_normal_attr);
       _shader.disableAttributeArray (_vertex_attr);
