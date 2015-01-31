@@ -86,6 +86,7 @@ namespace HIP {
       {
         static const char* const DATABASE    = "database";
         static const char* const MODEL       = "model";
+        static const char* const FILE    = "file";
         static const char* const POINTS      = "points";
         static const char* const POINT       = "point";
         static const char* const TAGS        = "tags";
@@ -104,7 +105,6 @@ namespace HIP {
       namespace Attributes
       {
         static const char* const VERSION = "version";
-        static const char* const FILE    = "file";
         static const char* const ID      = "id";
         static const char* const NAME    = "name";
         static const char* const X       = "x";
@@ -386,10 +386,13 @@ namespace HIP {
               //
               if (top_e.tagName () == Tags::MODEL)
                 {
-                  if (!top_e.hasAttribute (Attributes::FILE))
-                    throwDOMException (top_e, tr ("Model file name missing"));
+                  QDomElement file_e = top_e.namedItem (Tags::FILE).toElement ();
+                  if (file_e.isNull ())
+                    throwDOMException (file_e, tr ("Model entry must have a file name"));
+                  if (!file_e.firstChild ().isCharacterData ())
+                    throwDOMException (file_e, tr ("Character data expected for file name"));
 
-                  _model = top_e.attribute (Attributes::FILE);
+                  _model = file_e.firstChild ().toCharacterData ().data ();
                 }
 
               //
@@ -726,6 +729,13 @@ namespace HIP {
       out.writeStartElement (Tags::DATABASE);
       out.writeAttribute (Attributes::VERSION, QString (XML_VERSION));
       out.writeAttribute (Attributes::NAME, _name);
+
+      out.writeComment (tr ("Model"));
+      out.writeStartElement (Tags::MODEL);
+      out.writeStartElement (Tags::FILE);
+      out.writeCharacters (_model);
+      out.writeEndElement ();
+      out.writeEndElement ();
 
       out.writeComment (tr ("List of points"));
 

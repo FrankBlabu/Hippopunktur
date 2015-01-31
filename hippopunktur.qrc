@@ -3,7 +3,6 @@
         <file>main.qml</file>
         <file>explorer/Explorer.qml</file>
         <file>core/AboutDialog.qml</file>
-        <file>data/database.xml</file>
         <file>assets/about.html</file>
         <file>assets/icons/busy_indicator.png</file>
         <file>assets/style/branch_closed.png</file>
@@ -44,5 +43,6 @@
         <file>gl/FragmentShader.glsl</file>
         <file>gl/VertexShader.glsl</file>
         <file>assets/models/horse/texture.png</file>
+        <file>assets/models/horse/horse.xml</file>
     </qresource>
 </RCC>

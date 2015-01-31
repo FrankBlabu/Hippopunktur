@@ -12,6 +12,27 @@
 #include <QTextStream>
 
 namespace HIP {
+
+  //#************************************************************************
+  // Debug
+  //#************************************************************************
+
+  QDebug operator<< (QDebug stream, const GL::Face& face)
+  {
+    stream << "f";
+
+    foreach (const GL::Face::Point& point, face.getPoints ())
+      stream << " " << point;
+
+    return stream;
+  }
+
+  QDebug operator<< (QDebug stream, const GL::Face::Point& point)
+  {
+    stream << point.getVertexIndex () << "/" << point.getTextureIndex () << "/" << point.getNormalIndex ();
+    return stream;
+  }
+
   namespace GL {
 
     //#**********************************************************************
@@ -155,6 +176,8 @@ namespace HIP {
         _groups    (),
         _materials ()
     {
+      qDebug () << "* Model: " << path;
+
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
 
@@ -272,7 +295,6 @@ namespace HIP {
 
               foreach (const Face::Point& point, face.getPoints ())
                 {
-                  Q_UNUSED (point);
                   Q_ASSERT (point.getVertexIndex () >= -1 &&
                             point.getVertexIndex () < _vertices.size ());
                   Q_ASSERT (point.getNormalIndex () >= -1 &&
@@ -376,15 +398,33 @@ namespace HIP {
 
       int vertex_index = -1;
       if (parts.size () > 0 && !parts[0].isEmpty ())
-        vertex_index = toInt (parts[0]) - 1;
+        {
+          vertex_index = toInt (parts[0]);
+          if (vertex_index >= 0)
+            vertex_index -= 1;
+          else
+            vertex_index = _vertices.size () + vertex_index;
+        }
 
       int texture_index = -1;
       if (parts.size () > 1 && !parts[1].isEmpty ())
-        texture_index = toInt (parts[1]) - 1;
+        {
+          texture_index = toInt (parts[1]);
+          if (texture_index >= 0)
+            texture_index -= 1;
+          else
+            texture_index = _textures.size () + texture_index;
+        }
 
       int normal_index = -1;
       if (parts.size () > 2 && !parts[2].isEmpty ())
-        normal_index = toInt (parts[2]) - 1;
+        {
+          normal_index = toInt (parts[2]);
+          if (normal_index >= 0)
+            normal_index -= 1;
+          else
+            normal_index = _normals.size () + normal_index;
+        }
 
       return Face::Point (vertex_index, normal_index, texture_index);
     }

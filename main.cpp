@@ -19,7 +19,9 @@
 
 namespace {
 
-  static const char* const DATABASE_FILE = ":/data/database.xml";
+  //static const char* const DATABASE_FILE = ":/assets/models/horse/horse.xml";
+  //static const char* const DATABASE_FILE = "c:/Users/Frank/workspace/hippopunktur/assets/models/horse/horse.xml";
+  static const char* const DATABASE_FILE = "c:/Users/Frank/workspace/hippopunktur/assets/models/elephant/elephant.xml";
 
 }
 

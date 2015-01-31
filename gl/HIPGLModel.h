@@ -131,6 +131,10 @@ namespace HIP {
     };
 
   }
+
+  QDebug operator<< (QDebug stream, const GL::Face& face);
+  QDebug operator<< (QDebug stream, const GL::Face::Point& point);
+
 }
 
 #endif
