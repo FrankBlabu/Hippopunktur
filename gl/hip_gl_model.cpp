@@ -169,12 +169,13 @@ namespace HIP {
 
     /*! Constructor */
     Model::Model (const QString& path)
-      : _name      (),
-        _vertices  (),
-        _normals   (),
-        _textures  (),
-        _groups    (),
-        _materials ()
+      : _name         (),
+        _vertices     (),
+        _normals      (),
+        _textures     (),
+        _groups       (),
+        _materials    (),
+        _bounding_box ()
     {
       qDebug () << "* Model: " << path;
 
@@ -315,6 +316,27 @@ namespace HIP {
           p[p.size () - 1] = material_library;
 
           loadMaterial (p.join ('/'));
+        }
+
+      //
+      // Compute bounding box
+      //
+      _bounding_box.first = QVector3D (std::numeric_limits<float>::max (),
+                                       std::numeric_limits<float>::max (),
+                                       std::numeric_limits<float>::max ());
+      _bounding_box.second = QVector3D (-std::numeric_limits<float>::max (),
+                                        -std::numeric_limits<float>::max (),
+                                        -std::numeric_limits<float>::max ());
+
+      foreach (const QVector3D& v, _vertices)
+        {
+          _bounding_box.first.setX (qMin (_bounding_box.first.x (), v.x ()));
+          _bounding_box.first.setY (qMin (_bounding_box.first.y (), v.y ()));
+          _bounding_box.first.setZ (qMin (_bounding_box.first.z (), v.z ()));
+
+          _bounding_box.second.setX (qMax (_bounding_box.second.x (), v.x ()));
+          _bounding_box.second.setY (qMax (_bounding_box.second.y (), v.y ()));
+          _bounding_box.second.setZ (qMax (_bounding_box.second.z (), v.z ()));
         }
     }
 

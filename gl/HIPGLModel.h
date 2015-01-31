@@ -115,6 +115,9 @@ namespace HIP {
       const QVector<QVector2D>& getTextures () const { return _textures; }
       const QVector<Group>& getGroups () const       { return _groups; }
 
+      typedef QPair<QVector3D, QVector3D> Cube;
+      const Cube& getBoundingBox () const { return _bounding_box; }
+
     private:
       void loadMaterial (const QString& path); // throws Exception
       Face::Point toPoint (const QString& t) const; // throws Exception
@@ -128,6 +131,8 @@ namespace HIP {
 
       typedef QMap<QString, Material> MaterialMap;
       MaterialMap _materials;
+
+      Cube _bounding_box;
     };
 
   }
