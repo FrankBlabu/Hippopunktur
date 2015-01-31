@@ -84,6 +84,10 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
+      void addRotation (const QVector3D& delta);
+      float checkBounds (float lower, float value, float upper) const;
+
+    private:
       Model* _model;
 
       QOpenGLShaderProgram _shader;
@@ -230,12 +234,14 @@ namespace HIP {
       projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
       QMatrix4x4 camera;
-      camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
       camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
-      camera.translate (_translation);
+      camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
+
+      QMatrix4x4 mvp;
+      mvp.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
 
       _shader.bind ();
-      _shader.setUniformValue (_matrix_attr, projection * camera.inverted ());
+      _shader.setUniformValue (_matrix_attr, projection * mvp);
 
       int offset = 0;
 
@@ -267,7 +273,20 @@ namespace HIP {
 
     void Widget::keyPressEvent (QKeyEvent* event)
     {
-      Q_UNUSED (event);
+      if (event->key () == Qt::Key_Plus)
+        _translation.setZ (_translation.z () * 0.9);
+      else if (event->key () == Qt::Key_Minus)
+        _translation.setZ (_translation.z () * 1.1);
+      else if (event->key () == Qt::Key_Up)
+        addRotation (QVector3D (+5, 0, 0));
+      else if (event->key () == Qt::Key_Down)
+        addRotation (QVector3D (-5, 0, 0));
+      else if (event->key () == Qt::Key_Left)
+        addRotation (QVector3D (0, +5, 0));
+      else if (event->key () == Qt::Key_Right)
+        addRotation (QVector3D (0, -5, 0));
+
+      update ();
     }
 
     void Widget::mousePressEvent (QMouseEvent* event)
@@ -281,10 +300,7 @@ namespace HIP {
       _last_pos = event->pos ();
 
       if (event->buttons ().testFlag (Qt::LeftButton))
-        {
-          _rotation.setY (_rotation.y () - delta.x ());
-          _rotation.setX (_rotation.x () - delta.y ());
-        }
+        addRotation (QVector3D (-delta.y (), -delta.x (), 0.0));
       else if (event->buttons ().testFlag (Qt::MidButton))
         {
           _translation.setX (_translation.x () - delta.x () / (width () / _translation.length ()));
@@ -301,10 +317,37 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      float step = -0.08 * (event->angleDelta ().x () + event->angleDelta ().y ()) / (15 * 8);
-      _translation.setZ (_translation.z () + step * _translation.length ());
+      if (event->delta () < 0)
+        _translation.setZ (_translation.z () * 1.1);
+      else if (event->delta () > 0)
+        _translation.setZ (_translation.z () * 0.9);
 
       update ();
+    }
+
+    /*!
+     * Add rotation vector and checks bounds
+     */
+    void Widget::addRotation (const QVector3D& delta)
+    {
+      _rotation += delta;
+
+      _rotation.setX (checkBounds (0, _rotation.x (), 360));
+      _rotation.setY (checkBounds (0, _rotation.y (), 360));
+      _rotation.setZ (checkBounds (0, _rotation.z (), 360));
+    }
+
+    /*!
+     * Check that the given value is in the bounds
+     */
+    float Widget::checkBounds (float lower, float value, float upper) const
+    {
+      while (value < lower)
+        value += (upper - lower);
+      while (value >= upper)
+        value -= (upper - lower);
+
+      return value;
     }
 
 
