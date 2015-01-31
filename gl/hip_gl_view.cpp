@@ -107,7 +107,10 @@ namespace HIP {
       int _vertex_attr;
       int _normal_attr;
       int _color_attr;
-      int _matrix_attr;
+      int _mvp_matrix_attr;
+      int _mv_matrix_attr;
+      int _n_matrix_attr;
+      int _light_position_attr;
       int _texture_attr;
 
       QVector3D _translation;
@@ -120,19 +123,22 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
-        _model         (new Model (model_path)),
-        _shader        (),
-        _vertex_buffer (QOpenGLBuffer::VertexBuffer),
-        _index_buffer  (QOpenGLBuffer::IndexBuffer),
-        _texture       (0),
-        _vertex_attr   (-1),
-        _normal_attr   (-1),
-        _color_attr    (-1),
-        _matrix_attr   (-1),
-        _texture_attr  (-1),
-        _translation   (0, 0, 5),
-        _rotation      (0, 0, 0),
-        _last_pos      (0, 0)
+        _model               (new Model (model_path)),
+        _shader              (),
+        _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
+        _index_buffer        (QOpenGLBuffer::IndexBuffer),
+        _texture             (0),
+        _vertex_attr         (-1),
+        _normal_attr         (-1),
+        _color_attr          (-1),
+        _mvp_matrix_attr     (-1),
+        _mv_matrix_attr      (-1),
+        _n_matrix_attr       (-1),
+        _light_position_attr (-1),
+        _texture_attr        (-1),
+        _translation         (0, 0, 5),
+        _rotation            (0, 0, 0),
+        _last_pos            (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
 
@@ -185,7 +191,10 @@ namespace HIP {
       _vertex_attr = _shader.attributeLocation ("in_vertex");
       _normal_attr = _shader.attributeLocation ("in_normal");
       _color_attr = _shader.attributeLocation ("in_color");
-      _matrix_attr = _shader.uniformLocation ("in_matrix");
+      _mvp_matrix_attr = _shader.uniformLocation ("in_mvp_matrix");
+      _mv_matrix_attr = _shader.uniformLocation ("in_mv_matrix");
+      _n_matrix_attr = _shader.uniformLocation ("in_n_matrix");
+      _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
       _texture = new QOpenGLTexture (QImage (":/assets/models/horse/texture.png").mirrored ());
@@ -258,11 +267,14 @@ namespace HIP {
       camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
       camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
 
-      QMatrix4x4 mvp;
-      mvp.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
+      QMatrix4x4 mv;
+      mv.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
 
       _shader.bind ();
-      _shader.setUniformValue (_matrix_attr, projection * mvp);
+      _shader.setUniformValue (_mvp_matrix_attr, projection * mv);
+      _shader.setUniformValue (_mv_matrix_attr, mv);
+      _shader.setUniformValue (_n_matrix_attr, mv.normalMatrix ());
+      _shader.setUniformValue (_light_position_attr, camera * _translation);
 
       int offset = 0;
 
