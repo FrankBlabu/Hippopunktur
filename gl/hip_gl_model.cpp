@@ -71,6 +71,24 @@ namespace HIP {
     {
     }
 
+    /*! Comparison operator */
+    bool Face::Point::operator< (const Point& point) const
+    {
+      bool less = false;
+
+      if (_vertex_index == point._vertex_index)
+        {
+          if (_normal_index < point._normal_index)
+            less = _texture_index < point._texture_index;
+          else
+            less = _normal_index < point._normal_index;
+        }
+      else
+        less = _vertex_index < point._vertex_index;
+
+      return less;
+    }
+
 
     //#**********************************************************************
     // CLASS HIP::GL::Face

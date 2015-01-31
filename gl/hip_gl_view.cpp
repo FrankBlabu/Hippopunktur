@@ -37,6 +37,7 @@ namespace HIP {
 
     }
 
+
     //#**********************************************************************
     // CLASS HIP::GL::VertexData
     //#**********************************************************************
@@ -169,47 +170,13 @@ namespace HIP {
       _matrix_attr = _shader.uniformLocation ("in_matrix");
 
       //
-      // Compute normal for each vertex
-      //
-      typedef QMap<int, QVector3D> VertexNormalMap;
-      VertexNormalMap normals;
-
-      foreach (const Model::Group& group, _model->getGroups ())
-        {
-          foreach (const Face& face, group.getFaces ())
-            {
-              foreach (const Face::Point& point, face.getPoints ())
-                {
-                  int vi = point.getVertexIndex ();
-                  int ni = point.getNormalIndex ();
-
-                  if (normals.contains (vi))
-                    normals[vi] += _model->getNormals ()[ni];
-                  else
-                    normals[vi] = _model->getNormals ()[ni];
-                }
-            }
-        }
-
-      //
       // Init render data
       //
       QVector<VertexData> vertex_data;
-
-      for (int i=0; i < _model->getVertices ().size (); ++i)
-        {
-          const QVector3D& vertex = _model->getVertices ()[i];
-          Q_ASSERT (normals.contains (i));
-
-          vertex_data.push_back (VertexData (vertex, normals[i],
-                                             QVector3D (random (), random (), random ())));
-        }
-
-      _vertex_buffer.create ();
-      _vertex_buffer.bind ();
-      _vertex_buffer.allocate (vertex_data.constData (), vertex_data.size () * sizeof (VertexData));
-
       QVector<GLushort> index_data;
+
+      typedef QMap<Face::Point, int> PointIndexMap;
+      PointIndexMap point_indices;
 
       foreach (const Model::Group& group, _model->getGroups ())
         {
@@ -218,9 +185,25 @@ namespace HIP {
               Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
 
               foreach (const Face::Point& point, face.getPoints ())
-                index_data.push_back (point.getVertexIndex ());
+                {
+                  PointIndexMap::const_iterator pos = point_indices.find (point);
+                  if (pos == point_indices.end ())
+                    {
+                      vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
+                                                         _model->getNormals ()[point.getNormalIndex ()],
+                                                         QVector3D (random (), random (), random ())));
+                      point_indices.insert (point, vertex_data.size () - 1);
+                      index_data.push_back (vertex_data.size () - 1);
+                    }
+                  else
+                    index_data.push_back (pos.value ());
+                }
             }
         }
+
+      _vertex_buffer.create ();
+      _vertex_buffer.bind ();
+      _vertex_buffer.allocate (vertex_data.constData (), vertex_data.size () * sizeof (VertexData));
 
       _index_buffer.create ();
       _index_buffer.bind ();

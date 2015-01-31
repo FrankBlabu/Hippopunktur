@@ -33,6 +33,8 @@ namespace HIP {
         int getNormalIndex () const  { return _normal_index; }
         int getTextureIndex () const { return _texture_index; }
 
+        bool operator< (const Point& point) const;
+
       private:
         int _vertex_index;
         int _normal_index;
