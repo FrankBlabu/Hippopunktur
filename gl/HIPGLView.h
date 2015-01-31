@@ -28,7 +28,7 @@ namespace HIP {
       Q_OBJECT
 
     public:
-      explicit View (const Database::Database* database, const QString& model_path, QWidget* parent);
+      explicit View (const Database::Database* database, QWidget* parent);
       virtual ~View ();
 
     private slots:

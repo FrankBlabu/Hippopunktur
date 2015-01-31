@@ -156,6 +156,7 @@ namespace HIP {
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
       const QList<Image>& getImages () const { return _images; }
+      const QString& getModel () const { return _model; }
 
       const Point& getPoint (const QString& id) const;
       void setPoint (const Point& point);
@@ -196,6 +197,8 @@ namespace HIP {
       QList<Point> _points;
       QList<QString> _tags;
       QList<Image> _images;
+
+      QString _model;
 
       //
       // Database cached data

@@ -85,6 +85,7 @@ namespace HIP {
       namespace Tags
       {
         static const char* const DATABASE    = "database";
+        static const char* const MODEL       = "model";
         static const char* const POINTS      = "points";
         static const char* const POINT       = "point";
         static const char* const TAGS        = "tags";
@@ -103,6 +104,7 @@ namespace HIP {
       namespace Attributes
       {
         static const char* const VERSION = "version";
+        static const char* const FILE    = "file";
         static const char* const ID      = "id";
         static const char* const NAME    = "name";
         static const char* const X       = "x";
@@ -345,6 +347,7 @@ namespace HIP {
       : _points        (),
         _tags          (),
         _images        (),
+        _model         (),
         _point_indices (),
         _visible_image ()
     {
@@ -379,9 +382,20 @@ namespace HIP {
               QDomElement top_e = top_n.toElement ();
 
               //
+              // Load model information
+              //
+              if (top_e.tagName () == Tags::MODEL)
+                {
+                  if (!top_e.hasAttribute (Attributes::FILE))
+                    throwDOMException (top_e, tr ("Model file name missing"));
+
+                  _model = top_e.attribute (Attributes::FILE);
+                }
+
+              //
               // Load points database
               //
-              if (top_e.tagName () == Tags::POINTS)
+              else if (top_e.tagName () == Tags::POINTS)
                 {
                   for ( QDomNode point_n = top_e.firstChild (); !point_n.isNull ();
                         point_n = point_n.nextSibling () )

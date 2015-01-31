@@ -42,15 +42,6 @@ namespace HIP {
   namespace Gui {
 
     //#**********************************************************************
-    // Local data
-    //#**********************************************************************
-
-    namespace {
-      static const char* const MODEL_PATH = ":/assets/models/horse/horse.obj";
-    }
-
-
-    //#**********************************************************************
     // CLASS HIP::GUI::ImageViewInterfaceImpl
     //#**********************************************************************
 
@@ -138,7 +129,7 @@ namespace HIP {
       _ui->_tab_w->clear ();
 
 #ifdef HIP_USE_3D_VIEW
-      _ui->_tab_w->addTab (new GL::View (database, MODEL_PATH, _ui->_tab_w), tr ("3D model"));
+      _ui->_tab_w->addTab (new GL::View (database, _ui->_tab_w), tr ("3D model"));
 #endif
 
       foreach (const Database::Image& image, database->getImages ())

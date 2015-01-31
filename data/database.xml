@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <database version="0.1" name="Horse">
 
+    <!-- 3D model -->
+    <model file=":/assets/models/horse/horse.obj"/>
+
     <!--List of points-->
     <points>
         <point id="BI1">

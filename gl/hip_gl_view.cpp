@@ -398,13 +398,13 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
-    View::View (const Database::Database* database, const QString& model_path, QWidget* parent)
-      : QWidget(parent),
+    View::View (const Database::Database* database, QWidget* parent)
+      : QWidget (parent),
         _ui     (new Ui::HIP_GL_View),
         _widget (0)
     {
       _ui->setupUi (this);
-      _widget = Tools::addToParent (new Widget (model_path, _ui->_view_w));
+      _widget = Tools::addToParent (new Widget (database->getModel (), _ui->_view_w));
 
       connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
     }
