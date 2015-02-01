@@ -24,7 +24,7 @@ void main (void)
   fragment_viewer_direction = -eye_vertex.xyz;
   fragment_texture = in_texture;
 
-  fragment_color = vec4 (in_color.x, in_color.y, in_color.z, 1.0);
-  //fragment_color = vec4 (1.0, 1.0, 1.0, 1.0);
+  //fragment_color = vec4 (in_color.x, in_color.y, in_color.z, 1.0);
+  fragment_color = vec4 (1.0, 1.0, 1.0, 1.0);
   gl_Position = in_mvp_matrix * in_vertex;
 }

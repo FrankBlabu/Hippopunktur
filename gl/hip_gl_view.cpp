@@ -320,14 +320,15 @@ namespace HIP {
       _shader.enableAttributeArray (_texture_attr);
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
 
-      int number_of_points = 0;
-      foreach (const Model::Group& group, _model->getGroups ())
-        number_of_points += group.getFaces ().size () * 3;
-
       _texture->bind ();
       _shader.setUniformValue ("texture", 0);
 
-      glDrawElements (GL_TRIANGLES, number_of_points, GL_UNSIGNED_SHORT, 0);
+      int point_offset = 0;
+      foreach (const Model::Group& group, _model->getGroups ())
+        {
+          glDrawElements (GL_TRIANGLES, group.getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
+          point_offset += group.getFaces ().size () * 3;
+        }
 
       _shader.disableAttributeArray (_texture_attr);
       _shader.disableAttributeArray (_color_attr);
