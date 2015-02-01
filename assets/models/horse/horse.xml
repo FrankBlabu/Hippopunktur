@@ -3,7 +3,7 @@
 
     <!-- 3D model -->
     <model>
-      <file>:/assets/models/horse/horse.obj</file>
+      <file>c:/Users/Frank/workspace/hippopunktur/assets/models/horse/horse.obj</file>
     </model>
 
     <!--List of points-->

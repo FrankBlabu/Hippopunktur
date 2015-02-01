@@ -282,6 +282,18 @@ namespace HIP {
       _groups.push_back (group);
 
       //
+      // Normalize vertices
+      //
+      float max_length = 0.0f;
+
+      foreach (const QVector3D& vertex, _vertices)
+        if (vertex.length () > max_length)
+          max_length = vertex.length ();
+
+      for (int i=0; i < _vertices.size (); ++i)
+        _vertices[i] /= max_length;
+
+      //
       // Sanity check
       //
       Q_ASSERT (!_vertices.isEmpty ());

@@ -68,6 +68,26 @@ namespace HIP {
 
 
     //#**********************************************************************
+    // CLASS HIP::GL::VertexCollector
+    //#**********************************************************************
+
+    namespace {
+
+      struct VertexCollector
+      {
+        QVector<VertexData> _vertex_data;
+        QVector<GLushort> _index_data;
+
+        typedef QMap<Face::Point, int> PointIndexMap;
+        PointIndexMap _point_indices;
+      };
+
+    }
+
+
+
+
+    //#**********************************************************************
     // CLASS HIP::GL::Widget
     //#**********************************************************************
 
@@ -94,6 +114,7 @@ namespace HIP {
 
     private:
       void addRotation (const QVector3D& delta);
+      void addVertex (VertexCollector* collector, const Face::Point& point) const;
       float checkBounds (float lower, float value, float upper) const;
 
     private:
@@ -113,6 +134,7 @@ namespace HIP {
       int _light_position_attr;
       int _texture_attr;
 
+      QMatrix4x4 _model_matrix;
       QVector3D _translation;
       QVector3D _rotation;
 
@@ -136,7 +158,8 @@ namespace HIP {
         _n_matrix_attr       (-1),
         _light_position_attr (-1),
         _texture_attr        (-1),
-        _translation         (0, 0, 5),
+        _model_matrix        (),
+        _translation         (0, 0, 2),
         _rotation            (0, 0, 0),
         _last_pos            (0, 0)
     {
@@ -146,6 +169,9 @@ namespace HIP {
       format.setDepthBufferSize (24);
       format.setStencilBufferSize (8);
       setFormat (format);
+
+      Model::Cube cube = _model->getBoundingBox ();
+      _model_matrix.translate (-(cube.first + cube.second) / 2);
     }
 
     /*! Destructor */
@@ -205,43 +231,41 @@ namespace HIP {
       //
       // Init render data
       //
-      QVector<VertexData> vertex_data;
-      QVector<GLushort> index_data;
-
-      typedef QMap<Face::Point, int> PointIndexMap;
-      PointIndexMap point_indices;
+      VertexCollector vertices;
 
       foreach (const Model::Group& group, _model->getGroups ())
         {
           foreach (const Face& face, group.getFaces ())
             {
-              Q_ASSERT (face.getPoints ().size () == 3 && "Only triangles are supported.");
-
-              foreach (const Face::Point& point, face.getPoints ())
+              if (face.getPoints ().size () == 3)
                 {
-                  PointIndexMap::const_iterator pos = point_indices.find (point);
-                  if (pos == point_indices.end ())
-                    {
-                      vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
-                                                         _model->getNormals ()[point.getNormalIndex ()],
-                                                         QVector3D (random (), random (), random ()),
-                                                         _model->getTextures ()[point.getTextureIndex ()]));
-                      point_indices.insert (point, vertex_data.size () - 1);
-                      index_data.push_back (vertex_data.size () - 1);
-                    }
-                  else
-                    index_data.push_back (pos.value ());
+                  addVertex (&vertices, face.getPoints ()[0]);
+                  addVertex (&vertices, face.getPoints ()[1]);
+                  addVertex (&vertices, face.getPoints ()[2]);
                 }
+              else if (face.getPoints ().size () == 4)
+                {
+                  // XXX: Does not work correctly, why ?
+                  addVertex (&vertices, face.getPoints ()[0]);
+                  addVertex (&vertices, face.getPoints ()[1]);
+                  addVertex (&vertices, face.getPoints ()[2]);
+
+                  addVertex (&vertices, face.getPoints ()[2]);
+                  addVertex (&vertices, face.getPoints ()[3]);
+                  addVertex (&vertices, face.getPoints ()[1]);
+                }
+              else
+                throw Exception (tr ("Only triangular or rectangular faces are supported."));
             }
         }
 
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
-      _vertex_buffer.allocate (vertex_data.constData (), vertex_data.size () * sizeof (VertexData));
+      _vertex_buffer.allocate (vertices._vertex_data.constData (), vertices._vertex_data.size () * sizeof (VertexData));
 
       _index_buffer.create ();
       _index_buffer.bind ();
-      _index_buffer.allocate (index_data.constData (), index_data.size () * sizeof (GLushort));
+      _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLushort));
     }
 
     /*
@@ -267,13 +291,13 @@ namespace HIP {
       camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
       camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
 
-      QMatrix4x4 mv;
-      mv.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
+      QMatrix4x4 view_matrix;
+      view_matrix.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
 
       _shader.bind ();
-      _shader.setUniformValue (_mvp_matrix_attr, projection * mv);
-      _shader.setUniformValue (_mv_matrix_attr, mv);
-      _shader.setUniformValue (_n_matrix_attr, mv.normalMatrix ());
+      _shader.setUniformValue (_mvp_matrix_attr, projection * _model_matrix * view_matrix);
+      _shader.setUniformValue (_mv_matrix_attr, _model_matrix * view_matrix);
+      _shader.setUniformValue (_n_matrix_attr, view_matrix.normalMatrix ());
       _shader.setUniformValue (_light_position_attr, camera * _translation);
 
       int offset = 0;
@@ -377,6 +401,25 @@ namespace HIP {
       _rotation.setX (checkBounds (0, _rotation.x (), 360));
       _rotation.setY (checkBounds (0, _rotation.y (), 360));
       _rotation.setZ (checkBounds (0, _rotation.z (), 360));
+    }
+
+    /*
+     * Add single vertex
+     */
+    void Widget::addVertex (VertexCollector* collector, const Face::Point& point) const
+    {
+      VertexCollector::PointIndexMap::const_iterator pos = collector->_point_indices.find (point);
+      if (pos == collector->_point_indices.end ())
+        {
+          collector->_vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
+                                                         _model->getNormals ()[point.getNormalIndex ()],
+                                                         QVector3D (random (), random (), random ()),
+                                                         _model->getTextures ()[point.getTextureIndex ()]));
+          collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
+          collector->_index_data.push_back (collector->_vertex_data.size () - 1);
+        }
+      else
+        collector->_index_data.push_back (pos.value ());
     }
 
     /*!
