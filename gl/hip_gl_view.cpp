@@ -345,6 +345,13 @@ namespace HIP {
               TextureMap::const_iterator pos = _textures.find (group.getMaterial ());
               if (pos != _textures.end ())
                 texture = pos.value ();
+
+              const Material& material = _model->getMaterial (group.getMaterial ());
+
+              _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
+              _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
+              _shader.setUniformValue ("in_specular_color", material.getSpecular ());
+              _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
             }
 
           if (texture != 0)
