@@ -85,8 +85,6 @@ namespace HIP {
     }
 
 
-
-
     //#**********************************************************************
     // CLASS HIP::GL::Widget
     //#**********************************************************************
@@ -123,7 +121,9 @@ namespace HIP {
       QOpenGLShaderProgram _shader;
       QOpenGLBuffer _vertex_buffer;
       QOpenGLBuffer _index_buffer;
-      QOpenGLTexture* _texture;
+
+      typedef QMap<QString, QOpenGLTexture*> TextureMap;
+      TextureMap _textures;
 
       int _vertex_attr;
       int _normal_attr;
@@ -149,7 +149,7 @@ namespace HIP {
         _shader              (),
         _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
         _index_buffer        (QOpenGLBuffer::IndexBuffer),
-        _texture             (0),
+        _textures            (),
         _vertex_attr         (-1),
         _normal_attr         (-1),
         _color_attr          (-1),
@@ -180,7 +180,9 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
-      delete _texture;
+      for (TextureMap::const_iterator i = _textures.begin (); i != _textures.end (); ++i)
+        delete i.value ();
+
       _index_buffer.destroy ();
       _vertex_buffer.destroy ();
 
@@ -223,10 +225,23 @@ namespace HIP {
       _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
-      _texture = new QOpenGLTexture (QImage (":/assets/models/horse/texture.png").mirrored ());
-      _texture->setMinificationFilter (QOpenGLTexture::Nearest);
-      _texture->setMagnificationFilter (QOpenGLTexture::Linear);
-      _texture->setWrapMode (QOpenGLTexture::Repeat);
+      foreach (const Model::Group& group, _model->getGroups ())
+        {
+          if (!group.getMaterial ().isEmpty ())
+            {
+              const Material& material = _model->getMaterial (group.getMaterial ());
+              if ( !material.getTexture ().isEmpty () &&
+                   !_textures.contains (group.getMaterial ()) )
+                {
+                  QOpenGLTexture* texture = new QOpenGLTexture (Tools::loadResource<QImage> (material.getTexture ()).mirrored ());
+                  texture->setMinificationFilter (QOpenGLTexture::Nearest);
+                  texture->setMagnificationFilter (QOpenGLTexture::Linear);
+                  texture->setWrapMode (QOpenGLTexture::Repeat);
+
+                  _textures.insert (group.getMaterial (), texture);
+                }
+            }
+        }
 
       //
       // Init render data
@@ -245,7 +260,7 @@ namespace HIP {
                 }
               else if (face.getPoints ().size () == 4)
                 {
-                  // XXX: Does not work correctly, why ?
+                  // XXX: Correct faces
                   addVertex (&vertices, face.getPoints ()[0]);
                   addVertex (&vertices, face.getPoints ()[1]);
                   addVertex (&vertices, face.getPoints ()[2]);
@@ -319,15 +334,27 @@ namespace HIP {
 
       _shader.enableAttributeArray (_texture_attr);
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
-
-      _texture->bind ();
       _shader.setUniformValue ("texture", 0);
 
       int point_offset = 0;
       foreach (const Model::Group& group, _model->getGroups ())
         {
+          QOpenGLTexture* texture = 0;
+          if (!group.getMaterial ().isEmpty ())
+            {
+              TextureMap::const_iterator pos = _textures.find (group.getMaterial ());
+              if (pos != _textures.end ())
+                texture = pos.value ();
+            }
+
+          if (texture != 0)
+            texture->bind ();
+
           glDrawElements (GL_TRIANGLES, group.getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
           point_offset += group.getFaces ().size () * 3;
+
+          if (texture != 0)
+            texture->release ();
         }
 
       _shader.disableAttributeArray (_texture_attr);

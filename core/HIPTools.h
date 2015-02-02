@@ -67,6 +67,9 @@ namespace HIP {
 
     template<>
     QString loadResource (const QString& name);
+
+    template<>
+    QImage loadResource (const QString& name);
   }
 }
 

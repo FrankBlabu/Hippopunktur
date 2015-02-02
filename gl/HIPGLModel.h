@@ -65,17 +65,29 @@ namespace HIP {
       const QVector3D& getAmbient () const  { return _ambient; }
       const QVector3D& getDiffuse () const  { return _diffuse; }
       const QVector3D& getSpecular () const { return _specular; }
+      float getDissolved () const           { return _dissolved; }
+      float getSpecularExponent () const    { return _specular_exponent; }
+      float getOpticalDensity () const      { return _optical_density; }
+      const QString& getTexture () const    { return _texture; }
 
       void setName (const QString& name)           { _name = name; }
       void setAmbient (const QVector3D& ambient)   { _ambient = ambient; }
       void setDiffuse (const QVector3D& diffuse)   { _diffuse = diffuse; }
       void setSpecular (const QVector3D& specular) { _specular = specular; }
+      void setDissolved (float dissolved)          { _dissolved = dissolved; }
+      void setSpecularExponent (float ns)          { _specular_exponent = ns; }
+      void setOpticalDensity (float ni)            { _optical_density = ni; }
+      void setTexture (const QString& texture)     { _texture = texture; }
 
     private:
       QString _name;
       QVector3D _ambient;
       QVector3D _diffuse;
       QVector3D _specular;
+      float _dissolved;
+      float _specular_exponent;
+      float _optical_density;
+      QString _texture;
     };
 
 
@@ -117,6 +129,7 @@ namespace HIP {
 
       typedef QPair<QVector3D, QVector3D> Cube;
       const Cube& getBoundingBox () const { return _bounding_box; }
+      const Material& getMaterial (const QString& name) const;
 
     private:
       void loadMaterial (const QString& path); // throws Exception
@@ -137,8 +150,10 @@ namespace HIP {
 
   }
 
-  QDebug operator<< (QDebug stream, const GL::Face& face);
-  QDebug operator<< (QDebug stream, const GL::Face::Point& point);
+  QDebug& operator<< (QDebug& stream, const GL::Face& face);
+  QDebug& operator<< (QDebug& stream, const GL::Face::Point& point);
+  QDebug& operator<< (QDebug& stream, const GL::Material& material);
+  QDebug& operator<< (QDebug& stream, const GL::Model::Group& group);
 
 }
 

@@ -7,12 +7,41 @@
 #include "HIPTools.h"
 #include "core/HIPException.h"
 
+#include <QCoreApplication>
 #include <QFile>
+#include <QImage>
 #include <QTextStream>
 #include <QDebug>
 
 namespace HIP {
   namespace Tools {
+
+    //#************************************************************************
+    // Local functions
+    //#************************************************************************
+
+    namespace {
+
+      /*
+       * Return resolved file name
+       */
+      QString getResolvedFileName (const QString& name)
+      {
+        QString resolved = name.trimmed ();
+        if (!resolved.startsWith (':'))
+          {
+            resolved = QCoreApplication::applicationDirPath () + "/" + name.trimmed ();
+
+            // XXX
+            resolved.replace (QString ("hippopunktur-build-debug/debug"), QString ("hippopunktur"));
+            resolved.replace (QString ("hippopunktur-build-release/release"), QString ("hippopunktur"));
+          }
+
+        return resolved;
+      }
+
+    }
+
 
     //#************************************************************************
     // CLASS HIP::Tools
@@ -28,7 +57,7 @@ namespace HIP {
     template <>
     QString loadResource<QString> (const QString& name)
     {
-      QFile file (name);
+      QFile file (getResolvedFileName (name));
 
       if (!file.open (QFile::ReadOnly | QFile::Text))
         throw Exception (QObject::tr ("Unable to open resource file %1").arg (name));
@@ -39,6 +68,14 @@ namespace HIP {
       file.close ();
       return text;
     }
+
+    /* Load image resource */
+    template <>
+    QImage loadResource<QImage> (const QString& name)
+    {
+      return QImage (getResolvedFileName (name));
+    }
+
 
     /* Quote string for HTML output */
     QString quoteHTML (const QString& text)

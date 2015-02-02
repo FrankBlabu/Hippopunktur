@@ -86,7 +86,7 @@ namespace HIP {
       {
         static const char* const DATABASE    = "database";
         static const char* const MODEL       = "model";
-        static const char* const FILE    = "file";
+        static const char* const FILE        = "file";
         static const char* const POINTS      = "points";
         static const char* const POINT       = "point";
         static const char* const TAGS        = "tags";

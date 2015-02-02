@@ -42,7 +42,7 @@
         <file>assets/models/horse/horse.obj</file>
         <file>gl/FragmentShader.glsl</file>
         <file>gl/VertexShader.glsl</file>
-        <file>assets/models/horse/texture.png</file>
         <file>assets/models/horse/horse.xml</file>
+        <file>assets/models/horse/horse.png</file>
     </qresource>
 </RCC>

@@ -17,7 +17,7 @@ namespace HIP {
   // Debug
   //#************************************************************************
 
-  QDebug operator<< (QDebug stream, const GL::Face& face)
+  QDebug& operator<< (QDebug& stream, const GL::Face& face)
   {
     stream << "f";
 
@@ -27,11 +27,34 @@ namespace HIP {
     return stream;
   }
 
-  QDebug operator<< (QDebug stream, const GL::Face::Point& point)
+  QDebug& operator<< (QDebug& stream, const GL::Face::Point& point)
   {
     stream << point.getVertexIndex () << "/" << point.getTextureIndex () << "/" << point.getNormalIndex ();
     return stream;
   }
+
+  QDebug& operator<< (QDebug& stream, const GL::Model::Group& group)
+  {
+    stream << "Group (name=" << group.getName ()
+           << ", material=" << group.getMaterial ()
+           << "," << group.getFaces ().size () << " faces)";
+    return stream;
+  }
+
+  QDebug& operator<< (QDebug& stream, const GL::Material& material)
+  {
+    stream << "Material (name=" << material.getName ()
+           << ", ka=" << material.getAmbient ()
+           << ", kd=" << material.getDiffuse ()
+           << ", ks=" << material.getSpecular ()
+           << ", d=" << material.getDissolved ()
+           << ", ns=" << material.getSpecularExponent ()
+           << ", ni=" << material.getOpticalDensity ()
+           << ", texture=" << material.getTexture ()
+           << ")";
+    return stream;
+  }
+
 
   namespace GL {
 
@@ -132,10 +155,13 @@ namespace HIP {
 
     /*! Constructor */
     Material::Material ()
-      : _name     (""),
-        _ambient  (),
-        _diffuse  (),
-        _specular ()
+      : _name              (""),
+        _ambient           (),
+        _diffuse           (),
+        _specular          (),
+        _dissolved         (1.0),
+        _specular_exponent (100),
+        _optical_density   (1.5)
     {
     }
 
@@ -177,8 +203,6 @@ namespace HIP {
         _materials    (),
         _bounding_box ()
     {
-      qDebug () << "* Model: " << path;
-
       QString content = Tools::loadResource<QString> (path);
       QString material_library;
 
@@ -352,6 +376,15 @@ namespace HIP {
         }
     }
 
+    /*! Get material by name */
+    const Material& Model::getMaterial (const QString& name) const
+    {
+      MaterialMap::const_iterator pos = _materials.find (name);
+      Q_ASSERT (pos != _materials.end () && "Material map corrupted.");
+
+      return pos.value ();
+    }
+
     /*! Load material library */
     void Model::loadMaterial (const QString& path)
     {
@@ -385,7 +418,7 @@ namespace HIP {
           //
           // Ambient
           //
-          else if (tag == "Ka")
+          else if (tag == "ka")
             {
               QString x, y, z;
               in >> x >> y >> z;
@@ -395,7 +428,7 @@ namespace HIP {
           //
           // Diffuse
           //
-          else if (tag == "Kd")
+          else if (tag == "kd")
             {
               QString x, y, z;
               in >> x >> y >> z;
@@ -405,11 +438,53 @@ namespace HIP {
           //
           // Specular
           //
-          else if (tag == "Ks")
+          else if (tag == "ks")
             {
               QString x, y, z;
               in >> x >> y >> z;
               material.setSpecular (toVector3d (x, y, z));
+            }
+
+          //
+          // Dissolved
+          //
+          else if (tag == "d" || tag == "tr")
+            {
+              QString d;
+              in >> d;
+              material.setDissolved (toReal (d));
+            }
+
+          //
+          // Specular exponent
+          //
+          else if (tag == "ns")
+            {
+              QString ns;
+              in >> ns;
+              material.setSpecularExponent (toReal (ns));
+            }
+
+          //
+          // Optical density
+          //
+          else if (tag == "ni")
+            {
+              QString ni;
+              in >> ni;
+              material.setOpticalDensity (toReal (ni));
+            }
+
+          //
+          // Texture
+          //
+          else if ( tag == "map_kd" ||
+                    tag == "map_ka" ||
+                    tag == "map_bump" )
+            {
+              QString texture;
+              in >> texture;
+              material.setTexture (texture);
             }
         }
 
