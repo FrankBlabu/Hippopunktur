@@ -607,7 +607,7 @@ QLabel
 }
 
 /*--- Label used to draw selected point explorer elements */
-QLabel#HIP_ExplorerViewDelegate_ItemLabel
+QLabel#HIP_PointExplorerViewDelegate_ItemLabel
 {
    color: white;
    background-color: #78879b;

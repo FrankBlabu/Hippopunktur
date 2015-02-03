@@ -22,7 +22,8 @@ SOURCES += \
     gui/hip_gui_main_window.cpp \
     gl/hip_gl_model.cpp \
     explorer/hip_point_explorer_view.cpp \
-    explorer/hip_explorer_tagselector.cpp
+    explorer/hip_explorer_tagselector.cpp \
+    explorer/hip_anatomy_explorer_view.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -44,13 +45,15 @@ HEADERS += \
     gl/HIPGLModel.h \
     core/HIPVersion.h \
     explorer/HIPPointExplorerView.h \
-    explorer/HIPExplorerTagSelector.h
+    explorer/HIPExplorerTagSelector.h \
+    explorer/HIPAnatomyExplorerView.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
     gui/hip_gui_main_window.ui \
     gl/hip_gl_view.ui \
-    explorer/hip_point_explorer_view.ui
+    explorer/hip_point_explorer_view.ui \
+    explorer/hip_anatomy_explorer_view.ui
 
 DISTFILES += \
     assets/* \
