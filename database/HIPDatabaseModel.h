@@ -15,8 +15,6 @@
 namespace HIP {
   namespace Database {
 
-    class Database;
-
     /*
      * Proxy model for filtered database access
      */

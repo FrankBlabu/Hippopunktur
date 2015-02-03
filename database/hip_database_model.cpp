@@ -5,7 +5,6 @@
  */
 
 #include "HIPDatabaseModel.h"
-#include "HIPDatabase.h"
 
 #include <QDebug>
 
