@@ -285,7 +285,7 @@ namespace HIP {
       _shader.setUniformValue (_mvp_matrix_attr, projection * _model_matrix * view_matrix);
       _shader.setUniformValue (_mv_matrix_attr, _model_matrix * view_matrix);
       _shader.setUniformValue (_n_matrix_attr, view_matrix.normalMatrix ());
-      _shader.setUniformValue (_light_position_attr, camera * _translation);
+      _shader.setUniformValue (_light_position_attr, _translation);
 
       int offset = 0;
 
