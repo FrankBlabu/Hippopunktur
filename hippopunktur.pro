@@ -18,11 +18,11 @@ SOURCES += \
     core/hip_tools.cpp \
     database/hip_database.cpp \
     database/hip_database_model.cpp \
-    explorer/hip_explorer_tagselector.cpp \
-    explorer/hip_explorer_view.cpp \
     gl/hip_gl_view.cpp \
     gui/hip_gui_main_window.cpp \
-    gl/hip_gl_model.cpp
+    gl/hip_gl_model.cpp \
+    explorer/hip_point_explorer_view.cpp \
+    explorer/hip_explorer_tagselector.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -39,18 +39,18 @@ HEADERS += \
     core/HIPTools.h \
     database/HIPDatabase.h \
     database/HIPDatabaseModel.h \
-    explorer/HIPExplorerTagSelector.h \
-    explorer/HIPExplorerView.h \
     gui/HIPGuiMainWindow.h \
     gl/HIPGLView.h \
     gl/HIPGLModel.h \
-    core/HIPVersion.h
+    core/HIPVersion.h \
+    explorer/HIPPointExplorerView.h \
+    explorer/HIPExplorerTagSelector.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
-    explorer/hip_explorer_view.ui \
     gui/hip_gui_main_window.ui \
-    gl/hip_gl_view.ui
+    gl/hip_gl_view.ui \
+    explorer/hip_point_explorer_view.ui
 
 DISTFILES += \
     assets/* \

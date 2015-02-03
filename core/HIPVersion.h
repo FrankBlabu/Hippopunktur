@@ -8,7 +8,7 @@
 #define __HIPVersion_h__
 
 #define VERSION  "1.0 alpha1"
-#define REVISION "96"
+#define REVISION "105"
 
 #endif
 

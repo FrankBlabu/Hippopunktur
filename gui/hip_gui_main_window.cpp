@@ -11,7 +11,7 @@
 #include "core/HIPTools.h"
 #include "core/HIPVersion.h"
 #include "database/HIPDatabase.h"
-#include "explorer/HIPExplorerView.h"
+#include "explorer/HIPPointExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gl/HIPGLView.h"
 
@@ -56,7 +56,7 @@ namespace HIP {
 
       Tools::addToParent (new Explorer::TagSelector (database, _ui->_selector_w));
 
-      Explorer::ExplorerView* explorer = Tools::addToParent (new Explorer::ExplorerView (database, _ui->_explorer_w));
+      QWidget* explorer = Tools::addToParent (new Explorer::PointExplorerView (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
       Tools::addToParent (new GL::View (database, _ui->_gl_frame_w));

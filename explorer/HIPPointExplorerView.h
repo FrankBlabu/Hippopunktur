@@ -1,11 +1,11 @@
 /*
- * HIPExplorerView.h - Point list explorer
+ * HIPPointExplorerView.h - Point list explorer
  *
  * Frank Blankenburg, Jan. 2015
  */
 
-#ifndef __HIPExplorerView_h__
-#define __HIPExplorerView_h__
+#ifndef __HIPPointExplorerView_h__
+#define __HIPPointExplorerView_h__
 
 #include <QWidget>
 
@@ -14,7 +14,7 @@
 class QItemSelection;
 
 namespace Ui {
-  class HIP_Explorer_ExplorerView;
+  class HIP_Explorer_PointExplorerView;
 }
 
 namespace HIP {
@@ -30,20 +30,20 @@ namespace HIP {
     /*
      * Point list explorer
      */
-    class ExplorerView : public QWidget
+    class PointExplorerView : public QWidget
     {
       Q_OBJECT
 
     public:
-      ExplorerView (Database::Database* database, QWidget* parent);
-      virtual ~ExplorerView ();
+      PointExplorerView (Database::Database* database, QWidget* parent);
+      virtual ~PointExplorerView ();
 
     private slots:
       void onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected);
       void onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data);
 
     private:
-      Ui::HIP_Explorer_ExplorerView* _ui;
+      Ui::HIP_Explorer_PointExplorerView* _ui;
 
       Database::Database* _database;
       Database::DatabaseModel* _model;

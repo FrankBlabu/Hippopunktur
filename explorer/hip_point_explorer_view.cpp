@@ -1,11 +1,11 @@
 /*
- * hip_explorer_view.cpp - Point list explorer
+ * hip_point_explorer_view.cpp - Point list explorer
  *
  * Frank Blankenburg, Jan. 2015
  */
 
-#include "HIPExplorerView.h"
-#include "ui_hip_explorer_view.h"
+#include "HIPPointExplorerView.h"
+#include "ui_hip_point_explorer_view.h"
 
 #include "database/HIPDatabase.h"
 #include "database/HIPDatabaseModel.h"
@@ -23,17 +23,17 @@ namespace HIP {
   namespace Explorer {
 
     //#**********************************************************************
-    // CLASS HIP::Explorer::ExplorerViewDelegate
+    // CLASS HIP::Explorer::PointExplorerViewDelegate
     //#**********************************************************************
 
     /*
      * Delegate for painting the explorer items
      */
-    class ExplorerViewDelegate : public QStyledItemDelegate
+    class PointExplorerViewDelegate : public QStyledItemDelegate
     {
     public:
-      ExplorerViewDelegate (const Database::Database* database, QObject* parent);
-      virtual ~ExplorerViewDelegate ();
+      PointExplorerViewDelegate (const Database::Database* database, QObject* parent);
+      virtual ~PointExplorerViewDelegate ();
 
       virtual void paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
       virtual QSize	sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const;
@@ -47,22 +47,22 @@ namespace HIP {
     };
 
     /* Constructor */
-    ExplorerViewDelegate::ExplorerViewDelegate (const Database::Database* database, QObject* parent)
+    PointExplorerViewDelegate::PointExplorerViewDelegate (const Database::Database* database, QObject* parent)
       : QStyledItemDelegate (parent),
         _database (database),
         _label    (new QLabel)
     {
-      _label->setObjectName ("HIP_ExplorerViewDelegate_ItemLabel");
+      _label->setObjectName ("HIP_PointExplorerViewDelegate_ItemLabel");
     }
 
     /* Destructor */
-    ExplorerViewDelegate::~ExplorerViewDelegate ()
+    PointExplorerViewDelegate::~PointExplorerViewDelegate ()
     {
       delete _label;
     }
 
     /* Paint item */
-    void ExplorerViewDelegate::paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+    void PointExplorerViewDelegate::paint (QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
       const Database::Point& point = _database->getPoint (index.model ()->data (index, Database::DatabaseModel::Role::ID).toString ());
       setupLabel (point, option.rect.size ());
@@ -79,7 +79,7 @@ namespace HIP {
     }
 
     /* Compute size hint */
-    QSize ExplorerViewDelegate::sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const
+    QSize PointExplorerViewDelegate::sizeHint (const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
       QSize size = QStyledItemDelegate::sizeHint (option, index);
 
@@ -93,7 +93,7 @@ namespace HIP {
     }
 
     /* Setup label to display the text belonging to the given point */
-    void ExplorerViewDelegate::setupLabel (const Database::Point& point, const QSize& proposed_size) const
+    void PointExplorerViewDelegate::setupLabel (const Database::Point& point, const QSize& proposed_size) const
     {
       _label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Preferred);
       _label->setMinimumWidth (proposed_size.width ());
@@ -110,13 +110,13 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::Explorer::ExplorerView
+    // CLASS HIP::Explorer::PointExplorerView
     //#**********************************************************************
 
     /*! Constructor */
-    ExplorerView::ExplorerView (Database::Database* database, QWidget* parent)
+    PointExplorerView::PointExplorerView (Database::Database* database, QWidget* parent)
       : QWidget (parent),
-        _ui                 (new Ui::HIP_Explorer_ExplorerView),
+        _ui                 (new Ui::HIP_Explorer_PointExplorerView),
         _database           (database),
         _model              (new Database::DatabaseModel (database, this)),
         _filter             (new Database::DatabaseFilterProxyModel (database, this)),
@@ -126,20 +126,20 @@ namespace HIP {
 
       _filter->setSourceModel (_model);
       _ui->_tree_w->setModel (_filter);
-      _ui->_tree_w->setItemDelegate (new ExplorerViewDelegate (database, this));
+      _ui->_tree_w->setItemDelegate (new PointExplorerViewDelegate (database, this));
 
       connect (_ui->_tree_w->selectionModel (),
                SIGNAL (selectionChanged (const QItemSelection&, const QItemSelection&)),
                SLOT (onSelectionChanged (const QItemSelection&, const QItemSelection&)));
-      connect (database, &Database::Database::databaseChanged, this, &ExplorerView::onDatabaseChanged);
+      connect (database, &Database::Database::databaseChanged, this, &PointExplorerView::onDatabaseChanged);
     }
 
-    ExplorerView::~ExplorerView ()
+    PointExplorerView::~PointExplorerView ()
     {
       delete _ui;
     }
 
-    void ExplorerView::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
+    void PointExplorerView::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
     {
       if (!_update_in_progress)
         {
@@ -165,7 +165,7 @@ namespace HIP {
         }
     }
 
-    void ExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
+    void PointExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
       if (!_update_in_progress)
         {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>HIP_Explorer_ExplorerView</class>
- <widget class="QWidget" name="HIP_Explorer_ExplorerView">
+ <class>HIP_Explorer_PointExplorerView</class>
+ <widget class="QWidget" name="HIP_Explorer_PointExplorerView">
   <property name="geometry">
    <rect>
     <x>0</x>
