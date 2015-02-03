@@ -211,20 +211,20 @@ namespace HIP {
       _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
-      foreach (const Group& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _model->getGroups ())
         {
-          if (!group.getMaterial ().isEmpty ())
+          if (!group->getMaterial ().isEmpty ())
             {
-              const Material& material = _model->getMaterial (group.getMaterial ());
+              const Material& material = _model->getMaterial (group->getMaterial ());
               if ( !material.getTexture ().isEmpty () &&
-                   !_textures.contains (group.getMaterial ()) )
+                   !_textures.contains (group->getMaterial ()) )
                 {
                   QOpenGLTexture* texture = new QOpenGLTexture (Tools::loadResource<QImage> (material.getTexture ()).mirrored ());
                   texture->setMinificationFilter (QOpenGLTexture::Nearest);
                   texture->setMagnificationFilter (QOpenGLTexture::Linear);
                   texture->setWrapMode (QOpenGLTexture::Repeat);
 
-                  _textures.insert (group.getMaterial (), texture);
+                  _textures.insert (group->getMaterial (), texture);
                 }
             }
         }
@@ -234,9 +234,9 @@ namespace HIP {
       //
       VertexCollector vertices;
 
-      foreach (const Group& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _model->getGroups ())
         {
-          foreach (const Face& face, group.getFaces ())
+          foreach (const Face& face, group->getFaces ())
             {
               Q_ASSERT (face.getPoints ().size () == 3);
 
@@ -308,16 +308,16 @@ namespace HIP {
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
 
       int point_offset = 0;
-      foreach (const Group& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _model->getGroups ())
         {
           QOpenGLTexture* texture = 0;
-          if (!group.getMaterial ().isEmpty ())
+          if (!group->getMaterial ().isEmpty ())
             {
-              TextureMap::const_iterator pos = _textures.find (group.getMaterial ());
+              TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
               if (pos != _textures.end ())
                 texture = pos.value ();
 
-              const Material& material = _model->getMaterial (group.getMaterial ());
+              const Material& material = _model->getMaterial (group->getMaterial ());
 
               _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
               _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
@@ -334,8 +334,8 @@ namespace HIP {
           else
             _shader.setUniformValue ("has_texture", false);
 
-          glDrawElements (GL_TRIANGLES, group.getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
-          point_offset += group.getFaces ().size () * 3;
+          glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
+          point_offset += group->getFaces ().size () * 3;
 
           if (texture != 0)
             texture->release ();

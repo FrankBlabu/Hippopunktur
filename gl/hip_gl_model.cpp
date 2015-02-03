@@ -208,6 +208,7 @@ namespace HIP {
       _faces[face_index].setNormalIndex (index);
     }
 
+
     //#**********************************************************************
     // CLASS HIP::GL::Model
     //#**********************************************************************
@@ -227,7 +228,7 @@ namespace HIP {
 
       QTextStream file (&content, QIODevice::ReadOnly);
 
-      Group group;
+      GroupPtr group (new Group ());
 
       for (QString line=file.readLine ().trimmed (); !line.isNull (); line=file.readLine ().trimmed ())
         {
@@ -286,16 +287,16 @@ namespace HIP {
                 points.push_back (toPoint (tag));
 
               if (points.size () == 3)
-                group.addFace (Face (points));
+                group->addFace (Face (points));
               else if (points.size () == 4)
                 {
                   QList<Point> points1;
                   points1 << points[0] << points[1] << points[2];
-                  group.addFace (Face (points1));
+                  group->addFace (Face (points1));
 
                   QList<Point> points2;
                   points2 << points[1] << points[2] << points[3];
-                  group.addFace (Face (points2));
+                  group->addFace (Face (points2));
                 }
               else
                 throw Exception (QObject::tr ("Only triangular or rectangular faces supported."));
@@ -309,11 +310,11 @@ namespace HIP {
               QString name;
               in >> name;
 
-              if (!group.getFaces ().isEmpty ())
+              if (!group->getFaces ().isEmpty ())
                 _groups.push_back (group);
 
-              group = Group ();
-              group.setName (name);
+              group = GroupPtr (new Group ());
+              group->setName (name);
             }
 
           //
@@ -323,7 +324,7 @@ namespace HIP {
             {
               QString material;
               in >> material;
-              group.setMaterial (material);
+              group->setMaterial (material);
             }
 
           //
@@ -354,11 +355,11 @@ namespace HIP {
       //
       for (int i=0; i < _groups.size (); ++i)
         {
-          Group& group = _groups[i];
+          GroupPtr group = _groups[i];
 
-          for (int j=0; j < group.getFaces ().size (); ++j)
+          for (int j=0; j < group->getFaces ().size (); ++j)
             {
-              const Face& face = group.getFaces ()[j];
+              const Face& face = group->getFaces ()[j];
 
               Q_ASSERT (face.getPoints ().size () == 3);
 
@@ -373,7 +374,7 @@ namespace HIP {
                   QVector3D n = QVector3D::crossProduct (p1 - p0, p2 - p0);
 
                   _normals.push_back (n);
-                  group.setNormalIndex (j, _normals.size () - 1);
+                  group->setNormalIndex (j, _normals.size () - 1);
                 }
             }
         }
@@ -384,9 +385,9 @@ namespace HIP {
       Q_ASSERT (!_vertices.isEmpty ());
       Q_ASSERT (!_normals.isEmpty ());
 
-      foreach (const Group& group, _groups)
+      foreach (const GroupPtr& group, _groups)
         {
-          foreach (const Face& face, group.getFaces ())
+          foreach (const Face& face, group->getFaces ())
             {
               Q_ASSERT (!face.getPoints ().isEmpty ());
 

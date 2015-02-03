@@ -13,6 +13,7 @@
 #include <QVector>
 #include <QVector2D>
 #include <QVector3D>
+#include <QSharedPointer>
 
 
 namespace HIP {
@@ -59,7 +60,6 @@ namespace HIP {
     private:
       QList<Point> _points;
     };
-
 
     /*!
      * Class keeping material information
@@ -124,6 +124,7 @@ namespace HIP {
       QList<Face> _faces;
     };
 
+    typedef QSharedPointer<Group> GroupPtr;
 
     /*!
      * Class for loading and keeping a GL model
@@ -138,7 +139,7 @@ namespace HIP {
       const QVector<QVector3D>& getVertices () const { return _vertices; }
       const QVector<QVector3D>& getNormals () const  { return _normals; }
       const QVector<QVector2D>& getTextures () const { return _textures; }
-      const QVector<Group>& getGroups () const       { return _groups; }
+      const QVector<GroupPtr>& getGroups () const    { return _groups; }
 
       typedef QPair<QVector3D, QVector3D> Cube;
       const Cube& getBoundingBox () const { return _bounding_box; }
@@ -153,7 +154,7 @@ namespace HIP {
       QVector<QVector3D> _vertices;
       QVector<QVector3D> _normals;
       QVector<QVector2D> _textures;
-      QVector<Group> _groups;
+      QVector<GroupPtr> _groups;
 
       typedef QMap<QString, Material> MaterialMap;
       MaterialMap _materials;
