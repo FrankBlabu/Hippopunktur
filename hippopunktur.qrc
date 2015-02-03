@@ -32,12 +32,6 @@
         <file>assets/style/Vmovetoolbar.png</file>
         <file>assets/style/Vsepartoolbar.png</file>
         <file>gl/View.qml</file>
-        <file>assets/models/horse/back.jpg</file>
-        <file>assets/models/horse/bottom.jpg</file>
-        <file>assets/models/horse/front.jpg</file>
-        <file>assets/models/horse/left.jpg</file>
-        <file>assets/models/horse/right.jpg</file>
-        <file>assets/models/horse/top.jpg</file>
         <file>assets/models/horse/horse.mtl</file>
         <file>assets/models/horse/horse.obj</file>
         <file>gl/FragmentShader.glsl</file>
