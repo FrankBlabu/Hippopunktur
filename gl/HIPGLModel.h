@@ -19,32 +19,35 @@ namespace HIP {
   namespace GL {
 
     /*!
+     * Single indexed point of a face
+     */
+    class Point
+    {
+    public:
+      Point (int vertex_index, int normal_index, int texture_index);
+
+      int getVertexIndex () const  { return _vertex_index; }
+      int getNormalIndex () const  { return _normal_index; }
+      int getTextureIndex () const { return _texture_index; }
+
+      void setVertexIndex (int index) { _vertex_index = index; }
+      void setNormalIndex (int index) { _normal_index = index; }
+      void setTextureIndex (int index) { _texture_index = index; }
+
+      bool operator< (const Point& point) const;
+
+    private:
+      int _vertex_index;
+      int _normal_index;
+      int _texture_index;
+    };
+
+
+    /*!
      * Single face definition
      */
     class Face
     {
-    public:
-      class Point
-      {
-      public:
-        Point (int vertex_index, int normal_index, int texture_index);
-
-        int getVertexIndex () const  { return _vertex_index; }
-        int getNormalIndex () const  { return _normal_index; }
-        int getTextureIndex () const { return _texture_index; }
-
-        void setVertexIndex (int index) { _vertex_index = index; }
-        void setNormalIndex (int index) { _normal_index = index; }
-        void setTextureIndex (int index) { _texture_index = index; }
-
-        bool operator< (const Point& point) const;
-
-      private:
-        int _vertex_index;
-        int _normal_index;
-        int _texture_index;
-      };
-
     public:
       Face (const QList<Point>& points);
       ~Face ();
@@ -96,35 +99,37 @@ namespace HIP {
       QString _texture;
     };
 
+    /*!
+     * Single group
+     */
+    class Group
+    {
+    public:
+      Group ();
+      ~Group ();
+
+      const QString& getName () const      { return _name; }
+      const QString& getMaterial () const  { return _material; }
+      const QList<Face>& getFaces () const { return _faces; }
+
+      void setName (const QString& name)         { _name = name; }
+      void setMaterial (const QString& material) { _material = material; }
+      void addFace (const Face& face)            { _faces.push_back (face); }
+
+      void setNormalIndex (int face_index, int index);
+
+    private:
+      QString _name;
+      QString _material;
+      QList<Face> _faces;
+    };
+
 
     /*!
      * Class for loading and keeping a GL model
      */
     class Model
     {
-    public:
-      class Group
-      {
-      public:
-        Group ();
-        ~Group ();
-
-        const QString& getName () const      { return _name; }
-        const QString& getMaterial () const  { return _material; }
-        const QList<Face>& getFaces () const { return _faces; }
-
-        void setName (const QString& name)         { _name = name; }
-        void setMaterial (const QString& material) { _material = material; }
-        void addFace (const Face& face)            { _faces.push_back (face); }
-
-        void setNormalIndex (int face_index, int index);
-
-      private:
-        QString _name;
-        QString _material;
-        QList<Face> _faces;
-      };
-
     public:
       Model (const QString& path); // throws Exception
       ~Model ();
@@ -141,7 +146,7 @@ namespace HIP {
 
     private:
       void loadMaterial (const QString& path); // throws Exception
-      Face::Point toPoint (const QString& t) const; // throws Exception
+      Point toPoint (const QString& t) const; // throws Exception
 
     private:
       QString _name;
@@ -159,9 +164,9 @@ namespace HIP {
   }
 
   QDebug& operator<< (QDebug& stream, const GL::Face& face);
-  QDebug& operator<< (QDebug& stream, const GL::Face::Point& point);
+  QDebug& operator<< (QDebug& stream, const GL::Point& point);
   QDebug& operator<< (QDebug& stream, const GL::Material& material);
-  QDebug& operator<< (QDebug& stream, const GL::Model::Group& group);
+  QDebug& operator<< (QDebug& stream, const GL::Group& group);
 
 }
 

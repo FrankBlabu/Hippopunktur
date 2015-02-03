@@ -21,19 +21,19 @@ namespace HIP {
   {
     stream << "f";
 
-    foreach (const GL::Face::Point& point, face.getPoints ())
+    foreach (const GL::Point& point, face.getPoints ())
       stream << " " << point;
 
     return stream;
   }
 
-  QDebug& operator<< (QDebug& stream, const GL::Face::Point& point)
+  QDebug& operator<< (QDebug& stream, const GL::Point& point)
   {
     stream << point.getVertexIndex () << "/" << point.getTextureIndex () << "/" << point.getNormalIndex ();
     return stream;
   }
 
-  QDebug& operator<< (QDebug& stream, const GL::Model::Group& group)
+  QDebug& operator<< (QDebug& stream, const GL::Group& group)
   {
     stream << "Group (name=" << group.getName ()
            << ", material=" << group.getMaterial ()
@@ -104,11 +104,11 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::GL::Face::Point
+    // CLASS HIP::GL::Point
     //#**********************************************************************
 
     /*! Constructor */
-    Face::Point::Point (int vertex_index, int normal_index, int texture_index)
+    Point::Point (int vertex_index, int normal_index, int texture_index)
       : _vertex_index  (vertex_index),
         _normal_index  (normal_index),
         _texture_index (texture_index)
@@ -116,7 +116,7 @@ namespace HIP {
     }
 
     /*! Comparison operator */
-    bool Face::Point::operator< (const Point& point) const
+    bool Point::operator< (const Point& point) const
     {
       bool less = false;
 
@@ -180,11 +180,11 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::GL::Model::Group
+    // CLASS HIP::GL::Group
     //#**********************************************************************
 
     /*! Constructor */
-    Model::Group::Group ()
+    Group::Group ()
       : _name     (),
         _material (),
         _faces    ()
@@ -192,7 +192,7 @@ namespace HIP {
     }
 
     /*! Destructor */
-    Model::Group::~Group ()
+    Group::~Group ()
     {
     }
 
@@ -202,7 +202,7 @@ namespace HIP {
      * \param face_index Index of the face to access
      * \param index      Normal index to set
      */
-    void Model::Group::setNormalIndex (int face_index, int index)
+    void Group::setNormalIndex (int face_index, int index)
     {
       Q_ASSERT (face_index >= 0 && face_index < _faces.size ());
       _faces[face_index].setNormalIndex (index);
@@ -280,7 +280,7 @@ namespace HIP {
           //
           else if (tag == "f")
             {
-              QList<Face::Point> points;
+              QList<Point> points;
 
               for (in >> tag; !tag.isNull (); in >> tag)
                 points.push_back (toPoint (tag));
@@ -289,11 +289,11 @@ namespace HIP {
                 group.addFace (Face (points));
               else if (points.size () == 4)
                 {
-                  QList<Face::Point> points1;
+                  QList<Point> points1;
                   points1 << points[0] << points[1] << points[2];
                   group.addFace (Face (points1));
 
-                  QList<Face::Point> points2;
+                  QList<Point> points2;
                   points2 << points[1] << points[2] << points[3];
                   group.addFace (Face (points2));
                 }
@@ -370,10 +370,7 @@ namespace HIP {
                   QVector3D p0 = _vertices[face.getPoints ()[0].getVertexIndex ()];
                   QVector3D p1 = _vertices[face.getPoints ()[1].getVertexIndex ()];
                   QVector3D p2 = _vertices[face.getPoints ()[2].getVertexIndex ()];
-
-                  QVector3D v1 = p1 - p0;
-                  QVector3D v2 = p2 - p0;
-                  QVector3D n = QVector3D::crossProduct (v1, v2);
+                  QVector3D n = QVector3D::crossProduct (p1 - p0, p2 - p0);
 
                   _normals.push_back (n);
                   group.setNormalIndex (j, _normals.size () - 1);
@@ -387,13 +384,13 @@ namespace HIP {
       Q_ASSERT (!_vertices.isEmpty ());
       Q_ASSERT (!_normals.isEmpty ());
 
-      foreach (const Model::Group& group, _groups)
+      foreach (const Group& group, _groups)
         {
           foreach (const Face& face, group.getFaces ())
             {
               Q_ASSERT (!face.getPoints ().isEmpty ());
 
-              foreach (const Face::Point& point, face.getPoints ())
+              foreach (const Point& point, face.getPoints ())
                 {
                   Q_UNUSED (point);
 
@@ -564,7 +561,7 @@ namespace HIP {
     }
 
     /* Convert string into a face point */
-    Face::Point Model::toPoint (const QString& t) const // throws Exception
+    Point Model::toPoint (const QString& t) const // throws Exception
     {
       QStringList parts = t.split ('/', QString::KeepEmptyParts);
       if (parts.isEmpty ())
@@ -600,7 +597,7 @@ namespace HIP {
             normal_index = _normals.size () + normal_index;
         }
 
-      return Face::Point (vertex_index, normal_index, texture_index);
+      return Point (vertex_index, normal_index, texture_index);
     }
 
   }

@@ -64,7 +64,7 @@ namespace HIP {
         QVector<VertexData> _vertex_data;
         QVector<GLushort> _index_data;
 
-        typedef QMap<Face::Point, int> PointIndexMap;
+        typedef QMap<Point, int> PointIndexMap;
         PointIndexMap _point_indices;
       };
 
@@ -98,7 +98,7 @@ namespace HIP {
 
     private:
       void addRotation (const QVector3D& delta);
-      void addVertex (VertexCollector* collector, const Face::Point& point) const;
+      void addVertex (VertexCollector* collector, const Point& point) const;
       float checkBounds (float lower, float value, float upper) const;
 
     private:
@@ -211,7 +211,7 @@ namespace HIP {
       _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
-      foreach (const Model::Group& group, _model->getGroups ())
+      foreach (const Group& group, _model->getGroups ())
         {
           if (!group.getMaterial ().isEmpty ())
             {
@@ -234,7 +234,7 @@ namespace HIP {
       //
       VertexCollector vertices;
 
-      foreach (const Model::Group& group, _model->getGroups ())
+      foreach (const Group& group, _model->getGroups ())
         {
           foreach (const Face& face, group.getFaces ())
             {
@@ -308,7 +308,7 @@ namespace HIP {
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
 
       int point_offset = 0;
-      foreach (const Model::Group& group, _model->getGroups ())
+      foreach (const Group& group, _model->getGroups ())
         {
           QOpenGLTexture* texture = 0;
           if (!group.getMaterial ().isEmpty ())
@@ -418,7 +418,7 @@ namespace HIP {
     /*
      * Add single vertex
      */
-    void Widget::addVertex (VertexCollector* collector, const Face::Point& point) const
+    void Widget::addVertex (VertexCollector* collector, const Point& point) const
     {
       VertexCollector::PointIndexMap::const_iterator pos = collector->_point_indices.find (point);
       if (pos == collector->_point_indices.end ())
