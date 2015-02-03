@@ -14,8 +14,6 @@
 #include "explorer/HIPExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gl/HIPGLView.h"
-#include "gui/HIPGuiPointEditor.h"
-#include "image/HIPImageImageView.h"
 
 #include "ui_hip_gui_main_window.h"
 
@@ -32,71 +30,9 @@
 #include <QTabWidget>
 #include <QTextStream>
 
-//
-// If defined, the experimental 3D view is displayed in addition to the regular image views
-//
-#undef HIP_USE_3D_VIEW
-#define HIP_USE_3D_VIEW
 
 namespace HIP {
   namespace Gui {
-
-    //#**********************************************************************
-    // CLASS HIP::GUI::ImageViewInterfaceImpl
-    //#**********************************************************************
-
-    /*
-     * Interface used to access the image views
-     */
-    class ImageViewInterfaceImpl : public PointEditor::ImageViewInterface
-    {
-    public:
-      ImageViewInterfaceImpl (QTabWidget* tabs, QObject* parent);
-      virtual ~ImageViewInterfaceImpl ();
-
-      virtual QString getActiveImage () const;
-      virtual bool selectCoordinate (const QString& id, QPointF* coordinate) const;
-
-    private:
-      QTabWidget* _tabs;
-    };
-
-    /*! Constructor */
-    ImageViewInterfaceImpl::ImageViewInterfaceImpl (QTabWidget* tabs, QObject* parent)
-      : PointEditor::ImageViewInterface (parent),
-        _tabs (tabs)
-    {
-    }
-
-    /*! Destructor */
-    ImageViewInterfaceImpl::~ImageViewInterfaceImpl ()
-    {
-    }
-
-    /*! Return the id of the currently active image */
-    QString ImageViewInterfaceImpl::getActiveImage () const
-    {
-      Image::ImageView* view = qobject_cast<Image::ImageView*> (_tabs->currentWidget ());
-      Q_ASSERT (view != 0);
-      return view->getImage ().getId ();
-    }
-
-    /*! Select coordinate in image */
-    bool ImageViewInterfaceImpl::selectCoordinate (const QString& id, QPointF* coordinate) const
-    {
-      Image::ImageView* view = 0;
-      for (int i=0; i < _tabs->count () && view == 0; ++i)
-        {
-          Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_tabs->widget (i));
-          if (candidate != 0 && candidate->getImage ().getId () == id)
-            view = candidate;
-        }
-
-      Q_ASSERT (view != 0);
-
-      return view->selectCoordinate (coordinate);
-    }
-
 
     //#**********************************************************************
     // CLASS HIP::GUI::MainWindow
@@ -123,23 +59,8 @@ namespace HIP {
       Explorer::ExplorerView* explorer = Tools::addToParent (new Explorer::ExplorerView (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-      Gui::PointEditor* point_editor = Tools::addToParent (new Gui::PointEditor (database, _ui->_point_editor_w));
-      point_editor->setImageViewInterface (new ImageViewInterfaceImpl (_ui->_tab_w, this));
+      Tools::addToParent (new GL::View (database, _ui->_gl_frame_w));
 
-      _ui->_tab_w->clear ();
-
-#ifdef HIP_USE_3D_VIEW
-      _ui->_tab_w->addTab (new GL::View (database, _ui->_tab_w), tr ("3D model"));
-#endif
-
-      foreach (const Database::Image& image, database->getImages ())
-        {
-          Image::ImageView* view = new Image::ImageView (database, image, _ui->_tab_w);
-          _ui->_tab_w->addTab (view, image.getTitle ());
-        }
-
-      connect (_database, &Database::Database::databaseChanged, this, &MainWindow::onDatabaseChanged);
-      connect (_ui->_tab_w, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
       connect (_ui->_action_export_database, SIGNAL (triggered (bool)), SLOT (onExportDatabase ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
       connect (_ui->_action_about, SIGNAL (triggered (bool)), SLOT (onAbout ()));
@@ -169,68 +90,6 @@ namespace HIP {
       _ui->_explorer_splitter_w->setSizes (explorer_sizes);
     }
 
-
-    /*! React on database changes  */
-    void MainWindow::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
-    {
-      switch (reason)
-        {
-        case Database::Database::Reason::DATA:
-        case Database::Database::Reason::POINT:
-        case Database::Database::Reason::FILTER:
-          {
-            QSet<QString> used_images;
-
-            foreach (const Database::Point& point, _database->getPoints ())
-              {
-                if (point.matches (_database->getFilter ()))
-                  {
-                    foreach (const Database::Position& position, point.getPositions ())
-                      used_images.insert (position.getImage ());
-                  }
-              }
-
-            for (int i=0; i < _ui->_tab_w->count (); ++i)
-              {
-                Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-                if (view != 0)
-                  _ui->_tab_w->setTabEnabled (i, used_images.contains (view->getImage ().getId ()));
-              }
-          }
-          break;
-
-        case Database::Database::Reason::SELECTION:
-          break;
-
-        case Database::Database::Reason::VISIBLE_IMAGE:
-          {
-            Q_ASSERT (data.type () == QVariant::String);
-
-            Image::ImageView* view = 0;
-
-            for (int i=0; i < _ui->_tab_w->count () && view == 0; ++i)
-              {
-                Image::ImageView* candidate = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (i));
-                if (candidate != 0 && candidate->getImage ().getId () == data.toString ())
-                  view = candidate;
-              }
-
-            Q_ASSERT (view != 0);
-
-            if (view != _ui->_tab_w->currentWidget ())
-              _ui->_tab_w->setCurrentWidget (view);
-          }
-          break;
-        }
-    }
-
-    /*! Called when the currently visible image view tab changes */
-    void MainWindow::onCurrentTabChanged (int index)
-    {
-      Image::ImageView* view = qobject_cast<Image::ImageView*> (_ui->_tab_w->widget (index));
-      if (view != 0)
-        _database->setVisibleImage (view->getImage ().getId ());
-    }
 
     /*! Export current database into file */
     void MainWindow::onExportDatabase ()

@@ -21,9 +21,7 @@ SOURCES += \
     explorer/hip_explorer_tagselector.cpp \
     explorer/hip_explorer_view.cpp \
     gl/hip_gl_view.cpp \
-    gui/hip_gui_point_editor.cpp \
     gui/hip_gui_main_window.cpp \
-    image/hip_image_imageview.cpp \
     gl/hip_gl_model.cpp
 
 RESOURCES += \
@@ -44,19 +42,15 @@ HEADERS += \
     explorer/HIPExplorerTagSelector.h \
     explorer/HIPExplorerView.h \
     gui/HIPGuiMainWindow.h \
-    gui/HIPGuiPointEditor.h \
     gl/HIPGLView.h \
-    image/HIPImageImageView.h \
     gl/HIPGLModel.h \
     core/HIPVersion.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
     explorer/hip_explorer_view.ui \
-    gui/hip_gui_pointeditor.ui \
     gui/hip_gui_main_window.ui \
-    gl/hip_gl_view.ui \
-    image/hip_image_imageview.ui
+    gl/hip_gl_view.ui
 
 DISTFILES += \
     assets/* \
