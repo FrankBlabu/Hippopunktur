@@ -193,7 +193,6 @@ namespace HIP {
             case Database::Database::Reason::DATA:
             case Database::Database::Reason::POINT:
             case Database::Database::Reason::FILTER:
-            case Database::Database::Reason::VISIBLE_IMAGE:
               break;
             }
 

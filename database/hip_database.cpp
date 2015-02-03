@@ -19,21 +19,12 @@ namespace HIP {
   // Debug operators
   //#************************************************************************
 
-  QDebug operator<< (QDebug stream, const Database::Position& position)
-  {
-    stream << "Position (image=" << position.getImage ()
-           << ", coordinate=" << position.getCoordinate ()
-           << ")";
-
-    return stream;
-  }
-
   QDebug operator<< (QDebug stream, const Database::Point& point)
   {
     stream << "Point (id=" << point.getId ()
            << ", description=" << point.getDescription ()
            << ", tags=" << point.getTags ()
-           << ", positions=" << point.getPositions ().count ()
+           << ", position=" << point.getPosition ()
            << ", color="  << point.getColor ()
            << ", selected=" << point.getSelected ()
            << ")";
@@ -56,9 +47,6 @@ namespace HIP {
         break;
       case Database::Database::Reason::FILTER:
         stream << "FILTER";
-        break;
-      case Database::Database::Reason::VISIBLE_IMAGE:
-        stream << "VISIBLE_IMAGE";
         break;
       }
 
@@ -91,11 +79,8 @@ namespace HIP {
         static const char* const POINT       = "point";
         static const char* const TAGS        = "tags";
         static const char* const TAG         = "tag";
-        static const char* const POSITIONS   = "positions";
         static const char* const POSITION    = "position";
         static const char* const DESCRIPTION = "description";
-        static const char* const IMAGES      = "images";
-        static const char* const IMAGE       = "image";
         static const char* const COLOR       = "color";
       };
 
@@ -109,9 +94,9 @@ namespace HIP {
         static const char* const NAME    = "name";
         static const char* const X       = "x";
         static const char* const Y       = "y";
+        static const char* const Z       = "z";
         static const char* const TITLE   = "title";
         static const char* const PATH    = "path";
-        static const char* const IMAGE   = "image";
       }
 
     }
@@ -150,46 +135,6 @@ namespace HIP {
 
     }
 
-
-    //#**********************************************************************
-    // CLASS HIP::Database::Position
-    //#**********************************************************************
-
-    Position::Position ()
-      : _image      (),
-        _coordinate ()
-    {
-    }
-
-    Position::Position (const Position& toCopy)
-      : _image      (toCopy._image),
-        _coordinate (toCopy._coordinate)
-    {
-    }
-
-    Position::~Position ()
-    {
-    }
-
-    void Position::setImage (const QString& image)
-    {
-      _image = image;
-    }
-
-    void Position::setCoordinate (const QPointF& coordinate)
-    {
-      _coordinate = coordinate;
-    }
-
-    Position& Position::operator= (const Position& toCopy)
-    {
-      _image      = toCopy._image;
-      _coordinate = toCopy._coordinate;
-
-      return *this;
-    }
-
-
     //#**********************************************************************
     // CLASS HIP::Database::Point
     //#**********************************************************************
@@ -199,7 +144,7 @@ namespace HIP {
       : _id          (),
         _description (),
         _tags        (),
-        _positions   (),
+        _position    (),
         _color       (),
         _selected    (false)
     {
@@ -211,7 +156,7 @@ namespace HIP {
         _id          (toCopy._id),
         _description (toCopy._description),
         _tags        (toCopy._tags),
-        _positions   (toCopy._positions),
+        _position    (toCopy._position),
         _color       (toCopy._color),
         _selected    (toCopy._selected)
     {
@@ -263,9 +208,9 @@ namespace HIP {
       _tags = tags;
     }
 
-    void Point::setPositions (const QList<Position>& positions)
+    void Point::setPosition (const QVector3D& position)
     {
-      _positions = positions;
+      _position = position;
     }
 
     void Point::setColor (const QColor& color)
@@ -283,60 +228,12 @@ namespace HIP {
       _id          = toCopy._id;
       _description = toCopy._description;
       _tags        = toCopy._tags;
-      _positions   = toCopy._positions;
+      _position    = toCopy._position;
       _color       = toCopy._color;
       _selected    = toCopy._selected;
 
       return *this;
     }
-
-
-    //#**********************************************************************
-    // CLASS HIP::Database::Image
-    //#**********************************************************************
-
-    Image::Image ()
-      : _id    (),
-        _title (),
-        _path  ()
-    {
-    }
-
-    Image::Image (const Image& toCopy)
-      : _id    (toCopy._id),
-        _title (toCopy._title),
-        _path  (toCopy._path)
-    {
-    }
-
-    Image::~Image ()
-    {
-    }
-
-    void Image::setId (const QString& id)
-    {
-      _id = id;
-    }
-
-    void Image::setTitle (const QString& title)
-    {
-      _title = title;
-    }
-
-    void Image::setPath (const QString& path)
-    {
-      _path = path;
-    }
-
-    Image& Image::operator= (const Image& toCopy)
-    {
-      _id    = toCopy._id;
-      _title = toCopy._title;
-      _path  = toCopy._path;
-
-      return *this;
-    }
-
 
     //#**********************************************************************
     // CLASS HIP::Database::Database
@@ -346,10 +243,8 @@ namespace HIP {
     Database::Database ()
       : _points        (),
         _tags          (),
-        _images        (),
         _model         (),
-        _point_indices (),
-        _visible_image ()
+        _point_indices ()
     {
     }
 
@@ -359,7 +254,6 @@ namespace HIP {
       QString database_name;
       QList<Point> database_points;
       QList<QString> database_tags;
-      QList<Image> database_images;
 
       QDomDocument doc;
 
@@ -433,41 +327,32 @@ namespace HIP {
                       point.setTags (tags);
 
                       //
-                      // Category: Point::Positions
+                      // Attribute: Point::Position
                       //
-                      QList<Position> positions;
+                      QDomElement position_e = point_e.namedItem (Tags::POSITION).toElement ();
+                      if (position_e.isNull ())
+                        throwDOMException (position_e, tr ("Point entry does not have a position"));
+                      if (!position_e.hasAttribute (Attributes::X))
+                        throwDOMException (position_e, tr ("Position must specify an x coordinate"));
+                      if (!position_e.hasAttribute (Attributes::Y))
+                        throwDOMException (position_e, tr ("Position must specify a y coordinate"));
+                      if (!position_e.hasAttribute (Attributes::Z))
+                        throwDOMException (position_e, tr ("Position must specify a z coordinate"));
 
-                      QDomNodeList positions_l = point_e.elementsByTagName (Tags::POSITION);
-                      if (positions_l.isEmpty ())
-                        throwDOMException (point_e, tr ("Point entry does not have a position"));
+                      bool x_ok = true;
+                      bool y_ok = true;
+                      bool z_ok = true;
 
-                      for (int i=0; i < positions_l.count (); ++i)
-                        {
-                          QDomElement position_e = positions_l.at (i).toElement ();
-                          if (!position_e.hasAttribute (Attributes::IMAGE))
-                            throwDOMException (position_e, tr ("Position must specify an image"));
-                          if (!position_e.hasAttribute (Attributes::X))
-                            throwDOMException (position_e, tr ("Position must specify an x coordinate"));
-                          if (!position_e.hasAttribute (Attributes::Y))
-                            throwDOMException (position_e, tr ("Position must specify a y coordinate"));
+                      point.setPosition (QVector3D (position_e.attribute (Attributes::X).toDouble (&x_ok),
+                                                    position_e.attribute (Attributes::Y).toDouble (&y_ok),
+                                                    position_e.attribute (Attributes::Z).toDouble (&z_ok)));
 
-                          bool x_ok = true;
-                          bool y_ok = true;
-
-                          Position position;
-                          position.setImage (position_e.attribute (Attributes::IMAGE));
-                          position.setCoordinate (QPointF (position_e.attribute (Attributes::X).toDouble (&x_ok),
-                                                           position_e.attribute (Attributes::Y).toDouble (&y_ok)));
-
-                          if (!x_ok)
-                            throwDOMException (position_e, tr ("X coordinate is not a number"));
-                          if (!y_ok)
-                            throwDOMException (position_e, tr ("Y coordinate is not a number"));
-
-                          positions.push_back (position);
-                        }
-
-                      point.setPositions (positions);
+                      if (!x_ok)
+                        throwDOMException (position_e, tr ("X coordinate is not a number"));
+                      if (!y_ok)
+                        throwDOMException (position_e, tr ("Y coordinate is not a number"));
+                      if (!z_ok)
+                        throwDOMException (position_e, tr ("Z coordinate is not a number"));
 
                       //
                       // Attribute: Point::Description
@@ -500,34 +385,6 @@ namespace HIP {
                       database_points.push_back (point);
                     }
                 }
-
-              //
-              // Load image database
-              //
-              else if (top_e.tagName () == Tags::IMAGES)
-                {
-                  for ( QDomNode image_n = top_e.firstChild (); !image_n.isNull ();
-                        image_n = image_n.nextSibling () )
-                    {
-                      QDomElement image_e = image_n.toElement ();
-                      if (image_e.tagName () == Tags::IMAGE)
-                        {
-                          if (!image_e.hasAttribute (Attributes::ID))
-                            throwDOMException (image_e, tr ("Image entry does not have an id"));
-                          if (!image_e.hasAttribute (Attributes::TITLE))
-                            throwDOMException (image_e, tr ("Image entry does not have a title"));
-                          if (!image_e.hasAttribute (Attributes::PATH))
-                            throwDOMException (image_e, tr ("Image entry does not have a path"));
-
-                          Image image;
-                          image.setId (image_e.attribute (Attributes::ID));
-                          image.setTitle (image_e.attribute (Attributes::TITLE));
-                          image.setPath (image_e.attribute (Attributes::PATH));
-
-                          database_images.append (image);
-                        }
-                    }
-                }
             }
         }
       else
@@ -535,17 +392,12 @@ namespace HIP {
 
       std::sort (database_points.begin (), database_points.end (), PointComparator ());
 
-      if (database_images.isEmpty ())
-        throw Exception (tr ("No images found in database."));
-
       //
       // At this point everything went OK, loaded data can be assigned
       //
       _name = database_name;
       _points = database_points;
       _tags = database_tags;
-      _images = database_images;
-      _visible_image = _images.front ().getId ();
 
       computeIndices ();
       computeTags ();
@@ -587,20 +439,6 @@ namespace HIP {
       emit databaseChanged (Reason::DATA, QVariant ());
     }
 
-    /*! Get image entry from database */
-    const Image& Database::getImage (const QString& id) const
-    {
-      int index = -1;
-
-      for (int i=0; i < _images.size () && index == -1; ++i)
-        if (_images[i].getId () == id)
-          index = i;
-
-      Q_ASSERT (index >= 0);
-
-      return _images[index];
-    }
-
     /*! Set point selected */
     void Database::select (const QString& id)
     {
@@ -629,27 +467,6 @@ namespace HIP {
           point.setSelected (false);
           emit databaseChanged (Reason::SELECTION, qVariantFromValue (point.getId ()));
         }
-    }
-
-    /*! Return id of the currently visible image */
-    const QString& Database::getVisibleImage () const
-    {
-      return _visible_image;
-    }
-
-    /*! Set visible image */
-    void Database::setVisibleImage (const QString& id)
-    {
-      bool found = false;
-      foreach (const Image& image, _images)
-        if (image.getId () == id)
-          found = true;
-
-      Q_ASSERT (found && "Invalid image id");
-
-      _visible_image = id;
-
-      emit databaseChanged (Reason::VISIBLE_IMAGE, qVariantFromValue (_visible_image));
     }
 
     /*! Return the current filter configuration */
@@ -759,17 +576,10 @@ namespace HIP {
 
               out.writeEndElement ();
 
-              out.writeStartElement (Tags::POSITIONS);
-
-              foreach (const Position& position, point.getPositions ())
-                {
-                  out.writeStartElement (Tags::POSITION);
-                  out.writeAttribute (Attributes::IMAGE, position.getImage ());
-                  out.writeAttribute (Attributes::X, QString::number (position.getCoordinate ().x ()));
-                  out.writeAttribute (Attributes::Y, QString::number (position.getCoordinate ().y ()));
-                  out.writeEndElement ();
-                }
-
+              out.writeStartElement (Tags::POSITION);
+              out.writeAttribute (Attributes::X, QString::number (point.getPosition ().x ()));
+              out.writeAttribute (Attributes::Y, QString::number (point.getPosition ().y ()));
+              out.writeAttribute (Attributes::Z, QString::number (point.getPosition ().z ()));
               out.writeEndElement ();
 
               out.writeStartElement (Tags::DESCRIPTION);
@@ -781,23 +591,6 @@ namespace HIP {
               out.writeEndElement ();
             }
 
-            out.writeEndElement ();
-          }
-
-        out.writeEndElement ();
-      }
-
-      out.writeComment (tr ("List of images"));
-
-      {
-        out.writeStartElement (Tags::IMAGES);
-
-        foreach (const Image& image, _images)
-          {
-            out.writeStartElement (Tags::IMAGE);
-            out.writeAttribute (Attributes::ID, image.getId ());
-            out.writeAttribute (Attributes::TITLE, image.getTitle ());
-            out.writeAttribute (Attributes::PATH, image.getPath ());
             out.writeEndElement ();
           }
 

@@ -252,25 +252,11 @@ namespace HIP {
         {
           foreach (const Face& face, group.getFaces ())
             {
-              if (face.getPoints ().size () == 3)
-                {
-                  addVertex (&vertices, face.getPoints ()[0]);
-                  addVertex (&vertices, face.getPoints ()[1]);
-                  addVertex (&vertices, face.getPoints ()[2]);
-                }
-              else if (face.getPoints ().size () == 4)
-                {
-                  // XXX: Correct faces
-                  addVertex (&vertices, face.getPoints ()[0]);
-                  addVertex (&vertices, face.getPoints ()[1]);
-                  addVertex (&vertices, face.getPoints ()[2]);
+              Q_ASSERT (face.getPoints ().size () == 3);
 
-                  addVertex (&vertices, face.getPoints ()[2]);
-                  addVertex (&vertices, face.getPoints ()[3]);
-                  addVertex (&vertices, face.getPoints ()[1]);
-                }
-              else
-                throw Exception (tr ("Only triangular or rectangular faces are supported."));
+              addVertex (&vertices, face.getPoints ()[0]);
+              addVertex (&vertices, face.getPoints ()[1]);
+              addVertex (&vertices, face.getPoints ()[2]);
             }
         }
 
@@ -334,7 +320,6 @@ namespace HIP {
 
       _shader.enableAttributeArray (_texture_attr);
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
-      _shader.setUniformValue ("texture", 0);
 
       int point_offset = 0;
       foreach (const Model::Group& group, _model->getGroups ())
@@ -355,7 +340,13 @@ namespace HIP {
             }
 
           if (texture != 0)
-            texture->bind ();
+            {
+              texture->bind ();
+              _shader.setUniformValue ("in_texture", 0);
+              _shader.setUniformValue ("has_texture", true);
+            }
+          else
+            _shader.setUniformValue ("has_texture", false);
 
           glDrawElements (GL_TRIANGLES, group.getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
           point_offset += group.getFaces ().size () * 3;

@@ -13,40 +13,12 @@
 #include <QList>
 #include <QMap>
 #include <QFile>
-#include <QPointF>
+#include <QVector3D>
 
 class QDomNode;
 
 namespace HIP {
   namespace Database {
-
-    /*
-     * Object describing the a single position of a point
-     */
-    class Position : public QObject
-    {
-      Q_OBJECT
-
-      Q_PROPERTY (QString image READ getImage WRITE setImage)
-      Q_PROPERTY (QPointF coordinate READ getCoordinate WRITE setCoordinate)
-
-    public:
-      Position ();
-      Position (const Position& toCopy);
-      virtual ~Position ();
-
-      const QString& getImage () const { return _image; }
-      void setImage (const QString& image);
-
-      const QPointF& getCoordinate () const { return _coordinate; }
-      void setCoordinate (const QPointF& coordinate);
-
-      Position& operator= (const Position& toCopy);
-
-    private:
-      QString _image;
-      QPointF _coordinate;
-    };
 
     /*
      * Object keeping the data of a single point
@@ -78,8 +50,8 @@ namespace HIP {
       const QList<QString>& getTags () const { return _tags; }
       void setTags (const QList<QString>& tags);
 
-      const QList<Position>& getPositions () const { return _positions; }
-      void setPositions (const QList<Position>& positions);
+      const QVector3D& getPosition () const { return _position; }
+      void setPosition (const QVector3D& position);
 
       const QColor& getColor () const { return _color; }
       void setColor (const QColor& color);
@@ -93,44 +65,10 @@ namespace HIP {
       QString _id;
       QString _description;
       QList<QString> _tags;
-      QList<Position> _positions;
+      QVector3D _position;
       QColor _color;
 
       bool _selected;
-    };
-
-
-    /*
-     * Object representing a single image
-     */
-    class Image : public QObject
-    {
-      Q_OBJECT
-
-      Q_PROPERTY (QString id READ getId WRITE setId)
-      Q_PROPERTY (QString title READ getTitle WRITE setTitle)
-      Q_PROPERTY (QString path READ getPath WRITE setPath)
-
-    public:
-      Image ();
-      Image (const Image& toCopy);
-      virtual ~Image ();
-
-      const QString& getId () const { return _id; }
-      void setId (const QString& id);
-
-      const QString& getTitle () const { return _title; }
-      void setTitle (const QString& title);
-
-      const QString& getPath () const { return _path; }
-      void setPath (const QString& path);
-
-      Image& operator= (const Image& toCopy);
-
-    private:
-      QString _id;
-      QString _title;
-      QString _path;
     };
 
     /*
@@ -144,7 +82,7 @@ namespace HIP {
       Database (const Database& toCopy) { Q_UNUSED (toCopy); }
 
     public:
-      struct Reason { enum Type_t { POINT, SELECTION, DATA, FILTER, VISIBLE_IMAGE }; };
+      struct Reason { enum Type_t { POINT, SELECTION, DATA, FILTER }; };
       typedef Reason::Type_t Reason_t;
 
     public:
@@ -155,13 +93,10 @@ namespace HIP {
 
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
-      const QList<Image>& getImages () const { return _images; }
       const QString& getModel () const { return _model; }
 
       const Point& getPoint (const QString& id) const;
       void setPoint (const Point& point);
-
-      const Image& getImage (const QString& id) const;
 
       //
       // Point selection
@@ -169,9 +104,6 @@ namespace HIP {
       void select (const QString& id);
       void deselect (const QString& id);
       void clearSelection ();
-
-      const QString& getVisibleImage () const;
-      void setVisibleImage (const QString& id);
 
       const QString& getFilter () const;
       void setFilter (const QString& filter);
@@ -196,7 +128,6 @@ namespace HIP {
 
       QList<Point> _points;
       QList<QString> _tags;
-      QList<Image> _images;
 
       QString _model;
 
@@ -209,19 +140,15 @@ namespace HIP {
       //
       // Database state
       //
-      QString _visible_image;
       QString _filter;
     };
   }
 
-  QDebug operator<< (QDebug stream, const Database::Position& position);
   QDebug operator<< (QDebug stream, const Database::Point& point);
   QDebug operator<< (QDebug stream, const Database::Database::Reason_t reason);
 }
 
-Q_DECLARE_METATYPE (HIP::Database::Position)
 Q_DECLARE_METATYPE (HIP::Database::Point)
-Q_DECLARE_METATYPE (HIP::Database::Image)
 Q_DECLARE_METATYPE (HIP::Database::Database::Reason_t)
 
 #endif

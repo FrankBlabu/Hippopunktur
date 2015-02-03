@@ -102,7 +102,6 @@ namespace HIP {
 
         case Database::Database::Reason::SELECTION:
         case Database::Database::Reason::FILTER:
-        case Database::Database::Reason::VISIBLE_IMAGE:
           break;
         }
     }

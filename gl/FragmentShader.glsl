@@ -1,5 +1,6 @@
 
-uniform sampler2D texture;
+uniform sampler2D in_texture;
+uniform bool has_texture;
 
 varying mediump vec4 fragment_color;
 varying mediump vec2 fragment_texture;
@@ -28,6 +29,8 @@ void main(void)
   vec4 diffuse_illumination = diffuse_reflection * max (0.0, dot (light_direction, n)) * fragment_diffuse_color;
   vec4 specular_illumination = specular_reflection * pow (max (0.0, dot (-reflect (light_direction, n), viewer_direction)), fragment_specular_exponent) * fragment_specular_color;
 
-  //gl_FragColor = fragment_color * (ambient_illumination + diffuse_illumination) + specular_illumination;
-  gl_FragColor = texture2D (texture, fragment_texture) * (ambient_illumination + diffuse_illumination) + specular_illumination;
+  if (has_texture)
+    gl_FragColor = texture2D (in_texture, fragment_texture) * (ambient_illumination + diffuse_illumination) + specular_illumination;
+  else
+    gl_FragColor = fragment_color * (ambient_illumination + diffuse_illumination) + specular_illumination;
 }

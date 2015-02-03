@@ -266,7 +266,20 @@ namespace HIP {
               for (in >> tag; !tag.isNull (); in >> tag)
                 points.push_back (toPoint (tag));
 
-             group.addFace (Face (points));
+              if (points.size () == 3)
+                group.addFace (Face (points));
+              else if (points.size () == 4)
+                {
+                  QList<Face::Point> points1;
+                  points1 << points[0] << points[1] << points[2];
+                  group.addFace (Face (points1));
+
+                  QList<Face::Point> points2;
+                  points2 << points[1] << points[2] << points[3];
+                  group.addFace (Face (points2));
+                }
+              else
+                throw Exception (QObject::tr ("Only triangular or rectangular faces supported."));
             }
 
           //
