@@ -26,20 +26,6 @@ namespace HIP {
   namespace GL {
 
     //#**********************************************************************
-    // Local functions
-    //#**********************************************************************
-
-    namespace {
-
-      float random ()
-      {
-        return static_cast<float> (rand ()) / RAND_MAX;
-      }
-
-    }
-
-
-    //#**********************************************************************
     // CLASS HIP::GL::VertexData
     //#**********************************************************************
 
@@ -437,10 +423,14 @@ namespace HIP {
       VertexCollector::PointIndexMap::const_iterator pos = collector->_point_indices.find (point);
       if (pos == collector->_point_indices.end ())
         {
+          QVector2D texture_point (0, 0);
+          if (point.getTextureIndex () >= 0)
+            texture_point = _model->getTextures ()[point.getTextureIndex ()];
+
           collector->_vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
                                                          _model->getNormals ()[point.getNormalIndex ()],
-                                                         QVector3D (random (), random (), random ()),
-                                                         _model->getTextures ()[point.getTextureIndex ()]));
+                                                         QVector3D (1.0, 1.0, 1.0),
+                                                         texture_point));
           collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
           collector->_index_data.push_back (collector->_vertex_data.size () - 1);
         }

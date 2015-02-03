@@ -335,7 +335,6 @@ namespace HIP {
       //
       Q_ASSERT (!_vertices.isEmpty ());
       Q_ASSERT (!_normals.isEmpty ());
-      Q_ASSERT (!_textures.isEmpty ());
 
       foreach (const Model::Group& group, _groups)
         {
