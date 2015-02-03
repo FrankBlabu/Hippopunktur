@@ -149,6 +149,14 @@ namespace HIP {
     {
     }
 
+    /*! Set normal index of face points */
+    void Face::setNormalIndex (int index)
+    {
+      for (int i=0; i < _points.size (); ++i)
+        _points[i].setNormalIndex (index);
+    }
+
+
     //#**********************************************************************
     // CLASS HIP::GL::Material
     //#**********************************************************************
@@ -188,6 +196,17 @@ namespace HIP {
     {
     }
 
+    /*!
+     * Set index of the normals in the given face
+     *
+     * \param face_index Index of the face to access
+     * \param index      Normal index to set
+     */
+    void Model::Group::setNormalIndex (int face_index, int index)
+    {
+      Q_ASSERT (face_index >= 0 && face_index < _faces.size ());
+      _faces[face_index].setNormalIndex (index);
+    }
 
     //#**********************************************************************
     // CLASS HIP::GL::Model
@@ -329,6 +348,38 @@ namespace HIP {
 
       for (int i=0; i < _vertices.size (); ++i)
         _vertices[i] /= max_length;
+
+      //
+      // Add missing normals
+      //
+      for (int i=0; i < _groups.size (); ++i)
+        {
+          Group& group = _groups[i];
+
+          for (int j=0; j < group.getFaces ().size (); ++j)
+            {
+              const Face& face = group.getFaces ()[j];
+
+              Q_ASSERT (face.getPoints ().size () == 3);
+
+              if (face.getPoints ()[0].getNormalIndex () == -1)
+                {
+                  Q_ASSERT (face.getPoints ()[1].getNormalIndex () == -1);
+                  Q_ASSERT (face.getPoints ()[2].getNormalIndex () == -1);
+
+                  QVector3D p0 = _vertices[face.getPoints ()[0].getVertexIndex ()];
+                  QVector3D p1 = _vertices[face.getPoints ()[1].getVertexIndex ()];
+                  QVector3D p2 = _vertices[face.getPoints ()[2].getVertexIndex ()];
+
+                  QVector3D v1 = p1 - p0;
+                  QVector3D v2 = p2 - p0;
+                  QVector3D n = QVector3D::crossProduct (v1, v2);
+
+                  _normals.push_back (n);
+                  group.setNormalIndex (j, _normals.size () - 1);
+                }
+            }
+        }
 
       //
       // Sanity check

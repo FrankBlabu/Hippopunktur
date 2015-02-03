@@ -33,6 +33,10 @@ namespace HIP {
         int getNormalIndex () const  { return _normal_index; }
         int getTextureIndex () const { return _texture_index; }
 
+        void setVertexIndex (int index) { _vertex_index = index; }
+        void setNormalIndex (int index) { _normal_index = index; }
+        void setTextureIndex (int index) { _texture_index = index; }
+
         bool operator< (const Point& point) const;
 
       private:
@@ -46,6 +50,8 @@ namespace HIP {
       ~Face ();
 
       const QList<Point>& getPoints () const { return _points; }
+
+      void setNormalIndex (int index);
 
     private:
       QList<Point> _points;
@@ -110,6 +116,8 @@ namespace HIP {
         void setName (const QString& name)         { _name = name; }
         void setMaterial (const QString& material) { _material = material; }
         void addFace (const Face& face)            { _faces.push_back (face); }
+
+        void setNormalIndex (int face_index, int index);
 
       private:
         QString _name;
