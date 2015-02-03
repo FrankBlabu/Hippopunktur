@@ -6,6 +6,7 @@
 
 #include "HIPDatabase.h"
 #include "core/HIPException.h"
+#include "gl/HIPGLData.h"
 
 #include <QColor>
 #include <QDebug>
@@ -243,7 +244,7 @@ namespace HIP {
     Database::Database ()
       : _points        (),
         _tags          (),
-        _model         (),
+        _model         (0),
         _point_indices ()
     {
     }
@@ -254,6 +255,7 @@ namespace HIP {
       QString database_name;
       QList<Point> database_points;
       QList<QString> database_tags;
+      QString database_model_name;
 
       QDomDocument doc;
 
@@ -286,7 +288,7 @@ namespace HIP {
                   if (!file_e.firstChild ().isCharacterData ())
                     throwDOMException (file_e, tr ("Character data expected for file name"));
 
-                  _model = file_e.firstChild ().toCharacterData ().data ();
+                  database_model_name = file_e.firstChild ().toCharacterData ().data ();
                 }
 
               //
@@ -393,6 +395,12 @@ namespace HIP {
       std::sort (database_points.begin (), database_points.end (), PointComparator ());
 
       //
+      // Load matching GL model file
+      //
+      delete _model;
+      _model = new GL::Data (database_model_name);
+
+      //
       // At this point everything went OK, loaded data can be assigned
       //
       _name = database_name;
@@ -408,6 +416,7 @@ namespace HIP {
     /*! Destructor */
     Database::~Database ()
     {
+      delete _model;
     }
 
     /* Access point with the given id */
@@ -550,7 +559,7 @@ namespace HIP {
       out.writeComment (tr ("Model"));
       out.writeStartElement (Tags::MODEL);
       out.writeStartElement (Tags::FILE);
-      out.writeCharacters (_model);
+      out.writeCharacters (_model->getName ());
       out.writeEndElement ();
       out.writeEndElement ();
 

@@ -18,6 +18,11 @@
 class QDomNode;
 
 namespace HIP {
+
+  namespace GL {
+    class Data;
+  }
+
   namespace Database {
 
     /*
@@ -93,7 +98,7 @@ namespace HIP {
 
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
-      const QString& getModel () const { return _model; }
+      const GL::Data* getModel () const      { return _model; }
 
       const Point& getPoint (const QString& id) const;
       void setPoint (const Point& point);
@@ -129,7 +134,7 @@ namespace HIP {
       QList<Point> _points;
       QList<QString> _tags;
 
-      QString _model;
+      GL::Data* _model;
 
       //
       // Database cached data

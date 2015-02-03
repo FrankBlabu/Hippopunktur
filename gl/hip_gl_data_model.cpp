@@ -10,6 +10,37 @@ namespace HIP {
   namespace GL {
 
     //#**********************************************************************
+    // CLASS HIP::GL::DataItem
+    //#**********************************************************************
+
+    /*
+     * Item keeping information about a single GL data part
+     */
+    class DataItem : public QObject
+    {
+    public:
+      DataItem (const QString& group);
+      virtual ~DataItem ();
+
+      const QString& getGroup () const { return _group; }
+
+    private:
+      QString _group;
+    };
+
+    /*! Constructor */
+    DataItem::DataItem (const QString& group)
+      : _group (group)
+    {
+    }
+
+    /*! Destructor */
+    DataItem::~DataItem ()
+    {
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::GL::DataModel
     //#**********************************************************************
 

@@ -81,8 +81,10 @@ namespace HIP {
     class Widget : public QOpenGLWidget, protected QOpenGLFunctions
     {
     public:
-      Widget (const QString& model_path, QWidget* parent);
+      Widget (QWidget* parent);
       virtual ~Widget ();
+
+      void setData (const Data* data);
 
       virtual void initializeGL ();
       virtual void resizeGL (int width, int height);
@@ -102,7 +104,7 @@ namespace HIP {
       float checkBounds (float lower, float value, float upper) const;
 
     private:
-      Data* _data;
+      const Data* _data;
 
       QOpenGLShaderProgram _shader;
       QOpenGLBuffer _vertex_buffer;
@@ -129,9 +131,9 @@ namespace HIP {
 
 
     /*! Constructor */
-    Widget::Widget (const QString& model_path, QWidget* parent)
+    Widget::Widget (QWidget* parent)
       : QOpenGLWidget (parent),
-        _data                (new Data (model_path)),
+        _data                (0),
         _shader              (),
         _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
         _index_buffer        (QOpenGLBuffer::IndexBuffer),
@@ -145,8 +147,8 @@ namespace HIP {
         _light_position_attr (-1),
         _texture_attr        (-1),
         _model_matrix        (),
-        _translation         (0, 0, 2),
-        _rotation            (0, 0, 0),
+        _translation         (),
+        _rotation            (),
         _last_pos            (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
@@ -155,9 +157,6 @@ namespace HIP {
       format.setDepthBufferSize (24);
       format.setStencilBufferSize (8);
       setFormat (format);
-
-      Data::Cube cube = _data->getBoundingBox ();
-      _model_matrix.translate (-(cube.first + cube.second) / 2);
     }
 
     /*! Destructor */
@@ -173,8 +172,24 @@ namespace HIP {
       _vertex_buffer.destroy ();
 
       doneCurrent ();
+    }
+
+    /*
+     * Set displayed model
+     */
+    void Widget::setData (const Data* data)
+    {
+      Q_ASSERT (data != 0);
 
       delete _data;
+      _data = data;
+
+      Data::Cube cube = _data->getBoundingBox ();
+      _model_matrix.setToIdentity ();
+      _model_matrix.translate (-(cube.first + cube.second) / 2);
+
+      _translation = QVector3D (0, 0, 2);
+      _rotation = QVector3D (0, 0, 0);
     }
 
     /*
@@ -271,82 +286,85 @@ namespace HIP {
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      QMatrix4x4 projection;
-      projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
-
-      QMatrix4x4 camera;
-      camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
-      camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
-
-      QMatrix4x4 view_matrix;
-      view_matrix.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
-
-      _shader.bind ();
-      _shader.setUniformValue (_mvp_matrix_attr, projection * _model_matrix * view_matrix);
-      _shader.setUniformValue (_mv_matrix_attr, _model_matrix * view_matrix);
-      _shader.setUniformValue (_n_matrix_attr, view_matrix.normalMatrix ());
-      _shader.setUniformValue (_light_position_attr, _translation);
-
-      int offset = 0;
-
-      _shader.enableAttributeArray (_vertex_attr);
-      _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-      offset += sizeof (QVector3D);
-
-      _shader.enableAttributeArray (_normal_attr);
-      _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-      offset += sizeof (QVector3D);
-
-      _shader.enableAttributeArray (_color_attr);
-      _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-      offset += sizeof (QVector3D);
-
-      _shader.enableAttributeArray (_texture_attr);
-      _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
-
-      int point_offset = 0;
-      foreach (const GroupPtr& group, _data->getGroups ())
+      if (_data != 0)
         {
-          QOpenGLTexture* texture = 0;
-          if (!group->getMaterial ().isEmpty ())
+          QMatrix4x4 projection;
+          projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
+
+          QMatrix4x4 camera;
+          camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
+          camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
+
+          QMatrix4x4 view_matrix;
+          view_matrix.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
+
+          _shader.bind ();
+          _shader.setUniformValue (_mvp_matrix_attr, projection * _model_matrix * view_matrix);
+          _shader.setUniformValue (_mv_matrix_attr, _model_matrix * view_matrix);
+          _shader.setUniformValue (_n_matrix_attr, view_matrix.normalMatrix ());
+          _shader.setUniformValue (_light_position_attr, _translation);
+
+          int offset = 0;
+
+          _shader.enableAttributeArray (_vertex_attr);
+          _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+          offset += sizeof (QVector3D);
+
+          _shader.enableAttributeArray (_normal_attr);
+          _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+          offset += sizeof (QVector3D);
+
+          _shader.enableAttributeArray (_color_attr);
+          _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+          offset += sizeof (QVector3D);
+
+          _shader.enableAttributeArray (_texture_attr);
+          _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
+
+          int point_offset = 0;
+          foreach (const GroupPtr& group, _data->getGroups ())
             {
-              TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
-              if (pos != _textures.end ())
-                texture = pos.value ();
+              QOpenGLTexture* texture = 0;
+              if (!group->getMaterial ().isEmpty ())
+                {
+                  TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
+                  if (pos != _textures.end ())
+                    texture = pos.value ();
 
-              const Material& material = _data->getMaterial (group->getMaterial ());
+                  const Material& material = _data->getMaterial (group->getMaterial ());
 
-              _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
-              _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
-              _shader.setUniformValue ("in_specular_color", material.getSpecular ());
-              _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
+                  _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
+                  _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
+                  _shader.setUniformValue ("in_specular_color", material.getSpecular ());
+                  _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
+                }
+
+              if (texture != 0)
+                {
+                  texture->bind ();
+                  _shader.setUniformValue ("in_texture", 0);
+                  _shader.setUniformValue ("has_texture", true);
+                }
+              else
+                _shader.setUniformValue ("has_texture", false);
+
+              glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
+              point_offset += group->getFaces ().size () * 3;
+
+              if (texture != 0)
+                texture->release ();
             }
 
-          if (texture != 0)
-            {
-              texture->bind ();
-              _shader.setUniformValue ("in_texture", 0);
-              _shader.setUniformValue ("has_texture", true);
-            }
-          else
-            _shader.setUniformValue ("has_texture", false);
+          _shader.disableAttributeArray (_texture_attr);
+          _shader.disableAttributeArray (_color_attr);
+          _shader.disableAttributeArray (_normal_attr);
+          _shader.disableAttributeArray (_vertex_attr);
 
-          glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
-          point_offset += group->getFaces ().size () * 3;
-
-          if (texture != 0)
-            texture->release ();
+          _shader.release ();
         }
-
-      _shader.disableAttributeArray (_texture_attr);
-      _shader.disableAttributeArray (_color_attr);
-      _shader.disableAttributeArray (_normal_attr);
-      _shader.disableAttributeArray (_vertex_attr);
-
-      _shader.release ();
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
@@ -463,7 +481,8 @@ namespace HIP {
         _widget (0)
     {
       _ui->setupUi (this);
-      _widget = Tools::addToParent (new Widget (database->getModel (), _ui->_view_w));
+      _widget = Tools::addToParent (new Widget (_ui->_view_w));
+      _widget->setData (database->getModel ());
 
       connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
     }
