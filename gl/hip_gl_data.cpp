@@ -1,10 +1,10 @@
 /*
- * hip_gl_model.cpp - Class for loading and keeping a GL model
+ * hip_gl_data.cpp - Class for loading and keeping a GL model
  *
  * Frank Blankenburg, Jan. 2014
  */
 
-#include "HIPGLModel.h"
+#include "HIPGLData.h"
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 
@@ -210,11 +210,11 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::GL::Model
+    // CLASS HIP::GL::Data
     //#**********************************************************************
 
     /*! Constructor */
-    Model::Model (const QString& path)
+    Data::Data (const QString& path)
       : _name         (),
         _vertices     (),
         _normals      (),
@@ -440,7 +440,7 @@ namespace HIP {
     }
 
     /*! Get material by name */
-    const Material& Model::getMaterial (const QString& name) const
+    const Material& Data::getMaterial (const QString& name) const
     {
       MaterialMap::const_iterator pos = _materials.find (name);
       Q_ASSERT (pos != _materials.end () && "Material map corrupted.");
@@ -449,7 +449,7 @@ namespace HIP {
     }
 
     /*! Load material library */
-    void Model::loadMaterial (const QString& path)
+    void Data::loadMaterial (const QString& path)
     {
       QString content = Tools::loadResource<QString> (path);
       QTextStream file (&content, QIODevice::ReadOnly);
@@ -557,12 +557,12 @@ namespace HIP {
 
 
     /*! Destructor */
-    Model::~Model ()
+    Data::~Data ()
     {
     }
 
     /* Convert string into a face point */
-    Point Model::toPoint (const QString& t) const // throws Exception
+    Point Data::toPoint (const QString& t) const // throws Exception
     {
       QStringList parts = t.split ('/', QString::KeepEmptyParts);
       if (parts.isEmpty ())

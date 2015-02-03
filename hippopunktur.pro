@@ -20,10 +20,10 @@ SOURCES += \
     database/hip_database_model.cpp \
     gl/hip_gl_view.cpp \
     gui/hip_gui_main_window.cpp \
-    gl/hip_gl_model.cpp \
     explorer/hip_point_explorer_view.cpp \
     explorer/hip_explorer_tagselector.cpp \
-    explorer/hip_anatomy_explorer_view.cpp
+    explorer/hip_anatomy_explorer_view.cpp \
+    gl/hip_gl_data.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -42,11 +42,11 @@ HEADERS += \
     database/HIPDatabaseModel.h \
     gui/HIPGuiMainWindow.h \
     gl/HIPGLView.h \
-    gl/HIPGLModel.h \
     core/HIPVersion.h \
     explorer/HIPPointExplorerView.h \
     explorer/HIPExplorerTagSelector.h \
-    explorer/HIPAnatomyExplorerView.h
+    explorer/HIPAnatomyExplorerView.h \
+    gl/HIPGLData.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \

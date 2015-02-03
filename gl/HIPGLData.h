@@ -1,11 +1,11 @@
 /*
- * HIPGLModel.h - Class for loading and keeping a GL model
+ * HIPGLData.h - Class for loading and keeping a GL model
  *
  * Frank Blankenburg, Jan. 2015
  */
 
-#ifndef __HIPGLModel_h__
-#define __HIPGLModel_h__
+#ifndef __HIPGLData_h__
+#define __HIPGLData_h__
 
 #include <QList>
 #include <QMap>
@@ -127,13 +127,13 @@ namespace HIP {
     typedef QSharedPointer<Group> GroupPtr;
 
     /*!
-     * Class for loading and keeping a GL model
+     * Class for loading and keeping a GL model dataset
      */
-    class Model
+    class Data
     {
     public:
-      Model (const QString& path); // throws Exception
-      ~Model ();
+      Data (const QString& path); // throws Exception
+      ~Data ();
 
       const QString& getName () const                { return _name; }
       const QVector<QVector3D>& getVertices () const { return _vertices; }

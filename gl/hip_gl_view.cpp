@@ -5,7 +5,7 @@
  */
 
 #include "HIPGLView.h"
-#include "HIPGLModel.h"
+#include "HIPGLData.h"
 #include "ui_hip_gl_view.h"
 
 #include "core/HIPException.h"
@@ -102,7 +102,7 @@ namespace HIP {
       float checkBounds (float lower, float value, float upper) const;
 
     private:
-      Model* _model;
+      Data* _data;
 
       QOpenGLShaderProgram _shader;
       QOpenGLBuffer _vertex_buffer;
@@ -131,7 +131,7 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (const QString& model_path, QWidget* parent)
       : QOpenGLWidget (parent),
-        _model               (new Model (model_path)),
+        _data                (new Data (model_path)),
         _shader              (),
         _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
         _index_buffer        (QOpenGLBuffer::IndexBuffer),
@@ -156,7 +156,7 @@ namespace HIP {
       format.setStencilBufferSize (8);
       setFormat (format);
 
-      Model::Cube cube = _model->getBoundingBox ();
+      Data::Cube cube = _data->getBoundingBox ();
       _model_matrix.translate (-(cube.first + cube.second) / 2);
     }
 
@@ -174,7 +174,7 @@ namespace HIP {
 
       doneCurrent ();
 
-      delete _model;
+      delete _data;
     }
 
     /*
@@ -211,11 +211,11 @@ namespace HIP {
       _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
-      foreach (const GroupPtr& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _data->getGroups ())
         {
           if (!group->getMaterial ().isEmpty ())
             {
-              const Material& material = _model->getMaterial (group->getMaterial ());
+              const Material& material = _data->getMaterial (group->getMaterial ());
               if ( !material.getTexture ().isEmpty () &&
                    !_textures.contains (group->getMaterial ()) )
                 {
@@ -234,7 +234,7 @@ namespace HIP {
       //
       VertexCollector vertices;
 
-      foreach (const GroupPtr& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _data->getGroups ())
         {
           foreach (const Face& face, group->getFaces ())
             {
@@ -308,7 +308,7 @@ namespace HIP {
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
 
       int point_offset = 0;
-      foreach (const GroupPtr& group, _model->getGroups ())
+      foreach (const GroupPtr& group, _data->getGroups ())
         {
           QOpenGLTexture* texture = 0;
           if (!group->getMaterial ().isEmpty ())
@@ -317,7 +317,7 @@ namespace HIP {
               if (pos != _textures.end ())
                 texture = pos.value ();
 
-              const Material& material = _model->getMaterial (group->getMaterial ());
+              const Material& material = _data->getMaterial (group->getMaterial ());
 
               _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
               _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
@@ -425,10 +425,10 @@ namespace HIP {
         {
           QVector2D texture_point (0, 0);
           if (point.getTextureIndex () >= 0)
-            texture_point = _model->getTextures ()[point.getTextureIndex ()];
+            texture_point = _data->getTextures ()[point.getTextureIndex ()];
 
-          collector->_vertex_data.push_back (VertexData (_model->getVertices ()[point.getVertexIndex ()],
-                                                         _model->getNormals ()[point.getNormalIndex ()],
+          collector->_vertex_data.push_back (VertexData (_data->getVertices ()[point.getVertexIndex ()],
+                                                         _data->getNormals ()[point.getNormalIndex ()],
                                                          QVector3D (1.0, 1.0, 1.0),
                                                          texture_point));
           collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
