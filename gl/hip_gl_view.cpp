@@ -366,11 +366,12 @@ namespace HIP {
                     _shader.setUniformValue ("has_texture", false);
 
                   glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
-                  point_offset += group->getFaces ().size () * 3;
 
                   if (texture != 0)
                     texture->release ();
                 }
+
+              point_offset += group->getFaces ().size () * 3;
             }
 
           _shader.disableAttributeArray (_texture_attr);
@@ -499,6 +500,7 @@ namespace HIP {
         _action_group (0)
     {
       _ui->setupUi (this);
+
       _widget = Tools::addToParent (new Widget (database, _ui->_view_w));
       _widget->setData (database->getModel ());
 
