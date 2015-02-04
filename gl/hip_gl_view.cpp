@@ -11,6 +11,7 @@
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 
+#include <QActionGroup>
 #include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QMouseEvent>
@@ -20,6 +21,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QSurfaceFormat>
+#include <QToolBar>
 #include <QWheelEvent>
 
 namespace HIP {
@@ -81,7 +83,7 @@ namespace HIP {
     class Widget : public QOpenGLWidget, protected QOpenGLFunctions
     {
     public:
-      Widget (QWidget* parent);
+      Widget (const Database::Database* database, QWidget* parent);
       virtual ~Widget ();
 
       void setData (const Data* data);
@@ -104,6 +106,7 @@ namespace HIP {
       float checkBounds (float lower, float value, float upper) const;
 
     private:
+      const Database::Database* _database;
       const Data* _data;
 
       QOpenGLShaderProgram _shader;
@@ -131,8 +134,9 @@ namespace HIP {
 
 
     /*! Constructor */
-    Widget::Widget (QWidget* parent)
+    Widget::Widget (const Database::Database* database, QWidget* parent)
       : QOpenGLWidget (parent),
+        _database            (database),
         _data                (0),
         _shader              (),
         _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
@@ -288,6 +292,14 @@ namespace HIP {
 
       if (_data != 0)
         {
+          QSet<QString> active_groups;
+          if (!_database->getCurrentView ().isEmpty ())
+            {
+              foreach (const Database::View& view, _database->getViews ())
+                if (view.getName () == _database->getCurrentView ())
+                  active_groups = view.getGroups ().toSet ();
+            }
+
           QMatrix4x4 projection;
           projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
@@ -327,35 +339,38 @@ namespace HIP {
           int point_offset = 0;
           foreach (const GroupPtr& group, _data->getGroups ())
             {
-              QOpenGLTexture* texture = 0;
-              if (!group->getMaterial ().isEmpty ())
+              if (active_groups.isEmpty () || active_groups.contains (group->getName ()))
                 {
-                  TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
-                  if (pos != _textures.end ())
-                    texture = pos.value ();
+                  QOpenGLTexture* texture = 0;
+                  if (!group->getMaterial ().isEmpty ())
+                    {
+                      TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
+                      if (pos != _textures.end ())
+                        texture = pos.value ();
 
-                  const Material& material = _data->getMaterial (group->getMaterial ());
+                      const Material& material = _data->getMaterial (group->getMaterial ());
 
-                  _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
-                  _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
-                  _shader.setUniformValue ("in_specular_color", material.getSpecular ());
-                  _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
+                      _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
+                      _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
+                      _shader.setUniformValue ("in_specular_color", material.getSpecular ());
+                      _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
+                    }
+
+                  if (texture != 0)
+                    {
+                      texture->bind ();
+                      _shader.setUniformValue ("in_texture", 0);
+                      _shader.setUniformValue ("has_texture", true);
+                    }
+                  else
+                    _shader.setUniformValue ("has_texture", false);
+
+                  glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
+                  point_offset += group->getFaces ().size () * 3;
+
+                  if (texture != 0)
+                    texture->release ();
                 }
-
-              if (texture != 0)
-                {
-                  texture->bind ();
-                  _shader.setUniformValue ("in_texture", 0);
-                  _shader.setUniformValue ("has_texture", true);
-                }
-              else
-                _shader.setUniformValue ("has_texture", false);
-
-              glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
-              point_offset += group->getFaces ().size () * 3;
-
-              if (texture != 0)
-                texture->release ();
             }
 
           _shader.disableAttributeArray (_texture_attr);
@@ -475,16 +490,21 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Constructor */
-    View::View (const Database::Database* database, QWidget* parent)
+    View::View (Database::Database* database, QWidget* parent)
       : QWidget (parent),
-        _ui     (new Ui::HIP_GL_View),
-        _widget (0)
+        _ui           (new Ui::HIP_GL_View),
+        _database     (database),
+        _widget       (0),
+        _toolbar      (0),
+        _action_group (0)
     {
       _ui->setupUi (this);
-      _widget = Tools::addToParent (new Widget (_ui->_view_w));
+      _widget = Tools::addToParent (new Widget (database, _ui->_view_w));
       _widget->setData (database->getModel ());
 
       connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
+
+      updateToolBar ();
     }
 
     /*! Destructor */
@@ -501,9 +521,70 @@ namespace HIP {
       if (reason == Database::Database::Reason::DATA)
         {
           Q_ASSERT (!data.isValid ());
+          updateToolBar ();
         }
     }
 
+    /*! Update view switching buttons */
+    void View::updateToolBar ()
+    {
+      delete _action_group;
+      delete _toolbar;
+      _action_view_map.clear ();
+
+      _toolbar = Tools::addToParent (new QToolBar (_ui->_toolbar_frame_w));
+      _toolbar->setOrientation (Qt::Vertical);
+      _toolbar->setIconSize (QSize (16, 16));
+      _toolbar->setToolButtonStyle (Qt::ToolButtonIconOnly);
+
+      QAction* reset_action = new QAction (QIcon (), QString ("..."), _toolbar);
+      reset_action->setToolTip (tr ("Reset view"));
+      _toolbar->addAction (reset_action);
+
+      connect (reset_action, SIGNAL (triggered (bool)), SLOT (onResetView ()));
+
+      _toolbar->addSeparator ();
+
+      _action_group = new QActionGroup (_toolbar);
+      _action_group->setExclusive (true);
+
+      foreach (const Database::View& view, _database->getViews ())
+        {
+          QAction* action = new QAction (QIcon (), QString ("..."), this);
+          action->setToolTip (view.getName ());
+
+          _toolbar->addAction (action);
+          _action_group->addAction (action);
+
+          if (_action_view_map.isEmpty ())
+            action->setEnabled (true);
+
+          _action_view_map.insert (action, view.getName ());
+
+          connect (action, SIGNAL (triggered (bool)), SLOT (onSelectView ()));
+        }
+
+      QWidget* spacer = new QWidget;
+      spacer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
+      _toolbar->addWidget (spacer);
+    }
+
+    /*! Reset view */
+    void View::onResetView ()
+    {
+    }
+
+    /*! Select view */
+    void View::onSelectView ()
+    {
+      QAction* action = qobject_cast<QAction*> (sender ());
+      Q_ASSERT (action != 0);
+
+      ActionViewMap::const_iterator pos = _action_view_map.find (action);
+      Q_ASSERT (pos != _action_view_map.end ());
+
+      _database->setCurrentView (pos.value ());
+    }
 
   }
 }

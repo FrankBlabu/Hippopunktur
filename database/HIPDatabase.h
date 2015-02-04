@@ -32,12 +32,6 @@ namespace HIP {
     {
       Q_OBJECT
 
-      Q_PROPERTY (QString id READ getId WRITE setId)
-      Q_PROPERTY (QString description READ getDescription WRITE setDescription ())
-      Q_PROPERTY (QList<QString> tags READ getTags WRITE setTags)
-      Q_PROPERTY (QColor color READ getColor WRITE setColor)
-      Q_PROPERTY (bool selected READ getSelected WRITE setSelected)
-
     public:
       Point ();
       Point (const Point& toCopy);
@@ -76,6 +70,26 @@ namespace HIP {
       bool _selected;
     };
 
+    /*!
+     * Single view of the object consisting of multiple object groups
+     */
+    class View
+    {
+    public:
+      View ();
+      ~View ();
+
+      const QString& getName () const          { return _name; }
+      const QList<QString>& getGroups () const { return _groups; }
+
+      void setName (const QString& name)   { _name = name; }
+      void addGroup (const QString& group) { _groups.push_back (group); }
+
+    private:
+      QString _name;
+      QList<QString> _groups;
+    };
+
     /*
      * Database keeping all relevant data structures
      */
@@ -87,7 +101,7 @@ namespace HIP {
       Database (const Database& toCopy) { Q_UNUSED (toCopy); }
 
     public:
-      struct Reason { enum Type_t { POINT, SELECTION, DATA, FILTER }; };
+      struct Reason { enum Type_t { POINT, SELECTION, DATA, FILTER, VIEW }; };
       typedef Reason::Type_t Reason_t;
 
     public:
@@ -98,6 +112,7 @@ namespace HIP {
 
       const QList<Point>& getPoints () const { return _points; }
       const QList<QString>& getTags () const { return _tags; }
+      const QList<View>& getViews () const   { return _views; }
       const GL::Data* getModel () const      { return _model; }
 
       const Point& getPoint (const QString& id) const;
@@ -110,8 +125,17 @@ namespace HIP {
       void deselect (const QString& id);
       void clearSelection ();
 
+      //
+      // Filter
+      //
       const QString& getFilter () const;
       void setFilter (const QString& filter);
+
+      //
+      // Visible groups
+      //
+      const QString& getCurrentView () const;
+      void setCurrentView (const QString& view);
 
       QString toXML () const;
 
@@ -133,6 +157,7 @@ namespace HIP {
 
       QList<Point> _points;
       QList<QString> _tags;
+      QList<View> _views;
 
       GL::Data* _model;
 
@@ -146,6 +171,7 @@ namespace HIP {
       // Database state
       //
       QString _filter;
+      QString _current_view;
     };
   }
 

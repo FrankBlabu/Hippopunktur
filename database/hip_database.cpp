@@ -49,6 +49,9 @@ namespace HIP {
       case Database::Database::Reason::FILTER:
         stream << "FILTER";
         break;
+      case Database::Database::Reason::VIEW:
+        stream << "VIEW";
+        break;
       }
 
     return stream;
@@ -83,6 +86,9 @@ namespace HIP {
         static const char* const POSITION    = "position";
         static const char* const DESCRIPTION = "description";
         static const char* const COLOR       = "color";
+        static const char* const VIEWS       = "views";
+        static const char* const VIEW        = "view";
+        static const char* const GROUP       = "group";
       };
 
       //
@@ -237,6 +243,21 @@ namespace HIP {
     }
 
     //#**********************************************************************
+    // CLASS HIP::Database::View
+    //#**********************************************************************
+
+    /*! Constructor */
+    View::View ()
+    {
+    }
+
+    /*! Destructor */
+    View::~View ()
+    {
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::Database::Database
     //#**********************************************************************
 
@@ -244,8 +265,11 @@ namespace HIP {
     Database::Database ()
       : _points        (),
         _tags          (),
+        _views         (),
         _model         (0),
-        _point_indices ()
+        _point_indices (),
+        _filter        (),
+        _current_view  ()
     {
     }
 
@@ -289,6 +313,45 @@ namespace HIP {
                     throwDOMException (file_e, tr ("Character data expected for file name"));
 
                   database_model_name = file_e.firstChild ().toCharacterData ().data ();
+                }
+
+              //
+              // Load view information
+              //
+              else if (top_e.tagName () == Tags::VIEWS)
+                {
+                  for ( QDomNode view_n = top_e.firstChild (); !view_n.isNull ();
+                        view_n = view_n.nextSibling () )
+                    {
+                      //
+                      // Element: View
+                      //
+                      QDomElement view_e = view_n.toElement ();
+                      if (view_e.tagName () != Tags::VIEW)
+                        throwDOMException (view_e, tr ("View element expected, but got %1").arg (view_e.tagName ()));
+                      if (!view_e.hasAttribute (Attributes::NAME))
+                        throwDOMException (view_e, tr ("View entry does not have an id"));
+
+                      View view;
+                      view.setName (view_e.attribute (Attributes::NAME));
+
+                      for ( QDomNode group_n = view_e.firstChild (); !group_n.isNull ();
+                            group_n = group_n.nextSibling () )
+                        {
+                          //
+                          // Element: View
+                          //
+                          QDomElement group_e = group_n.toElement ();
+                          if (group_e.tagName () != Tags::GROUP)
+                            throwDOMException (group_e, tr ("Group element expected, but got %1").arg (group_e.tagName ()));
+                          if (!group_e.firstChild ().isCharacterData ())
+                            throwDOMException (group_e, tr ("Character data expected for group name"));
+
+                          view.addGroup (group_e.firstChild ().toCharacterData ().data ());
+                        }
+
+                      _views.push_back (view);
+                    }
                 }
 
               //
@@ -365,7 +428,6 @@ namespace HIP {
                       if (!description_e.firstChild ().isCharacterData ())
                         throwDOMException (description_e, tr ("Character data expected for point description"));
 
-
                       point.setDescription (description_e.firstChild ().toCharacterData ().data ());
 
                       //
@@ -406,6 +468,8 @@ namespace HIP {
       _name = database_name;
       _points = database_points;
       _tags = database_tags;
+      _filter = QString ();
+      _current_view = QString ();
 
       computeIndices ();
       computeTags ();
@@ -489,6 +553,19 @@ namespace HIP {
     {
       _filter = filter;
       emit databaseChanged (Reason::FILTER, qVariantFromValue (_filter));
+    }
+
+    /*! Get currently active view */
+    const QString& Database::getCurrentView () const
+    {
+      return _current_view;
+    }
+
+    /*! Set currently active view */
+    void Database::setCurrentView (const QString& view)
+    {
+      _current_view = view;
+      emit databaseChanged (Reason::VIEW, qVariantFromValue (_current_view));
     }
 
     /*! Clear selection */
