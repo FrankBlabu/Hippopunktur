@@ -9,7 +9,9 @@
 #include "core/HIPTools.h"
 
 #include <QDebug>
+#include <QOpenGLContext>
 #include <QTextStream>
+
 
 namespace HIP {
 
@@ -403,6 +405,26 @@ namespace HIP {
                 }
             }
         }
+
+      //
+      // Statistics
+      //
+      if (_vertices.size () >= std::numeric_limits<GLushort>::max ())
+        qWarning ("Number of vertices > sizeof (GLushort)");
+
+#if 0
+      qDebug () << "* Mesh: " << _name;
+
+      foreach (const GroupPtr& group, _groups)
+        {
+          qDebug () << "  Group " << group->getName ();
+          qDebug () << "    " << group->getFaces ().size () << " faces";
+        }
+
+      qDebug () << "  " << _vertices.size () << " vertices";
+      qDebug () << "  limit (GLushort)=" << std::numeric_limits<GLushort>::max ();
+
+#endif
 
       //
       // Load material

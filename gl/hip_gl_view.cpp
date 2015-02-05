@@ -24,6 +24,7 @@
 #include <QToolBar>
 #include <QWheelEvent>
 
+
 namespace HIP {
   namespace GL {
 
@@ -64,7 +65,7 @@ namespace HIP {
       struct VertexCollector
       {
         QVector<VertexData> _vertex_data;
-        QVector<GLushort> _index_data;
+        QVector<GLuint> _index_data;
 
         typedef QMap<Point, int> PointIndexMap;
         PointIndexMap _point_indices;
@@ -271,7 +272,7 @@ namespace HIP {
 
       _index_buffer.create ();
       _index_buffer.bind ();
-      _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLushort));
+      _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLuint));
     }
 
     /*
@@ -365,7 +366,7 @@ namespace HIP {
                   else
                     _shader.setUniformValue ("has_texture", false);
 
-                  glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_SHORT, (void*)(point_offset * sizeof (GLushort)));
+                  glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_INT, (void*)(point_offset * sizeof (GLuint)));
 
                   if (texture != 0)
                     texture->release ();
