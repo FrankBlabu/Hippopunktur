@@ -102,7 +102,6 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
-      void addRotation (const QVector3D& delta);
       void addVertex (VertexCollector* collector, const Point& point) const;
       float checkBounds (float lower, float value, float upper) const;
 
@@ -127,8 +126,7 @@ namespace HIP {
       int _texture_attr;
 
       QMatrix4x4 _model_matrix;
-      QVector3D _translation;
-      QVector3D _rotation;
+      QMatrix4x4 _view_matrix;
 
       QPointF _last_pos;
     };
@@ -152,8 +150,7 @@ namespace HIP {
         _light_position_attr (-1),
         _texture_attr        (-1),
         _model_matrix        (),
-        _translation         (),
-        _rotation            (),
+        _view_matrix         (),
         _last_pos            (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
@@ -190,11 +187,10 @@ namespace HIP {
       _data = data;
 
       Data::Cube cube = _data->getBoundingBox ();
-      _model_matrix.setToIdentity ();
-      _model_matrix.translate (-(cube.first + cube.second) / 2);
+      _view_matrix.setToIdentity ();
+      _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
-      _translation = QVector3D (0, 0, 2);
-      _rotation = QVector3D (0, 0, 0);
+      _model_matrix.setToIdentity ();
     }
 
     /*
@@ -304,18 +300,11 @@ namespace HIP {
           QMatrix4x4 projection;
           projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
-          QMatrix4x4 camera;
-          camera.rotate (_rotation.y (), QVector3D (0.0, 1.0, 0.0));
-          camera.rotate (_rotation.x (), QVector3D (1.0, 0.0, 0.0));
-
-          QMatrix4x4 view_matrix;
-          view_matrix.lookAt (camera * _translation, QVector3D (0, 0, 0), camera * QVector3D (0.0, 1.0, 0.0));
-
           _shader.bind ();
-          _shader.setUniformValue (_mvp_matrix_attr, projection * _model_matrix * view_matrix);
-          _shader.setUniformValue (_mv_matrix_attr, _model_matrix * view_matrix);
-          _shader.setUniformValue (_n_matrix_attr, view_matrix.normalMatrix ());
-          _shader.setUniformValue (_light_position_attr, _translation);
+          _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
+          _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
+          _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
+          _shader.setUniformValue (_light_position_attr, _view_matrix * QVector3D (0, 0, 1));
 
           int offset = 0;
 
@@ -387,17 +376,17 @@ namespace HIP {
     void Widget::keyPressEvent (QKeyEvent* event)
     {
       if (event->key () == Qt::Key_Plus)
-        _translation.setZ (_translation.z () * 0.9);
+        _view_matrix.translate (0, 0, -0.1f);
       else if (event->key () == Qt::Key_Minus)
-        _translation.setZ (_translation.z () * 1.1);
+        _view_matrix.translate (0, 0, +0.1f);
       else if (event->key () == Qt::Key_Up)
-        addRotation (QVector3D (+5, 0, 0));
+        _model_matrix.rotate (+5, _model_matrix.inverted () * QVector3D (1, 0, 0));
       else if (event->key () == Qt::Key_Down)
-        addRotation (QVector3D (-5, 0, 0));
+        _model_matrix.rotate (-5, _model_matrix.inverted () * QVector3D (1, 0, 0));
       else if (event->key () == Qt::Key_Left)
-        addRotation (QVector3D (0, +5, 0));
+        _model_matrix.rotate (+5, _model_matrix.inverted () * QVector3D (0, 1, 0));
       else if (event->key () == Qt::Key_Right)
-        addRotation (QVector3D (0, -5, 0));
+        _model_matrix.rotate (-5, _model_matrix.inverted () * QVector3D (0, 1, 0));
 
       update ();
     }
@@ -413,11 +402,23 @@ namespace HIP {
       _last_pos = event->pos ();
 
       if (event->buttons ().testFlag (Qt::LeftButton))
-        addRotation (QVector3D (-delta.y (), -delta.x (), 0.0));
+        {
+          if (event->modifiers ().testFlag (Qt::ControlModifier))
+            {
+              _model_matrix.rotate (-delta.x (), _model_matrix.inverted () * QVector3D (0, 0, 1));
+            }
+          else
+            {
+              _model_matrix.rotate (delta.y (), _model_matrix.inverted () * QVector3D (1, 0, 0));
+              _model_matrix.rotate (delta.x (), _model_matrix.inverted () * QVector3D (0, 1, 0));
+            }
+        }
       else if (event->buttons ().testFlag (Qt::MidButton))
         {
-          _translation.setX (_translation.x () - delta.x () / (width () / _translation.length ()));
-          _translation.setY (_translation.y () + delta.y () / (height () / _translation.length ()));
+          QVector3D translation (static_cast<float> (delta.x ()) / width (),
+                                 static_cast<float> (-delta.y ()) / height (),
+                                 0.0f);
+          _model_matrix.translate (translation);
         }
 
       update ();
@@ -430,24 +431,8 @@ namespace HIP {
 
     void Widget::wheelEvent (QWheelEvent* event)
     {
-      if (event->delta () < 0)
-        _translation.setZ (_translation.z () * 1.1);
-      else if (event->delta () > 0)
-        _translation.setZ (_translation.z () * 0.9);
-
+      _view_matrix.translate (0, 0, (event->delta () / 120.0) * 0.1);
       update ();
-    }
-
-    /*!
-     * Add rotation vector and checks bounds
-     */
-    void Widget::addRotation (const QVector3D& delta)
-    {
-      _rotation += delta;
-
-      _rotation.setX (checkBounds (0, _rotation.x (), 360));
-      _rotation.setY (checkBounds (0, _rotation.y (), 360));
-      _rotation.setZ (checkBounds (0, _rotation.z (), 360));
     }
 
     /*
