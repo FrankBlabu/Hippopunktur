@@ -139,8 +139,14 @@ namespace HIP {
 
       QString toXML () const;
 
+      //
+      // Signals
+      //
+      void emitViewChanged (const QVariant& data);
+
     signals:
       void databaseChanged (Reason_t reason, const QVariant& data);
+      void viewChanged (const QVariant& data);
 
     private:
       void computeTags ();

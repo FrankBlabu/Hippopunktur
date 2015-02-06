@@ -20,6 +20,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QStackedLayout>
 #include <QSurfaceFormat>
 #include <QToolBar>
 #include <QWheelEvent>
@@ -84,10 +85,11 @@ namespace HIP {
     class Widget : public QOpenGLWidget, protected QOpenGLFunctions
     {
     public:
-      Widget (const Database::Database* database, QWidget* parent);
+      Widget (Database::Database* database, QWidget* parent);
       virtual ~Widget ();
 
       void setData (const Data* data);
+      void resetView ();
 
       virtual void initializeGL ();
       virtual void resizeGL (int width, int height);
@@ -106,7 +108,7 @@ namespace HIP {
       float checkBounds (float lower, float value, float upper) const;
 
     private:
-      const Database::Database* _database;
+      Database::Database* _database;
       const Data* _data;
 
       QOpenGLShaderProgram _shader;
@@ -133,7 +135,7 @@ namespace HIP {
 
 
     /*! Constructor */
-    Widget::Widget (const Database::Database* database, QWidget* parent)
+    Widget::Widget (Database::Database* database, QWidget* parent)
       : QOpenGLWidget (parent),
         _database            (database),
         _data                (0),
@@ -154,6 +156,7 @@ namespace HIP {
         _last_pos            (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
+      setContextMenuPolicy (Qt::NoContextMenu);
 
       QSurfaceFormat format;
       format.setDepthBufferSize (24);
@@ -191,6 +194,19 @@ namespace HIP {
       _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
       _model_matrix.setToIdentity ();
+    }
+
+    /*! Reset view */
+    void Widget::resetView ()
+    {
+      if (_data != 0)
+        {
+          Data::Cube cube = _data->getBoundingBox ();
+          _view_matrix.setToIdentity ();
+          _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
+
+          _model_matrix.setToIdentity ();
+        }
     }
 
     /*
@@ -388,6 +404,8 @@ namespace HIP {
       else if (event->key () == Qt::Key_Right)
         _model_matrix.rotate (-5, _model_matrix.inverted () * QVector3D (0, 1, 0));
 
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+
       update ();
     }
 
@@ -421,6 +439,8 @@ namespace HIP {
           _model_matrix.translate (translation);
         }
 
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+
       update ();
     }
 
@@ -432,6 +452,9 @@ namespace HIP {
     void Widget::wheelEvent (QWheelEvent* event)
     {
       _view_matrix.translate (0, 0, (event->delta () / 120.0) * 0.1);
+
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+
       update ();
     }
 
@@ -481,13 +504,18 @@ namespace HIP {
       : QWidget (parent),
         _ui           (new Ui::HIP_GL_View),
         _database     (database),
-        _widget       (0),
+        _widget       (new Widget (database, this)),
+        _overlays     (),
         _toolbar      (0),
         _action_group (0)
     {
       _ui->setupUi (this);
 
-      _widget = Tools::addToParent (new Widget (database, _ui->_view_w));
+      QStackedLayout* layout = new QStackedLayout (_ui->_view_w);
+      layout->setStackingMode (QStackedLayout::StackAll);
+      layout->addWidget (_widget);
+      _ui->_view_w->setLayout (layout);
+
       _widget->setData (database->getModel ());
 
       connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
@@ -498,7 +526,22 @@ namespace HIP {
     /*! Destructor */
     View::~View ()
     {
+      QStackedLayout* l = qobject_cast<QStackedLayout*> (_ui->_view_w->layout ());
+      Q_ASSERT (l != 0);
+
       delete _ui;
+    }
+
+    /*! Add overlay to the view */
+    void View::addOverlay (const OverlayPtr& overlay)
+    {
+      _overlays.push_back (overlay);
+
+      QStackedLayout* l = qobject_cast<QStackedLayout*> (_ui->_view_w->layout ());
+      Q_ASSERT (l != 0);
+
+      l->insertWidget (0, overlay.data ());
+      l->setCurrentIndex (0);
     }
 
     /*! React on database changes */
@@ -560,6 +603,7 @@ namespace HIP {
     /*! Reset view */
     void View::onResetView ()
     {
+      _widget->resetView ();
     }
 
     /*! Select view */
@@ -572,6 +616,7 @@ namespace HIP {
       Q_ASSERT (pos != _action_view_map.end ());
 
       _database->setCurrentView (pos.value ());
+      update ();
     }
 
   }

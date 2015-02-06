@@ -20,9 +20,9 @@
 namespace {
 
   //static const char* const DATABASE_FILE = ":/assets/models/horse/horse.xml";
-  static const char* const DATABASE_FILE = "assets/models/horse/horse.xml";
+  //static const char* const DATABASE_FILE = "assets/models/horse/horse.xml";
   //static const char* const DATABASE_FILE = "assets/models/elephant/elephant.xml";
-  //static const char* const DATABASE_FILE = "assets/models/mandible/mandible.xml";
+  static const char* const DATABASE_FILE = "assets/models/mandible/mandible.xml";
   //static const char* const DATABASE_FILE = "assets/models/max/max.xml";
   //static const char* const DATABASE_FILE = "assets/models/skeleton/skeleton.xml";
   //static const char* const DATABASE_FILE = "assets/models/goose/goose.xml";

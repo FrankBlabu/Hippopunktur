@@ -583,6 +583,12 @@ namespace HIP {
         }
     }
 
+    /*! Emit view changed signal */
+    void Database::emitViewChanged (const QVariant& data)
+    {
+      emit viewChanged (data);
+    }
+
     /*! Compute list of all existing tags */
     void Database::computeTags ()
     {
