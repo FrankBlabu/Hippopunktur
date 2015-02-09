@@ -106,6 +106,7 @@ namespace HIP {
     private:
       void addVertex (VertexCollector* collector, const Point& point) const;
       float checkBounds (float lower, float value, float upper) const;
+      void setLightParameter (uint parameter, const QVector3D& value);
 
     private:
       Database::Database* _database;
@@ -356,10 +357,11 @@ namespace HIP {
 
                       const Material& material = _data->getMaterial (group->getMaterial ());
 
-                      _shader.setUniformValue ("in_ambient_color", material.getAmbient ());
-                      _shader.setUniformValue ("in_diffuse_color", material.getDiffuse ());
-                      _shader.setUniformValue ("in_specular_color", material.getSpecular ());
-                      _shader.setUniformValue ("in_specular_exponent", material.getSpecularExponent ());
+                      setLightParameter (GL_AMBIENT, material.getAmbient ());
+                      setLightParameter (GL_DIFFUSE, material.getDiffuse ());
+                      setLightParameter (GL_SPECULAR, material.getSpecular ());
+                      glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
+                      glEnable (GL_LIGHT0);
                     }
 
                   if (texture != 0)
@@ -492,6 +494,15 @@ namespace HIP {
         value -= (upper - lower);
 
       return value;
+    }
+
+    /*!
+     * Set single vector based light parameter
+     */
+    void Widget::setLightParameter (uint parameter, const QVector3D& value)
+    {
+      float array[] = {value.x (), value.y (), value.z (), 1.0f};
+      glLightfv (GL_LIGHT0, parameter, array);
     }
 
 
