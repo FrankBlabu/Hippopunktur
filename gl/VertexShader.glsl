@@ -6,9 +6,6 @@ attribute mediump vec2 in_texture;
 uniform mediump mat4 in_mvp_matrix;
 uniform mediump mat4 in_mv_matrix;
 uniform mediump mat3 in_n_matrix;
-uniform mediump vec3 in_light_position;
-
-uniform mediump float in_specular_exponent;
 
 varying mediump vec4 fragment_color;
 varying mediump vec2 fragment_texture;
@@ -26,7 +23,7 @@ void main (void)
   vec4 eye_vertex = in_mv_matrix * in_vertex;
   eye_vertex /= eye_vertex.w;
   fragment_normal = in_n_matrix * in_normal;
-  fragment_light_direction = in_light_position - eye_vertex.xyz;
+  fragment_light_direction = gl_LightSource[0].position.xyz - eye_vertex.xyz;
   fragment_viewer_direction = -eye_vertex.xyz;
   fragment_texture = in_texture;
 

@@ -125,7 +125,6 @@ namespace HIP {
       int _mvp_matrix_attr;
       int _mv_matrix_attr;
       int _n_matrix_attr;
-      int _light_position_attr;
       int _texture_attr;
 
       QMatrix4x4 _model_matrix;
@@ -150,7 +149,6 @@ namespace HIP {
         _mvp_matrix_attr     (-1),
         _mv_matrix_attr      (-1),
         _n_matrix_attr       (-1),
-        _light_position_attr (-1),
         _texture_attr        (-1),
         _model_matrix        (),
         _view_matrix         (),
@@ -241,7 +239,6 @@ namespace HIP {
       _mvp_matrix_attr = _shader.uniformLocation ("in_mvp_matrix");
       _mv_matrix_attr = _shader.uniformLocation ("in_mv_matrix");
       _n_matrix_attr = _shader.uniformLocation ("in_n_matrix");
-      _light_position_attr = _shader.uniformLocation ("in_light_position");
       _texture_attr = _shader.attributeLocation ("in_texture");
 
       foreach (const GroupPtr& group, _data->getGroups ())
@@ -321,7 +318,6 @@ namespace HIP {
           _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
           _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
           _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
-          _shader.setUniformValue (_light_position_attr, _view_matrix * QVector3D (0, 0, 1));
 
           int offset = 0;
 
@@ -360,6 +356,7 @@ namespace HIP {
                       setLightParameter (GL_AMBIENT, material.getAmbient ());
                       setLightParameter (GL_DIFFUSE, material.getDiffuse ());
                       setLightParameter (GL_SPECULAR, material.getSpecular ());
+                      setLightParameter (GL_POSITION, _view_matrix * QVector3D (0, 0, 1));
                       glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
                       glEnable (GL_LIGHT0);
                     }
