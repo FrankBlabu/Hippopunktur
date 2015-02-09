@@ -6,6 +6,7 @@
 
 #include "HIPGLView.h"
 #include "HIPGLData.h"
+#include "HIPGLSphere.h"
 #include "ui_hip_gl_view.h"
 
 #include "core/HIPException.h"
@@ -119,6 +120,8 @@ namespace HIP {
       typedef QMap<QString, QOpenGLTexture*> TextureMap;
       TextureMap _textures;
 
+      QSharedPointer<Sphere> _sphere;
+
       int _vertex_attr;
       int _normal_attr;
       int _color_attr;
@@ -143,6 +146,7 @@ namespace HIP {
         _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
         _index_buffer        (QOpenGLBuffer::IndexBuffer),
         _textures            (),
+        _sphere              (),
         _vertex_attr         (-1),
         _normal_attr         (-1),
         _color_attr          (-1),
@@ -174,6 +178,8 @@ namespace HIP {
 
       _index_buffer.destroy ();
       _vertex_buffer.destroy ();
+
+      _sphere.reset ();
 
       doneCurrent ();
     }
@@ -217,6 +223,8 @@ namespace HIP {
 
       glClearColor (.2f, .2f, .2f, 1.0f);
       glEnable (GL_DEPTH_TEST);
+
+      _sphere = QSharedPointer<Sphere> (new Sphere (1.0));
 
       //
       // Init shaders

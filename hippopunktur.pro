@@ -27,7 +27,8 @@ SOURCES += \
     gl/hip_gl_data_model.cpp \
     core/hip_xml.cpp \
     gl/hip_gl_overlay.cpp \
-    gl/hip_gl_debug_overlay.cpp
+    gl/hip_gl_debug_overlay.cpp \
+    gl/hip_gl_sphere.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -54,7 +55,8 @@ HEADERS += \
     gl/HIPGLDataModel.h \
     core/HIPXml.h \
     gl/HIPGLOverlay.h \
-    gl/HIPGLDebugOverlay.h
+    gl/HIPGLDebugOverlay.h \
+    gl/HIPGLSphere.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
@@ -67,5 +69,7 @@ DISTFILES += \
     assets/* \
     gl/View.qml \
     gl/FragmentShader.glsl \
-    gl/VertexShader.glsl
+    gl/VertexShader.glsl \
+    gl/SphereVertexShader.glsl \
+    gl/SphereFragmentShader.glsl
 
