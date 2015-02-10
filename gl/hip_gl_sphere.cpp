@@ -43,7 +43,7 @@ namespace HIP {
     /*!
      * Sphere data keeping class
      */
-    class SphereImpl : public QOpenGLFunctions
+    class SphereImpl
     {
     public:
       SphereImpl (double radius);
@@ -62,17 +62,20 @@ namespace HIP {
       int _normal_attr;
       int _mvp_attr;
       int _color_attr;
+
+      int _number_of_triangles;
     };
 
     /*! Constructor */
     SphereImpl::SphereImpl (double radius)
-      : _shader        (),
-        _vertex_buffer (QOpenGLBuffer::VertexBuffer),
-        _index_buffer  (QOpenGLBuffer::IndexBuffer),
-        _vertex_attr   (-1),
-        _normal_attr   (-1),
-        _mvp_attr      (-1),
-        _color_attr    (-1)
+      : _shader              (),
+        _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
+        _index_buffer        (QOpenGLBuffer::IndexBuffer),
+        _vertex_attr         (-1),
+        _normal_attr         (-1),
+        _mvp_attr            (-1),
+        _color_attr          (-1),
+        _number_of_triangles (0)
     {
       Q_UNUSED (radius);
 
@@ -91,18 +94,19 @@ namespace HIP {
         throw Exception (QObject::tr ("Shader linking failed: %1")
                          .arg (_shader.log ()));
 
-      qDebug () << "*** LOADED ***";
-
       //
       // Init vertex data
       //
-      QVector<SphereData> data;
 
       _vertex_attr = _shader.attributeLocation ("in_vertex");
       _normal_attr = _shader.attributeLocation ("in_normal");
       _mvp_attr = _shader.attributeLocation ("in_mvp");
       _color_attr = _shader.attributeLocation ("in_color");
 
+      QVector<SphereData> data;
+      QVector<GLushort> indices;
+
+#if 0
       static const int lats = 16;
       static const int longs = 16;
 
@@ -116,33 +120,57 @@ namespace HIP {
           double z1 = sin (lat1);
           double zr1 = cos (lat1);
 
-#if 0
-          glBegin (GL_QUAD_STRIP);
-#endif
-
           for (int j=0; j <= longs; ++j)
             {
               double lng = 2 * M_PI * static_cast<double> (j - 1) / longs;
               double x = cos (lng);
               double y = sin (lng);
 
-              data.push_back (SphereData (QVector3D (x * zr0, y * zr0, z0),
+              data.push_back (SphereData (QVector3D (x * zr0, y * zr0, z0) * radius,
                                           QVector3D (x * zr0, y * zr0, z0)));
-              data.push_back (SphereData (QVector3D (x * zr1, y * zr1, z1),
+              data.push_back (SphereData (QVector3D (x * zr1, y * zr1, z1) * radius,
                                           QVector3D (x * zr1, y * zr1, z1)));
             }
         }
 
+      for (int i=2; i < data.size (); i += 2)
+        {
+          indices.push_back (i - 2);
+          indices.push_back (i - 1);
+          indices.push_back (i);
+
+          indices.push_back (i - 2);
+          indices.push_back (i);
+          indices.push_back (i + 1);
+
+          _number_of_triangles += 2;
+        }
+#else
+      data.push_back (SphereData (QVector3D (-0.5, +0.0, 0.0), QVector3D (0.0, 0.0, +1.0)));
+      data.push_back (SphereData (QVector3D (+0.5, +0.0, 0.0), QVector3D (0.0, 0.0, +1.0)));
+      data.push_back (SphereData (QVector3D (0.0, 0.5, 0.0), QVector3D (0.0, 0.0, +1.0)));
+
+      indices.push_back (0);
+      indices.push_back (1);
+      indices.push_back (2);
+
+      _number_of_triangles = 1;
+#endif
+
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
       _vertex_buffer.allocate (data.constData (), data.size () * sizeof (SphereData));
+
+      _index_buffer.create ();
+      _index_buffer.bind ();
+      _index_buffer.allocate (indices.constData (), indices.size () * sizeof (GLushort));
     }
 
 
     /*! Destructor */
     SphereImpl::~SphereImpl ()
     {
-      //_index_buffer.destroy ();
+      _index_buffer.destroy ();
       _vertex_buffer.destroy ();
     }
 
@@ -157,6 +185,8 @@ namespace HIP {
                            const QColor& color)
     {
       Q_UNUSED (position);
+
+      QOpenGLFunctions gl (QOpenGLContext::currentContext ());
 
       _shader.bind ();
       _shader.setUniformValue (_mvp_attr, mvp);
@@ -174,7 +204,7 @@ namespace HIP {
 
       offset += sizeof (QVector3D);
 
-      //glDrawElement ();
+      gl.glDrawElements (GL_TRIANGLES, _number_of_triangles * 3, GL_UNSIGNED_SHORT, 0);
 
       _shader.disableAttributeArray (_normal_attr);
       _shader.disableAttributeArray (_vertex_attr);

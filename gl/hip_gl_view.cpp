@@ -39,18 +39,16 @@ namespace HIP {
       struct VertexData
       {
         VertexData () {}
-        VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color, const QVector3D& texture);
+        VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& texture);
 
         QVector3D _vertex;
         QVector3D _normal;
-        QVector3D _color;
         QVector2D _texture;
       };
 
-      VertexData::VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& color, const QVector3D& texture)
+      VertexData::VertexData (const QVector3D& vertex, const QVector3D& normal, const QVector3D& texture)
         : _vertex  (vertex),
           _normal  (normal),
-          _color   (color),
           _texture (texture)
       {
       }
@@ -124,7 +122,6 @@ namespace HIP {
 
       int _vertex_attr;
       int _normal_attr;
-      int _color_attr;
       int _mvp_matrix_attr;
       int _mv_matrix_attr;
       int _n_matrix_attr;
@@ -149,7 +146,6 @@ namespace HIP {
         _sphere              (),
         _vertex_attr         (-1),
         _normal_attr         (-1),
-        _color_attr          (-1),
         _mvp_matrix_attr     (-1),
         _mv_matrix_attr      (-1),
         _n_matrix_attr       (-1),
@@ -243,7 +239,6 @@ namespace HIP {
 
       _vertex_attr = _shader.attributeLocation ("in_vertex");
       _normal_attr = _shader.attributeLocation ("in_normal");
-      _color_attr = _shader.attributeLocation ("in_color");
       _mvp_matrix_attr = _shader.uniformLocation ("in_mvp_matrix");
       _mv_matrix_attr = _shader.uniformLocation ("in_mv_matrix");
       _n_matrix_attr = _shader.uniformLocation ("in_n_matrix");
@@ -309,6 +304,9 @@ namespace HIP {
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      QMatrix4x4 projection;
+      projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
+
       if (_data != 0)
         {
           QSet<QString> active_groups;
@@ -318,9 +316,6 @@ namespace HIP {
                 if (view.getName () == _database->getCurrentView ())
                   active_groups = view.getGroups ().toSet ();
             }
-
-          QMatrix4x4 projection;
-          projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
           _shader.bind ();
           _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
@@ -336,11 +331,6 @@ namespace HIP {
 
           _shader.enableAttributeArray (_normal_attr);
           _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-          offset += sizeof (QVector3D);
-
-          _shader.enableAttributeArray (_color_attr);
-          _shader.setAttributeBuffer (_color_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
 
           offset += sizeof (QVector3D);
 
@@ -388,12 +378,13 @@ namespace HIP {
             }
 
           _shader.disableAttributeArray (_texture_attr);
-          _shader.disableAttributeArray (_color_attr);
           _shader.disableAttributeArray (_normal_attr);
           _shader.disableAttributeArray (_vertex_attr);
 
           _shader.release ();
         }
+
+      _sphere->draw (projection * _view_matrix * _model_matrix, QVector3D (0.0, 0.0, 0.0), Qt::red);
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
@@ -479,7 +470,6 @@ namespace HIP {
 
           collector->_vertex_data.push_back (VertexData (_data->getVertices ()[point.getVertexIndex ()],
                                                          _data->getNormals ()[point.getNormalIndex ()],
-                                                         QVector3D (1.0, 1.0, 1.0),
                                                          texture_point));
           collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
           collector->_index_data.push_back (collector->_vertex_data.size () - 1);

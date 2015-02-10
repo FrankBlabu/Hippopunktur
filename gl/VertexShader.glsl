@@ -1,6 +1,5 @@
 attribute highp vec4 in_vertex;
 attribute mediump vec3 in_normal;
-attribute mediump vec3 in_color;
 attribute mediump vec2 in_texture;
 
 uniform mediump mat4 in_mvp_matrix;
@@ -32,7 +31,6 @@ void main (void)
   fragment_diffuse_color = gl_LightSource[0].diffuse;
   fragment_specular_exponent = gl_LightSource[0].spotExponent;
 
-  //fragment_color = vec4 (in_color.x, in_color.y, in_color.z, 1.0);
   fragment_color = vec4 (1.0, 1.0, 1.0, 1.0);
   gl_Position = in_mvp_matrix * in_vertex;
 }

@@ -1,11 +1,9 @@
 attribute highp vec4 in_vertex;
-attribute mediump vec3 in_normal;
 
 uniform mediump mat4 in_mvp;
 uniform mediump vec3 in_color;
 
 varying mediump vec4 fragment_color;
-
 
 void main (void)
 {
