@@ -238,11 +238,22 @@ namespace HIP {
                          .arg (_shader.log ()));
 
       _vertex_attr = _shader.attributeLocation ("in_vertex");
+      Q_ASSERT (_vertex_attr >= 0);
+
       _normal_attr = _shader.attributeLocation ("in_normal");
+      Q_ASSERT (_normal_attr >= 0);
+
       _mvp_matrix_attr = _shader.uniformLocation ("in_mvp_matrix");
+      Q_ASSERT (_mvp_matrix_attr >= 0);
+
       _mv_matrix_attr = _shader.uniformLocation ("in_mv_matrix");
+      Q_ASSERT (_mv_matrix_attr >= 0);
+
       _n_matrix_attr = _shader.uniformLocation ("in_n_matrix");
+      Q_ASSERT (_n_matrix_attr >= 0);
+
       _texture_attr = _shader.attributeLocation ("in_texture");
+      Q_ASSERT (_texture_attr >= 0);
 
       foreach (const GroupPtr& group, _data->getGroups ())
         {
@@ -282,10 +293,12 @@ namespace HIP {
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
       _vertex_buffer.allocate (vertices._vertex_data.constData (), vertices._vertex_data.size () * sizeof (VertexData));
+      _vertex_buffer.release ();
 
       _index_buffer.create ();
       _index_buffer.bind ();
       _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLuint));
+      _index_buffer.release ();
     }
 
     /*
@@ -316,6 +329,9 @@ namespace HIP {
                 if (view.getName () == _database->getCurrentView ())
                   active_groups = view.getGroups ().toSet ();
             }
+
+          _vertex_buffer.bind ();
+          _index_buffer.bind ();
 
           _shader.bind ();
           _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
@@ -381,10 +397,12 @@ namespace HIP {
           _shader.disableAttributeArray (_normal_attr);
           _shader.disableAttributeArray (_vertex_attr);
 
+          _index_buffer.release ();
+          _vertex_buffer.release ();
           _shader.release ();
-        }
 
-      _sphere->draw (projection * _view_matrix * _model_matrix, QVector3D (0.0, 0.0, 0.0), Qt::red);
+          _sphere->draw (projection * _view_matrix * _model_matrix, QVector3D (0.0, 0.0, 0.0), Qt::red);
+        }
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
