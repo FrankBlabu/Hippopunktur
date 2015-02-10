@@ -220,7 +220,7 @@ namespace HIP {
       glClearColor (.2f, .2f, .2f, 1.0f);
       glEnable (GL_DEPTH_TEST);
 
-      _sphere = QSharedPointer<Sphere> (new Sphere (1.0));
+      _sphere = QSharedPointer<Sphere> (new Sphere (0.1));
 
       //
       // Init shaders

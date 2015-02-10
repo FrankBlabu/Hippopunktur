@@ -61,21 +61,19 @@ namespace HIP {
       int _mvp_attr;
       int _color_attr;
 
-      int _number_of_triangles;
+      int _number_of_points;
     };
 
     /*! Constructor */
     SphereImpl::SphereImpl (double radius)
-      : _shader              (),
-        _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
-        _index_buffer        (QOpenGLBuffer::IndexBuffer),
-        _vertex_attr         (-1),
-        _mvp_attr            (-1),
-        _color_attr          (-1),
-        _number_of_triangles (0)
+      : _shader           (),
+        _vertex_buffer    (QOpenGLBuffer::VertexBuffer),
+        _index_buffer     (QOpenGLBuffer::IndexBuffer),
+        _vertex_attr      (-1),
+        _mvp_attr         (-1),
+        _color_attr       (-1),
+        _number_of_points (0)
     {
-      Q_UNUSED (radius);
-
       //
       // Init shaders
       //
@@ -107,8 +105,8 @@ namespace HIP {
       QVector<SphereData> data;
       QVector<GLushort> indices;
 
-      static const int lats = 16;
-      static const int longs = 16;
+      static const int lats = 8;
+      static const int longs = 8;
 
       for (int i=0; i <= lats; ++i)
         {
@@ -131,18 +129,10 @@ namespace HIP {
             }
         }
 
-      for (int i=2; i < data.size (); i += 2)
-        {
-          indices.push_back (i - 2);
-          indices.push_back (i - 1);
-          indices.push_back (i);
+      for (int i=0; i < data.size (); ++i)
+        indices.push_back (i);
 
-          indices.push_back (i - 2);
-          indices.push_back (i);
-          indices.push_back (i + 1);
-
-          _number_of_triangles += 2;
-        }
+      _number_of_points = data.size ();
 
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
@@ -191,7 +181,7 @@ namespace HIP {
 
       offset += sizeof (QVector3D);
 
-      gl.glDrawElements (GL_TRIANGLES, _number_of_triangles * 3, GL_UNSIGNED_SHORT, 0);
+      gl.glDrawElements (GL_QUAD_STRIP, _number_of_points, GL_UNSIGNED_SHORT, 0);
 
       _shader.disableAttributeArray (_vertex_attr);
 
