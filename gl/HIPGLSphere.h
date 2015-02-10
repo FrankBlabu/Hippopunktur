@@ -25,10 +25,10 @@ namespace HIP {
     class Sphere
     {
     public:
-      Sphere (double radius);
+      Sphere ();
       ~Sphere ();
 
-      void draw (const QMatrix4x4& mvp, const QVector3D& position, const QColor& color);
+      void draw (const QMatrix4x4& mvp, const QVector3D& position, const QColor& color, double radius);
 
     private:
       QSharedPointer<SphereImpl> _data;

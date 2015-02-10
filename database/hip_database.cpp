@@ -8,11 +8,17 @@
 #include "core/HIPException.h"
 #include "gl/HIPGLData.h"
 
+#include <QtGlobal>
+
 #include <QColor>
 #include <QDebug>
 #include <QDomDocument>
 #include <QFile>
+#include <QTime>
 #include <QXmlStreamWriter>
+
+#undef HIP_USE_FAKE_POSITIONS
+#define HIP_USE_FAKE_POSITIONS
 
 namespace HIP {
 
@@ -473,6 +479,13 @@ namespace HIP {
 
       computeIndices ();
       computeTags ();
+
+#ifdef HIP_USE_FAKE_POSITIONS
+      qsrand (QTime::currentTime ().msec ());
+
+      for (int i=0; i < _points.size (); ++i)
+        _points[i].setPosition (_model->getVertices ()[qrand () % _model->getVertices ().size ()]);
+#endif
 
       emit databaseChanged (Reason::DATA, QVariant ());
     }

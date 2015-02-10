@@ -137,22 +137,22 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (Database::Database* database, QWidget* parent)
       : QOpenGLWidget (parent),
-        _database            (database),
-        _data                (0),
-        _shader              (),
-        _vertex_buffer       (QOpenGLBuffer::VertexBuffer),
-        _index_buffer        (QOpenGLBuffer::IndexBuffer),
-        _textures            (),
-        _sphere              (),
-        _vertex_attr         (-1),
-        _normal_attr         (-1),
-        _mvp_matrix_attr     (-1),
-        _mv_matrix_attr      (-1),
-        _n_matrix_attr       (-1),
-        _texture_attr        (-1),
-        _model_matrix        (),
-        _view_matrix         (),
-        _last_pos            (0, 0)
+        _database        (database),
+        _data            (0),
+        _shader          (),
+        _vertex_buffer   (QOpenGLBuffer::VertexBuffer),
+        _index_buffer    (QOpenGLBuffer::IndexBuffer),
+        _textures        (),
+        _sphere          (),
+        _vertex_attr     (-1),
+        _normal_attr     (-1),
+        _mvp_matrix_attr (-1),
+        _mv_matrix_attr  (-1),
+        _n_matrix_attr   (-1),
+        _texture_attr    (-1),
+        _model_matrix    (),
+        _view_matrix     (),
+        _last_pos        (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
       setContextMenuPolicy (Qt::NoContextMenu);
@@ -220,7 +220,7 @@ namespace HIP {
       glClearColor (.2f, .2f, .2f, 1.0f);
       glEnable (GL_DEPTH_TEST);
 
-      _sphere = QSharedPointer<Sphere> (new Sphere (0.1));
+      _sphere = QSharedPointer<Sphere> (new Sphere ());
 
       //
       // Init shaders
@@ -370,7 +370,7 @@ namespace HIP {
                       setLightParameter (GL_AMBIENT, material.getAmbient ());
                       setLightParameter (GL_DIFFUSE, material.getDiffuse ());
                       setLightParameter (GL_SPECULAR, material.getSpecular ());
-                      setLightParameter (GL_POSITION, _view_matrix * QVector3D (0, 0, 1));
+                      setLightParameter (GL_POSITION, _view_matrix * QVector3D (0, 0, 100));
                       glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
                       glEnable (GL_LIGHT0);
                     }
@@ -401,7 +401,11 @@ namespace HIP {
           _vertex_buffer.release ();
           _shader.release ();
 
-          _sphere->draw (projection * _view_matrix * _model_matrix, QVector3D (0.0, 0.0, 0.0), Qt::red);
+          foreach (const Database::Point& point, _database->getPoints ())
+            if (point.getSelected ())
+              _sphere->draw (projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
+            else
+              _sphere->draw (projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
         }
     }
 
@@ -578,6 +582,8 @@ namespace HIP {
           Q_ASSERT (!data.isValid ());
           updateToolBar ();
         }
+      else if (reason == Database::Database::Reason::SELECTION)
+        _widget->update ();
     }
 
     /*! Update view switching buttons */

@@ -45,12 +45,13 @@ namespace HIP {
     class SphereImpl
     {
     public:
-      SphereImpl (double radius);
+      SphereImpl ();
       ~SphereImpl ();
 
       void draw (const QMatrix4x4& mvp,
                  const QVector3D& position,
-                 const QColor& color);
+                 const QColor& color,
+                 double radius);
 
     private:
       QOpenGLShaderProgram _shader;
@@ -65,7 +66,7 @@ namespace HIP {
     };
 
     /*! Constructor */
-    SphereImpl::SphereImpl (double radius)
+    SphereImpl::SphereImpl ()
       : _shader           (),
         _vertex_buffer    (QOpenGLBuffer::VertexBuffer),
         _index_buffer     (QOpenGLBuffer::IndexBuffer),
@@ -124,8 +125,8 @@ namespace HIP {
               double x = cos (lng);
               double y = sin (lng);
 
-              data.push_back (SphereData (QVector3D (x * zr0, y * zr0, z0) * radius));
-              data.push_back (SphereData (QVector3D (x * zr1, y * zr1, z1) * radius));
+              data.push_back (SphereData (QVector3D (x * zr0, y * zr0, z0)));
+              data.push_back (SphereData (QVector3D (x * zr1, y * zr1, z1)));
             }
         }
 
@@ -161,17 +162,20 @@ namespace HIP {
      */
     void SphereImpl::draw (const QMatrix4x4& mvp,
                            const QVector3D& position,
-                           const QColor& color)
+                           const QColor& color,
+                           double radius)
     {
-      Q_UNUSED (position);
-
       QOpenGLFunctions gl (QOpenGLContext::currentContext ());
+
+      QMatrix4x4 p;
+      p.translate (position);
+      p.scale (radius);
 
       _vertex_buffer.bind ();
       _index_buffer.bind ();
 
       _shader.bind ();
-      _shader.setUniformValue (_mvp_attr, mvp);
+      _shader.setUniformValue (_mvp_attr, mvp * p);
       _shader.setUniformValue (_color_attr, QVector3D (color.redF (), color.greenF (), color.blueF ()));
 
       int offset = 0;
@@ -197,8 +201,8 @@ namespace HIP {
     //#**********************************************************************
 
     /*! Construction */
-    Sphere::Sphere (double radius)
-      : _data (new SphereImpl (radius))
+    Sphere::Sphere ()
+      : _data (new SphereImpl ())
     {
     }
 
@@ -215,9 +219,10 @@ namespace HIP {
      */
     void Sphere::draw (const QMatrix4x4& mvp,
                        const QVector3D& position,
-                       const QColor& color)
+                       const QColor& color,
+                       double radius)
     {
-      _data->draw (mvp, position, color);
+      _data->draw (mvp, position, color, radius);
     }
 
   }
