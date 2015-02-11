@@ -304,6 +304,7 @@ namespace HIP {
     private:
       Database::Database* _database;
       const Data* _data;
+      Data _pin_data;
 
       QOpenGLShaderProgram _shader;
 
@@ -332,7 +333,8 @@ namespace HIP {
         _data              (0),
         _shader            (),
         _model             (),
-        _pin               (),//(new Renderable ()),
+        _pin_data          ("assets/models/pin/pin.obj"),
+        _pin               (new Renderable (&_pin_data)),
         _vertex_attr       (-1),
         _normal_attr       (-1),
         _mvp_matrix_attr   (-1),
