@@ -7,7 +7,6 @@
 #ifndef __HIPGLView_h__
 #define __HIPGLView_h__
 
-#include "gl/HIPGLOverlay.h"
 #include "database/HIPDatabase.h"
 
 #include <QMap>
@@ -38,8 +37,6 @@ namespace HIP {
       explicit View (Database::Database* database, QWidget* parent);
       virtual ~View ();
 
-      void addOverlay (const OverlayPtr& overlay);
-
     signals:
       void modelViewMatrixChanged (const QMatrix4x4& matrix);
 
@@ -58,8 +55,6 @@ namespace HIP {
       QToolBar* _toolbar;
       QActionGroup* _action_group;
       Widget* _widget;
-
-      QList<OverlayPtr> _overlays;
 
       typedef QMap<QAction*, QString> ActionViewMap;
       ActionViewMap _action_view_map;

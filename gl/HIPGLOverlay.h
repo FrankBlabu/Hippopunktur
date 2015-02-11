@@ -21,6 +21,9 @@ namespace HIP {
     public:
       Overlay (QWidget* parent);
       virtual ~Overlay ();
+
+    protected:
+      virtual void paintEvent (QPaintEvent* event);
     };
 
     typedef QSharedPointer<Overlay> OverlayPtr;

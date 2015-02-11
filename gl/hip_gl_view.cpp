@@ -21,7 +21,6 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
-#include <QStackedLayout>
 #include <QSurfaceFormat>
 #include <QToolBar>
 #include <QWheelEvent>
@@ -532,18 +531,13 @@ namespace HIP {
       : QWidget (parent),
         _ui           (new Ui::HIP_GL_View),
         _database     (database),
-        _widget       (new Widget (database, this)),
-        _overlays     (),
+        _widget       (0),
         _toolbar      (0),
         _action_group (0)
     {
       _ui->setupUi (this);
 
-      QStackedLayout* layout = new QStackedLayout (_ui->_view_w);
-      layout->setStackingMode (QStackedLayout::StackAll);
-      layout->addWidget (_widget);
-      _ui->_view_w->setLayout (layout);
-
+      _widget = Tools::addToParent (new Widget (database, _ui->_view_w));
       _widget->setData (database->getModel ());
 
       connect (database, &Database::Database::databaseChanged, this, &View::onDatabaseChanged);
@@ -554,22 +548,7 @@ namespace HIP {
     /*! Destructor */
     View::~View ()
     {
-      QStackedLayout* l = qobject_cast<QStackedLayout*> (_ui->_view_w->layout ());
-      Q_ASSERT (l != 0);
-
       delete _ui;
-    }
-
-    /*! Add overlay to the view */
-    void View::addOverlay (const OverlayPtr& overlay)
-    {
-      _overlays.push_back (overlay);
-
-      QStackedLayout* l = qobject_cast<QStackedLayout*> (_ui->_view_w->layout ());
-      Q_ASSERT (l != 0);
-
-      l->insertWidget (0, overlay.data ());
-      l->setCurrentIndex (0);
     }
 
     /*! React on database changes */

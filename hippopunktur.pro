@@ -26,8 +26,6 @@ SOURCES += \
     gl/hip_gl_data.cpp \
     gl/hip_gl_data_model.cpp \
     core/hip_xml.cpp \
-    gl/hip_gl_overlay.cpp \
-    gl/hip_gl_debug_overlay.cpp \
     gl/hip_gl_sphere.cpp
 
 RESOURCES += \
@@ -54,8 +52,6 @@ HEADERS += \
     gl/HIPGLData.h \
     gl/HIPGLDataModel.h \
     core/HIPXml.h \
-    gl/HIPGLOverlay.h \
-    gl/HIPGLDebugOverlay.h \
     gl/HIPGLSphere.h
 
 FORMS += \

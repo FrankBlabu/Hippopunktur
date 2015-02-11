@@ -14,7 +14,6 @@
 #include "explorer/HIPPointExplorerView.h"
 #include "explorer/HIPExplorerTagSelector.h"
 #include "gl/HIPGLView.h"
-#include "gl/HIPGLDebugOverlay.h"
 
 #include "ui_hip_gui_main_window.h"
 
@@ -60,8 +59,7 @@ namespace HIP {
       QWidget* explorer = Tools::addToParent (new Explorer::PointExplorerView (database, _ui->_explorer_w));
       explorer->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-      GL::View* view = Tools::addToParent (new GL::View (database, _ui->_gl_frame_w));
-      view->addOverlay (GL::OverlayPtr (new GL::DebugOverlay (database, 0)));
+      Tools::addToParent (new GL::View (database, _ui->_gl_frame_w));
 
       connect (_ui->_action_export_database, SIGNAL (triggered (bool)), SLOT (onExportDatabase ()));
       connect (_ui->_action_exit, SIGNAL (triggered (bool)), qApp, SLOT (quit ()));
