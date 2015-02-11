@@ -110,6 +110,8 @@ namespace HIP {
         TextureMap _textures;
     };
 
+    typedef QSharedPointer<Renderable> RenderablePtr;
+
     /*! Constructor */
     Renderable::Renderable (const Data* data)
       : _data          (data),
@@ -296,6 +298,7 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
+      void drawRenderable (const RenderablePtr& renderable, const QSet<QString>& groups);
       float checkBounds (float lower, float value, float upper) const;
 
     private:
@@ -304,8 +307,8 @@ namespace HIP {
 
       QOpenGLShaderProgram _shader;
 
-      QSharedPointer<Renderable> _model;
-      QSharedPointer<Pin> _pin;
+      RenderablePtr _model;
+      RenderablePtr _pin;
 
       int _vertex_attr;
       int _normal_attr;
@@ -314,6 +317,7 @@ namespace HIP {
       int _n_matrix_attr;
       int _texture_attr;
 
+      QMatrix4x4 _projection_matrix;
       QMatrix4x4 _model_matrix;
       QMatrix4x4 _view_matrix;
 
@@ -324,20 +328,21 @@ namespace HIP {
     /*! Constructor */
     Widget::Widget (Database::Database* database, QWidget* parent)
       : QOpenGLWidget (parent),
-        _database        (database),
-        _data            (0),
-        _shader          (),
-        _model           (),
-        _pin             (),
-        _vertex_attr     (-1),
-        _normal_attr     (-1),
-        _mvp_matrix_attr (-1),
-        _mv_matrix_attr  (-1),
-        _n_matrix_attr   (-1),
-        _texture_attr    (-1),
-        _model_matrix    (),
-        _view_matrix     (),
-        _last_pos        (0, 0)
+        _database          (database),
+        _data              (0),
+        _shader            (),
+        _model             (),
+        _pin               (),//(new Renderable ()),
+        _vertex_attr       (-1),
+        _normal_attr       (-1),
+        _mvp_matrix_attr   (-1),
+        _mv_matrix_attr    (-1),
+        _n_matrix_attr     (-1),
+        _texture_attr      (-1),
+        _projection_matrix (),
+        _model_matrix      (),
+        _view_matrix       (),
+        _last_pos          (0, 0)
     {
       setFocusPolicy (Qt::WheelFocus);
       setContextMenuPolicy (Qt::NoContextMenu);
@@ -367,7 +372,7 @@ namespace HIP {
     {
       Q_ASSERT (data != 0);
 
-      _model = QSharedPointer<Renderable> (new Renderable (data));
+      _model = RenderablePtr (new Renderable (data));
 
       Data::Cube cube = _model->getBoundingBox ();
       _view_matrix.setToIdentity ();
@@ -398,8 +403,6 @@ namespace HIP {
 
       glClearColor (.2f, .2f, .2f, 1.0f);
       glEnable (GL_DEPTH_TEST);
-
-      _pin = QSharedPointer<Pin> (new Pin ());
 
       //
       // Init shaders
@@ -442,8 +445,8 @@ namespace HIP {
      */
     void Widget::resizeGL (int width, int height)
     {
-      Q_UNUSED (width);
-      Q_UNUSED (height);
+      _projection_matrix = QMatrix4x4 ();
+      _projection_matrix.perspective (45.0f /*fov*/, qreal (width) / qreal (height) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
     }
 
     /*
@@ -452,9 +455,6 @@ namespace HIP {
     void Widget::paintGL ()
     {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      QMatrix4x4 projection;
-      projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
       if (!_model.isNull ())
         {
@@ -466,48 +466,56 @@ namespace HIP {
                   groups = view.getGroups ().toSet ();
             }
 
-          _model->bind ();
 
-          _shader.bind ();
-          _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
-          _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
-          _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
-          _shader.setUniformValue ("in_texture", 0);
-
-          int offset = 0;
-
-          _shader.enableAttributeArray (_vertex_attr);
-          _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-          offset += sizeof (QVector3D);
-
-          _shader.enableAttributeArray (_normal_attr);
-          _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
-
-          offset += sizeof (QVector3D);
-
-          _shader.enableAttributeArray (_texture_attr);
-          _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
-          _shader.setUniformValue ("has_texture", _model->hasTexture ());
-
-          _model->paint (projection * _view_matrix, groups);
-
-          _shader.disableAttributeArray (_texture_attr);
-          _shader.disableAttributeArray (_normal_attr);
-          _shader.disableAttributeArray (_vertex_attr);
-
-          _shader.release ();
-
-          _model->release ();
-
+          drawRenderable (_model, groups);
 #if 0
           foreach (const Database::Point& point, _database->getPoints ())
             if (point.getSelected ())
-              _pin->draw (projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
+              _pin->draw (_projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
             else
-              _pin->draw (projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
+              _pin->draw (_projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
 #endif
         }
+    }
+
+    /*
+     * Draw single renderable
+     */
+    void Widget::drawRenderable (const RenderablePtr& renderable, const QSet<QString>& groups)
+    {
+      renderable->bind ();
+
+      _shader.bind ();
+      _shader.setUniformValue (_mvp_matrix_attr, _projection_matrix * _view_matrix * _model_matrix);
+      _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
+      _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
+      _shader.setUniformValue ("in_texture", 0);
+
+      int offset = 0;
+
+      _shader.enableAttributeArray (_vertex_attr);
+      _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+      offset += sizeof (QVector3D);
+
+      _shader.enableAttributeArray (_normal_attr);
+      _shader.setAttributeBuffer (_normal_attr, GL_FLOAT, offset, 3, sizeof (VertexData));
+
+      offset += sizeof (QVector3D);
+
+      _shader.enableAttributeArray (_texture_attr);
+      _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
+      _shader.setUniformValue ("has_texture", _model->hasTexture ());
+
+      renderable->paint (_projection_matrix * _view_matrix, groups);
+
+      _shader.disableAttributeArray (_texture_attr);
+      _shader.disableAttributeArray (_normal_attr);
+      _shader.disableAttributeArray (_vertex_attr);
+
+      _shader.release ();
+
+      renderable->release ();
     }
 
     void Widget::keyPressEvent (QKeyEvent* event)
