@@ -38,9 +38,9 @@
         <file>gl/VertexShader.glsl</file>
         <file>assets/models/horse/horse.xml</file>
         <file>assets/models/horse/horse.png</file>
-        <file>gl/SphereVertexShader.glsl</file>
-        <file>gl/SphereFragmentShader.glsl</file>
         <file>assets/models/pin/pin.obj</file>
         <file>assets/models/pin/pin.mtl</file>
+        <file>gl/PinVertexShader.glsl</file>
+        <file>gl/PinFragmentShader.glsl</file>
     </qresource>
 </RCC>

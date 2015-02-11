@@ -48,8 +48,7 @@ namespace HIP {
 
       setWindowTitle (QString ("%1 V%2 - Rev. %3")
                       .arg (qApp->applicationName ())
-                      .arg (qApp->applicationVersion ())
-                      .arg (REVISION));
+                      .arg (qApp->applicationVersion ()) .arg (REVISION));
       setAcceptDrops (true);
 
       new Tools::StatusBar (_ui->_status_bar_w);

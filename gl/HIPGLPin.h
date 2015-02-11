@@ -1,11 +1,11 @@
 /*
- * HIPGLSphere.h - GL based sphere
+ * HIPGLSphere.h - GL based pin
  *
  * Frank Blankenburg, Feb. 2015
  */
 
-#ifndef __HIPGLSphere_h__
-#define __HIPGLSphere_h__
+#ifndef __HIPGLPin_h__
+#define __HIPGLPin_h__
 
 #include <QColor>
 #include <QMatrix4x4>
@@ -17,21 +17,21 @@ class QOpenGLFunctions;
 namespace HIP {
   namespace GL {
 
-    class SphereImpl;
+    class PinImpl;
 
     /*!
-     * GL based sphere
+     * GL based pin
      */
-    class Sphere
+    class Pin
     {
     public:
-      Sphere ();
-      ~Sphere ();
+      Pin ();
+      ~Pin ();
 
       void draw (const QMatrix4x4& mvp, const QVector3D& position, const QColor& color, double radius);
 
     private:
-      QSharedPointer<SphereImpl> _data;
+      QSharedPointer<PinImpl> _data;
     };
 
   }

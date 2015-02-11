@@ -1,10 +1,10 @@
 /*
- * hip_gl_painter.cpp - GL based sphere
+ * hip_gl_painter.cpp - GL based pin
  *
  * Frank Blankenburg, Feb. 2015
  */
 
-#include "HIPGLSphere.h"
+#include "HIPGLPin.h"
 #include "core/HIPException.h"
 
 #define _USE_MATH_DEFINES
@@ -18,15 +18,15 @@ namespace HIP {
   namespace GL {
 
     //#**********************************************************************
-    // CLASS HIP::GL::SphereData
+    // CLASS HIP::GL::PinData
     //#**********************************************************************
 
     namespace {
 
-      struct SphereData
+      struct PinData
       {
-        SphereData () {}
-        SphereData (const QVector3D& vertex)
+        PinData () {}
+        PinData (const QVector3D& vertex)
           : _vertex (vertex) {}
 
         QVector3D _vertex;
@@ -36,17 +36,17 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::GL::SphereImpl
+    // CLASS HIP::GL::PinImpl
     //#**********************************************************************
 
     /*!
-     * Sphere data keeping class
+     * Pin data keeping class
      */
-    class SphereImpl
+    class PinImpl
     {
     public:
-      SphereImpl ();
-      ~SphereImpl ();
+      PinImpl ();
+      ~PinImpl ();
 
       void draw (const QMatrix4x4& mvp,
                  const QVector3D& position,
@@ -66,7 +66,7 @@ namespace HIP {
     };
 
     /*! Constructor */
-    SphereImpl::SphereImpl ()
+    PinImpl::PinImpl ()
       : _shader           (),
         _vertex_buffer    (QOpenGLBuffer::VertexBuffer),
         _index_buffer     (QOpenGLBuffer::IndexBuffer),
@@ -78,11 +78,11 @@ namespace HIP {
       //
       // Init shaders
       //
-      if (!_shader.addShaderFromSourceFile (QOpenGLShader::Vertex, ":/gl/SphereVertexShader.glsl"))
+      if (!_shader.addShaderFromSourceFile (QOpenGLShader::Vertex, ":/gl/PinVertexShader.glsl"))
         throw Exception (QObject::tr ("Unable to initialize vertex shader: %1")
                          .arg (_shader.log ()));
 
-      if (!_shader.addShaderFromSourceFile (QOpenGLShader::Fragment, ":/gl/SphereFragmentShader.glsl"))
+      if (!_shader.addShaderFromSourceFile (QOpenGLShader::Fragment, ":/gl/PinFragmentShader.glsl"))
         throw Exception (QObject::tr ("Unable to initialize fragment shader: %1")
                          .arg (_shader.log ()));
 
@@ -103,7 +103,7 @@ namespace HIP {
       _color_attr = _shader.uniformLocation ("in_color");
       Q_ASSERT (_color_attr >= 0);
 
-      QVector<SphereData> data;
+      QVector<PinData> data;
       QVector<GLushort> indices;
 
       static const int lats = 8;
@@ -125,8 +125,8 @@ namespace HIP {
               double x = cos (lng);
               double y = sin (lng);
 
-              data.push_back (SphereData (QVector3D (x * zr0, y * zr0, z0)));
-              data.push_back (SphereData (QVector3D (x * zr1, y * zr1, z1)));
+              data.push_back (PinData (QVector3D (x * zr0, y * zr0, z0)));
+              data.push_back (PinData (QVector3D (x * zr1, y * zr1, z1)));
             }
         }
 
@@ -137,7 +137,7 @@ namespace HIP {
 
       _vertex_buffer.create ();
       _vertex_buffer.bind ();
-      _vertex_buffer.allocate (data.constData (), data.size () * sizeof (SphereData));
+      _vertex_buffer.allocate (data.constData (), data.size () * sizeof (PinData));
       _vertex_buffer.release ();
 
       _index_buffer.create ();
@@ -148,19 +148,19 @@ namespace HIP {
 
 
     /*! Destructor */
-    SphereImpl::~SphereImpl ()
+    PinImpl::~PinImpl ()
     {
       _index_buffer.destroy ();
       _vertex_buffer.destroy ();
     }
 
     /*!
-     * Draw sphere
+     * Draw pin
      *
      * @param pos   Drawing position
-     * @param color Sphere color
+     * @param color Pin color
      */
-    void SphereImpl::draw (const QMatrix4x4& mvp,
+    void PinImpl::draw (const QMatrix4x4& mvp,
                            const QVector3D& position,
                            const QColor& color,
                            double radius)
@@ -181,7 +181,7 @@ namespace HIP {
       int offset = 0;
 
       _shader.enableAttributeArray (_vertex_attr);
-      _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (SphereData));
+      _shader.setAttributeBuffer (_vertex_attr, GL_FLOAT, offset, 3, sizeof (PinData));
 
       offset += sizeof (QVector3D);
 
@@ -197,27 +197,27 @@ namespace HIP {
 
 
     //#**********************************************************************
-    // CLASS HIP::GL::Sphere
+    // CLASS HIP::GL::Pin
     //#**********************************************************************
 
     /*! Construction */
-    Sphere::Sphere ()
-      : _data (new SphereImpl ())
+    Pin::Pin ()
+      : _data (new PinImpl ())
     {
     }
 
     /*! Destructor */
-    Sphere::~Sphere ()
+    Pin::~Pin ()
     {
     }
 
     /*!
-     * Draw sphere
+     * Draw pin
      *
      * @param pos   Drawing position
-     * @param color Sphere color
+     * @param color Pin color
      */
-    void Sphere::draw (const QMatrix4x4& mvp,
+    void Pin::draw (const QMatrix4x4& mvp,
                        const QVector3D& position,
                        const QColor& color,
                        double radius)

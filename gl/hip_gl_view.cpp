@@ -6,7 +6,7 @@
 
 #include "HIPGLView.h"
 #include "HIPGLData.h"
-#include "HIPGLSphere.h"
+#include "HIPGLPin.h"
 #include "ui_hip_gl_view.h"
 
 #include "core/HIPException.h"
@@ -74,6 +74,200 @@ namespace HIP {
 
 
     //#**********************************************************************
+    // CLASS HIP::GL::Renderable
+    //#**********************************************************************
+
+    /*
+     * Renderable object
+     */
+    class Renderable
+    {
+      public:
+        Renderable (const Data* data);
+        ~Renderable ();
+
+        void initialize ();
+        void paint (const QMatrix4x4& view, const QSet<QString>& groups);
+
+        void bind ();
+        void release ();
+
+        bool hasTexture () const { return _has_texture; }
+        Data::Cube getBoundingBox () const { return _data->getBoundingBox (); }
+
+      private:
+        void addVertex (VertexCollector* collector, const Point& point) const;
+        void setLightParameter (uint parameter, const QVector3D& value);
+
+      private:
+        const Data* _data;
+        bool _has_texture;
+
+        QOpenGLBuffer _vertex_buffer;
+        QOpenGLBuffer _index_buffer;
+
+        typedef QMap<QString, QOpenGLTexture*> TextureMap;
+        TextureMap _textures;
+    };
+
+    /*! Constructor */
+    Renderable::Renderable (const Data* data)
+      : _data          (data),
+        _has_texture   (false),
+        _vertex_buffer (QOpenGLBuffer::VertexBuffer),
+        _index_buffer  (QOpenGLBuffer::IndexBuffer),
+        _textures      ()
+    {
+    }
+
+    /*! Destructor */
+    Renderable::~Renderable ()
+    {
+      for (TextureMap::const_iterator i = _textures.begin (); i != _textures.end (); ++i)
+        delete i.value ();
+
+      _index_buffer.destroy ();
+      _vertex_buffer.destroy ();
+    }
+
+    /*! Initialize for drawing */
+    void Renderable::initialize ()
+    {
+      if (_data != 0)
+        {
+          foreach (const GroupPtr& group, _data->getGroups ())
+            {
+              if (!group->getMaterial ().isEmpty ())
+                {
+                  const Material& material = _data->getMaterial (group->getMaterial ());
+                  if ( !material.getTexture ().isEmpty () &&
+                       !_textures.contains (group->getMaterial ()) )
+                    {
+                      QOpenGLTexture* texture = new QOpenGLTexture (Tools::loadResource<QImage> (material.getTexture ()).mirrored ());
+                      texture->setMinificationFilter (QOpenGLTexture::Nearest);
+                      texture->setMagnificationFilter (QOpenGLTexture::Linear);
+                      texture->setWrapMode (QOpenGLTexture::Repeat);
+
+                      _textures.insert (group->getMaterial (), texture);
+                      _has_texture = true;
+                    }
+                }
+            }
+
+          //
+          // Init render data
+          //
+          VertexCollector vertices;
+
+          foreach (const GroupPtr& group, _data->getGroups ())
+            {
+              foreach (const Face& face, group->getFaces ())
+                {
+                  Q_ASSERT (face.getPoints ().size () == 3);
+
+                  addVertex (&vertices, face.getPoints ()[0]);
+                  addVertex (&vertices, face.getPoints ()[1]);
+                  addVertex (&vertices, face.getPoints ()[2]);
+                }
+            }
+
+          _vertex_buffer.create ();
+          _vertex_buffer.bind ();
+          _vertex_buffer.allocate (vertices._vertex_data.constData (), vertices._vertex_data.size () * sizeof (VertexData));
+          _vertex_buffer.release ();
+
+          _index_buffer.create ();
+          _index_buffer.bind ();
+          _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLuint));
+          _index_buffer.release ();
+        }
+    }
+
+    /*! Bind structures */
+    void Renderable::bind ()
+    {
+      _vertex_buffer.bind ();
+      _index_buffer.bind ();
+    }
+
+    /*! Release structures */
+    void Renderable::release ()
+    {
+      _index_buffer.release ();
+      _vertex_buffer.release ();
+    }
+
+    /*! Paint renderable */
+    void Renderable::paint (const QMatrix4x4& view, const QSet<QString>& groups)
+    {
+      int point_offset = 0;
+      foreach (const GroupPtr& group, _data->getGroups ())
+        {
+          if (groups.isEmpty () || groups.contains (group->getName ()))
+            {
+              QOpenGLTexture* texture = 0;
+              if (!group->getMaterial ().isEmpty ())
+                {
+                  TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
+                  if (pos != _textures.end ())
+                    texture = pos.value ();
+
+                  const Material& material = _data->getMaterial (group->getMaterial ());
+
+                  setLightParameter (GL_AMBIENT, material.getAmbient ());
+                  setLightParameter (GL_DIFFUSE, material.getDiffuse ());
+                  setLightParameter (GL_SPECULAR, material.getSpecular ());
+                  setLightParameter (GL_POSITION, view * QVector3D (0, 0, 100));
+                  glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
+                  glEnable (GL_LIGHT0);
+                }
+
+              if (texture != 0)
+                texture->bind ();
+
+              glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_INT, (void*)(point_offset * sizeof (GLuint)));
+
+              if (texture != 0)
+                texture->release ();
+            }
+
+          point_offset += group->getFaces ().size () * 3;
+        }
+    }
+
+    /*
+     * Add single vertex to data vectors
+     */
+    void Renderable::addVertex (VertexCollector* collector, const Point& point) const
+    {
+      VertexCollector::PointIndexMap::const_iterator pos = collector->_point_indices.find (point);
+      if (pos == collector->_point_indices.end ())
+        {
+          QVector2D texture_point (0, 0);
+          if (point.getTextureIndex () >= 0)
+            texture_point = _data->getTextures ()[point.getTextureIndex ()];
+
+          collector->_vertex_data.push_back (VertexData (_data->getVertices ()[point.getVertexIndex ()],
+                                                         _data->getNormals ()[point.getNormalIndex ()],
+                                                         texture_point));
+          collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
+          collector->_index_data.push_back (collector->_vertex_data.size () - 1);
+        }
+      else
+        collector->_index_data.push_back (pos.value ());
+    }
+
+    /*!
+     * Set single vector based light parameter
+     */
+    void Renderable::setLightParameter (uint parameter, const QVector3D& value)
+    {
+      float array[] = {value.x (), value.y (), value.z (), 1.0f};
+      glLightfv (GL_LIGHT0, parameter, array);
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::GL::Widget
     //#**********************************************************************
 
@@ -102,22 +296,16 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
-      void addVertex (VertexCollector* collector, const Point& point) const;
       float checkBounds (float lower, float value, float upper) const;
-      void setLightParameter (uint parameter, const QVector3D& value);
 
     private:
       Database::Database* _database;
       const Data* _data;
 
       QOpenGLShaderProgram _shader;
-      QOpenGLBuffer _vertex_buffer;
-      QOpenGLBuffer _index_buffer;
 
-      typedef QMap<QString, QOpenGLTexture*> TextureMap;
-      TextureMap _textures;
-
-      QSharedPointer<Sphere> _sphere;
+      QSharedPointer<Renderable> _model;
+      QSharedPointer<Pin> _pin;
 
       int _vertex_attr;
       int _normal_attr;
@@ -139,10 +327,8 @@ namespace HIP {
         _database        (database),
         _data            (0),
         _shader          (),
-        _vertex_buffer   (QOpenGLBuffer::VertexBuffer),
-        _index_buffer    (QOpenGLBuffer::IndexBuffer),
-        _textures        (),
-        _sphere          (),
+        _model           (),
+        _pin             (),
         _vertex_attr     (-1),
         _normal_attr     (-1),
         _mvp_matrix_attr (-1),
@@ -168,13 +354,8 @@ namespace HIP {
       makeCurrent ();
 
       // Delete GL related structures
-      for (TextureMap::const_iterator i = _textures.begin (); i != _textures.end (); ++i)
-        delete i.value ();
-
-      _index_buffer.destroy ();
-      _vertex_buffer.destroy ();
-
-      _sphere.reset ();
+      _model.reset ();
+      _pin.reset ();
 
       doneCurrent ();
     }
@@ -186,10 +367,9 @@ namespace HIP {
     {
       Q_ASSERT (data != 0);
 
-      delete _data;
-      _data = data;
+      _model = QSharedPointer<Renderable> (new Renderable (data));
 
-      Data::Cube cube = _data->getBoundingBox ();
+      Data::Cube cube = _model->getBoundingBox ();
       _view_matrix.setToIdentity ();
       _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
@@ -199,9 +379,9 @@ namespace HIP {
     /*! Reset view */
     void Widget::resetView ()
     {
-      if (_data != 0)
+      if (!_model.isNull ())
         {
-          Data::Cube cube = _data->getBoundingBox ();
+          Data::Cube cube = _model->getBoundingBox ();
           _view_matrix.setToIdentity ();
           _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
@@ -219,7 +399,7 @@ namespace HIP {
       glClearColor (.2f, .2f, .2f, 1.0f);
       glEnable (GL_DEPTH_TEST);
 
-      _sphere = QSharedPointer<Sphere> (new Sphere ());
+      _pin = QSharedPointer<Pin> (new Pin ());
 
       //
       // Init shaders
@@ -254,50 +434,7 @@ namespace HIP {
       _texture_attr = _shader.attributeLocation ("in_texture");
       Q_ASSERT (_texture_attr >= 0);
 
-      foreach (const GroupPtr& group, _data->getGroups ())
-        {
-          if (!group->getMaterial ().isEmpty ())
-            {
-              const Material& material = _data->getMaterial (group->getMaterial ());
-              if ( !material.getTexture ().isEmpty () &&
-                   !_textures.contains (group->getMaterial ()) )
-                {
-                  QOpenGLTexture* texture = new QOpenGLTexture (Tools::loadResource<QImage> (material.getTexture ()).mirrored ());
-                  texture->setMinificationFilter (QOpenGLTexture::Nearest);
-                  texture->setMagnificationFilter (QOpenGLTexture::Linear);
-                  texture->setWrapMode (QOpenGLTexture::Repeat);
-
-                  _textures.insert (group->getMaterial (), texture);
-                }
-            }
-        }
-
-      //
-      // Init render data
-      //
-      VertexCollector vertices;
-
-      foreach (const GroupPtr& group, _data->getGroups ())
-        {
-          foreach (const Face& face, group->getFaces ())
-            {
-              Q_ASSERT (face.getPoints ().size () == 3);
-
-              addVertex (&vertices, face.getPoints ()[0]);
-              addVertex (&vertices, face.getPoints ()[1]);
-              addVertex (&vertices, face.getPoints ()[2]);
-            }
-        }
-
-      _vertex_buffer.create ();
-      _vertex_buffer.bind ();
-      _vertex_buffer.allocate (vertices._vertex_data.constData (), vertices._vertex_data.size () * sizeof (VertexData));
-      _vertex_buffer.release ();
-
-      _index_buffer.create ();
-      _index_buffer.bind ();
-      _index_buffer.allocate (vertices._index_data.constData (), vertices._index_data.size () * sizeof (GLuint));
-      _index_buffer.release ();
+      _model->initialize ();
     }
 
     /*
@@ -319,23 +456,23 @@ namespace HIP {
       QMatrix4x4 projection;
       projection.perspective (45.0f /*fov*/, qreal (width ()) / qreal (height ()) /*aspect*/, 0.05f /*zNear*/, 20.0f /*zFar*/);
 
-      if (_data != 0)
+      if (!_model.isNull ())
         {
-          QSet<QString> active_groups;
+          QSet<QString> groups;
           if (!_database->getCurrentView ().isEmpty ())
             {
               foreach (const Database::View& view, _database->getViews ())
                 if (view.getName () == _database->getCurrentView ())
-                  active_groups = view.getGroups ().toSet ();
+                  groups = view.getGroups ().toSet ();
             }
 
-          _vertex_buffer.bind ();
-          _index_buffer.bind ();
+          _model->bind ();
 
           _shader.bind ();
           _shader.setUniformValue (_mvp_matrix_attr, projection * _view_matrix * _model_matrix);
           _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
           _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
+          _shader.setUniformValue ("in_texture", 0);
 
           int offset = 0;
 
@@ -351,60 +488,25 @@ namespace HIP {
 
           _shader.enableAttributeArray (_texture_attr);
           _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, sizeof (VertexData));
+          _shader.setUniformValue ("has_texture", _model->hasTexture ());
 
-          int point_offset = 0;
-          foreach (const GroupPtr& group, _data->getGroups ())
-            {
-              if (active_groups.isEmpty () || active_groups.contains (group->getName ()))
-                {
-                  QOpenGLTexture* texture = 0;
-                  if (!group->getMaterial ().isEmpty ())
-                    {
-                      TextureMap::const_iterator pos = _textures.find (group->getMaterial ());
-                      if (pos != _textures.end ())
-                        texture = pos.value ();
-
-                      const Material& material = _data->getMaterial (group->getMaterial ());
-
-                      setLightParameter (GL_AMBIENT, material.getAmbient ());
-                      setLightParameter (GL_DIFFUSE, material.getDiffuse ());
-                      setLightParameter (GL_SPECULAR, material.getSpecular ());
-                      setLightParameter (GL_POSITION, _view_matrix * QVector3D (0, 0, 100));
-                      glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
-                      glEnable (GL_LIGHT0);
-                    }
-
-                  if (texture != 0)
-                    {
-                      texture->bind ();
-                      _shader.setUniformValue ("in_texture", 0);
-                      _shader.setUniformValue ("has_texture", true);
-                    }
-                  else
-                    _shader.setUniformValue ("has_texture", false);
-
-                  glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_INT, (void*)(point_offset * sizeof (GLuint)));
-
-                  if (texture != 0)
-                    texture->release ();
-                }
-
-              point_offset += group->getFaces ().size () * 3;
-            }
+          _model->paint (projection * _view_matrix, groups);
 
           _shader.disableAttributeArray (_texture_attr);
           _shader.disableAttributeArray (_normal_attr);
           _shader.disableAttributeArray (_vertex_attr);
 
-          _index_buffer.release ();
-          _vertex_buffer.release ();
           _shader.release ();
 
+          _model->release ();
+
+#if 0
           foreach (const Database::Point& point, _database->getPoints ())
             if (point.getSelected ())
-              _sphere->draw (projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
+              _pin->draw (projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
             else
-              _sphere->draw (projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
+              _pin->draw (projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
+#endif
         }
     }
 
@@ -477,28 +579,6 @@ namespace HIP {
       update ();
     }
 
-    /*
-     * Add single vertex
-     */
-    void Widget::addVertex (VertexCollector* collector, const Point& point) const
-    {
-      VertexCollector::PointIndexMap::const_iterator pos = collector->_point_indices.find (point);
-      if (pos == collector->_point_indices.end ())
-        {
-          QVector2D texture_point (0, 0);
-          if (point.getTextureIndex () >= 0)
-            texture_point = _data->getTextures ()[point.getTextureIndex ()];
-
-          collector->_vertex_data.push_back (VertexData (_data->getVertices ()[point.getVertexIndex ()],
-                                                         _data->getNormals ()[point.getNormalIndex ()],
-                                                         texture_point));
-          collector->_point_indices.insert (point, collector->_vertex_data.size () - 1);
-          collector->_index_data.push_back (collector->_vertex_data.size () - 1);
-        }
-      else
-        collector->_index_data.push_back (pos.value ());
-    }
-
     /*!
      * Check that the given value is in the bounds
      */
@@ -510,15 +590,6 @@ namespace HIP {
         value -= (upper - lower);
 
       return value;
-    }
-
-    /*!
-     * Set single vector based light parameter
-     */
-    void Widget::setLightParameter (uint parameter, const QVector3D& value)
-    {
-      float array[] = {value.x (), value.y (), value.z (), 1.0f};
-      glLightfv (GL_LIGHT0, parameter, array);
     }
 
 
