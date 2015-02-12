@@ -12,11 +12,11 @@
 
 #include <QOpenGLBuffer>
 #include <QMap>
+#include <QMatrix4x4>
 #include <QSet>
 #include <QSharedPointer>
 
 class QOpenGLTexture;
-class QMatrx4x4;
 class QString;
 class QVector3D;
 
@@ -56,6 +56,7 @@ namespace HIP {
 
         QOpenGLBuffer _vertex_buffer;
         QOpenGLBuffer _index_buffer;
+        QMatrix4x4 _model_matrix;
 
         typedef QMap<QString, QOpenGLTexture*> TextureMap;
         TextureMap _textures;

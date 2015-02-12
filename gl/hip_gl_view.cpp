@@ -202,6 +202,7 @@ namespace HIP {
       Q_ASSERT (_texture_attr >= 0);
 
       _model->initialize ();
+      _pin->initialize ();
     }
 
     /*
@@ -232,6 +233,8 @@ namespace HIP {
 
 
           drawRenderable (_model, groups);
+
+          drawRenderable (_pin, QSet<QString> ());
 #if 0
           foreach (const Database::Point& point, _database->getPoints ())
             if (point.getSelected ())
@@ -269,7 +272,7 @@ namespace HIP {
 
       _shader.enableAttributeArray (_texture_attr);
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, renderable->getElementSize ());
-      _shader.setUniformValue ("has_texture", _model->hasTexture ());
+      _shader.setUniformValue ("has_texture", renderable->hasTexture ());
 
       renderable->paint (_projection_matrix * _view_matrix, groups);
 

@@ -13,7 +13,6 @@
 
 #include <QActionGroup>
 #include <QKeyEvent>
-#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -73,6 +72,7 @@ namespace HIP {
         _has_texture   (false),
         _vertex_buffer (QOpenGLBuffer::VertexBuffer),
         _index_buffer  (QOpenGLBuffer::IndexBuffer),
+        _model_matrix  (),
         _textures      ()
     {
     }
