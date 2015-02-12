@@ -26,7 +26,8 @@ SOURCES += \
     gl/hip_gl_data.cpp \
     gl/hip_gl_data_model.cpp \
     core/hip_xml.cpp \
-    gl/hip_gl_pin.cpp
+    gl/hip_gl_pin.cpp \
+    gl/hip_gl_renderable.cpp
 
 RESOURCES += \
     hippopunktur.qrc
@@ -52,7 +53,8 @@ HEADERS += \
     gl/HIPGLData.h \
     gl/HIPGLDataModel.h \
     core/HIPXml.h \
-    gl/HIPGLPin.h
+    gl/HIPGLPin.h \
+    gl/HIPGLRenderable.h
 
 FORMS += \
     explorer/hip_explorer_tagselector.ui \
