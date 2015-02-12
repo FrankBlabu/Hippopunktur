@@ -10,6 +10,7 @@
 #include "HIPGLPin.h"
 #include "ui_hip_gl_view.h"
 
+#include "core/HIPConfig.h"
 #include "core/HIPException.h"
 #include "core/HIPTools.h"
 
@@ -94,7 +95,7 @@ namespace HIP {
         _data              (0),
         _shader            (),
         _model             (),
-        _pin_data          ("assets/models/pin/pin.obj"),
+        _pin_data          (Config::PIN_MODEL_FILE),
         _pin               (new Renderable (&_pin_data)),
         _vertex_attr       (-1),
         _normal_attr       (-1),
