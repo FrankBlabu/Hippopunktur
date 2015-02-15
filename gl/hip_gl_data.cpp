@@ -439,9 +439,35 @@ namespace HIP {
           loadMaterial (p.join ('/'));
         }
 
-      //
-      // Compute bounding box
-      //
+      updateBoundingBox ();
+      normalize ();
+    }
+
+    /*
+     * Normalize vertex data so that the largest axis is 1.0 units
+     */
+    void Data::normalize ()
+    {
+      float max_axis = _bounding_box.second.x () - _bounding_box.first.x ();
+      max_axis = qMax (max_axis, _bounding_box.second.y () - _bounding_box.first.y ());
+      max_axis = qMax (max_axis, _bounding_box.second.z () - _bounding_box.first.z ());
+
+      QVector3D center (_bounding_box.first / 2 + _bounding_box.second / 2);
+
+      for (int i=0; i < _vertices.size (); ++i)
+        {
+          _vertices[i] -= center;
+          _vertices[i] /= max_axis;
+        }
+
+      updateBoundingBox ();
+    }
+
+    /*
+     * Compute bounding box
+     */
+    void Data::updateBoundingBox ()
+    {
       _bounding_box.first = QVector3D (std::numeric_limits<float>::max (),
                                        std::numeric_limits<float>::max (),
                                        std::numeric_limits<float>::max ());

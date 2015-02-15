@@ -145,8 +145,12 @@ namespace HIP {
       const Cube& getBoundingBox () const { return _bounding_box; }
       const Material& getMaterial (const QString& name) const;
 
+      void normalize ();
+
     private:
       void loadMaterial (const QString& path); // throws Exception
+      void updateBoundingBox ();
+
       Point toPoint (const QString& t) const; // throws Exception
 
     private:
