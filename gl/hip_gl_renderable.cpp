@@ -63,6 +63,49 @@ namespace HIP {
 
 
     //#**********************************************************************
+    // CLASS HIP::GL::RenderableParameters
+    //#**********************************************************************
+
+    /* Constructor */
+    RenderableParameters::RenderableParameters ()
+      : _position       (0, 0, 0),
+        _visible_groups (),
+        _transparent    ()
+    {
+    }
+
+    const QVector3D& RenderableParameters::getPosition () const
+    {
+      return _position;
+    }
+
+    void RenderableParameters::setPosition (const QVector3D& position)
+    {
+      _position = position;
+    }
+
+    const QSet<QString>& RenderableParameters::getVisibleGroups () const
+    {
+      return _visible_groups;
+    }
+
+    void RenderableParameters::setVisibleGroups (const QSet<QString>& visible_groups)
+    {
+      _visible_groups = visible_groups;
+    }
+
+    bool RenderableParameters::getTransparent () const
+    {
+      return _transparent;
+    }
+
+    void RenderableParameters::setTransparent (bool transparent)
+    {
+      _transparent = transparent;
+    }
+
+
+    //#**********************************************************************
     // CLASS HIP::GL::Renderable
     //#**********************************************************************
 
@@ -155,12 +198,12 @@ namespace HIP {
     }
 
     /*! Paint renderable */
-    void Renderable::paint (const QMatrix4x4& view, const QSet<QString>& groups)
+    void Renderable::paint (const QMatrix4x4& mvp, const RenderableParameters& parameters)
     {
       int point_offset = 0;
       foreach (const GroupPtr& group, _data->getGroups ())
         {
-          if (groups.isEmpty () || groups.contains (group->getName ()))
+          if (parameters.getVisibleGroups ().isEmpty () || parameters.getVisibleGroups ().contains (group->getName ()))
             {
               QOpenGLTexture* texture = 0;
               if (!group->getMaterial ().isEmpty ())
@@ -174,7 +217,7 @@ namespace HIP {
                   setLightParameter (GL_AMBIENT, material.getAmbient ());
                   setLightParameter (GL_DIFFUSE, material.getDiffuse ());
                   setLightParameter (GL_SPECULAR, material.getSpecular ());
-                  setLightParameter (GL_POSITION, view * QVector3D (0, 0, 100));
+                  setLightParameter (GL_POSITION, mvp * QVector3D (0, 0, 100));
                   glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
                   glEnable (GL_LIGHT0);
                 }

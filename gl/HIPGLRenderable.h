@@ -27,6 +27,29 @@ namespace HIP {
     struct VertexCollector;
 
     /*
+     * Renderable paint configuration
+     */
+    class RenderableParameters
+    {
+    public:
+      RenderableParameters ();
+
+      const QVector3D& getPosition () const;
+      void setPosition (const QVector3D& position);
+
+      const QSet<QString>& getVisibleGroups () const;
+      void setVisibleGroups (const QSet<QString>& visible_groups);
+
+      bool getTransparent () const;
+      void setTransparent (bool transparent);
+
+    private:
+      QVector3D _position;
+      QSet<QString> _visible_groups;
+      bool _transparent;
+    };
+
+    /*
      * Renderable object
      */
     class Renderable
@@ -36,7 +59,7 @@ namespace HIP {
         ~Renderable ();
 
         void initialize ();
-        void paint (const QMatrix4x4& view, const QSet<QString>& groups);
+        void paint (const QMatrix4x4& mvp, const RenderableParameters& parameters);
 
         void bind ();
         void release ();

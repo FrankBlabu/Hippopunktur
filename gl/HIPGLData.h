@@ -146,6 +146,7 @@ namespace HIP {
       const Material& getMaterial (const QString& name) const;
 
       void normalize ();
+      void scale (double factor);
 
     private:
       void loadMaterial (const QString& path); // throws Exception

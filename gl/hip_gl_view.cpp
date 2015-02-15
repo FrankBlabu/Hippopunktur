@@ -60,7 +60,7 @@ namespace HIP {
       virtual void wheelEvent (QWheelEvent* event);
 
     private:
-      void drawRenderable (const RenderablePtr& renderable, const QSet<QString>& groups);
+      void drawRenderable (const RenderablePtr& renderable, const RenderableParameters& parameters);
       float checkBounds (float lower, float value, float upper) const;
 
     private:
@@ -81,7 +81,7 @@ namespace HIP {
       int _texture_attr;
 
       QMatrix4x4 _projection_matrix;
-      QMatrix4x4 _model_matrix;
+      QMatrix4x4 _camera_matrix;
       QMatrix4x4 _view_matrix;
 
       QPointF _last_pos;
@@ -96,7 +96,7 @@ namespace HIP {
         _shader            (),
         _model             (),
         _pin_data          (Config::PIN_MODEL_FILE),
-        _pin               (new Renderable (&_pin_data)),
+        _pin               (),
         _vertex_attr       (-1),
         _normal_attr       (-1),
         _mvp_matrix_attr   (-1),
@@ -104,10 +104,14 @@ namespace HIP {
         _n_matrix_attr     (-1),
         _texture_attr      (-1),
         _projection_matrix (),
-        _model_matrix      (),
+        _camera_matrix     (),
         _view_matrix       (),
         _last_pos          (0, 0)
     {
+      _pin_data.normalize ();
+      _pin_data.scale (1.0 / 2.0);
+      _pin = RenderablePtr (new Renderable (&_pin_data));
+
       setFocusPolicy (Qt::WheelFocus);
       setContextMenuPolicy (Qt::NoContextMenu);
 
@@ -142,7 +146,7 @@ namespace HIP {
       _view_matrix.setToIdentity ();
       _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
-      _model_matrix.setToIdentity ();
+      _camera_matrix.setToIdentity ();
     }
 
     /*! Reset view */
@@ -154,7 +158,7 @@ namespace HIP {
           _view_matrix.setToIdentity ();
           _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
 
-          _model_matrix.setToIdentity ();
+          _camera_matrix.setToIdentity ();
         }
     }
 
@@ -223,39 +227,39 @@ namespace HIP {
 
       if (!_model.isNull ())
         {
+          RenderableParameters model_parameters;
+
           QSet<QString> groups;
           if (!_database->getCurrentView ().isEmpty ())
             {
               foreach (const Database::View& view, _database->getViews ())
                 if (view.getName () == _database->getCurrentView ())
-                  groups = view.getGroups ().toSet ();
+                  model_parameters.setVisibleGroups (view.getGroups ().toSet ());
             }
 
+          drawRenderable (_model, model_parameters);
 
-          drawRenderable (_model, groups);
-
-          drawRenderable (_pin, QSet<QString> ());
-#if 0
+          RenderableParameters pin_parameters;
           foreach (const Database::Point& point, _database->getPoints ())
-            if (point.getSelected ())
-              _pin->draw (_projection * _view_matrix * _model_matrix, point.getPosition (), point.getColor (), 0.005);
-            else
-              _pin->draw (_projection * _view_matrix * _model_matrix, point.getPosition (), Qt::darkGray, 0.002);
-#endif
+            {
+              pin_parameters.setPosition (point.getPosition ());
+              pin_parameters.setTransparent (!point.getSelected ());
+              drawRenderable (_pin, pin_parameters);
+            }
         }
     }
 
     /*
      * Draw single renderable
      */
-    void Widget::drawRenderable (const RenderablePtr& renderable, const QSet<QString>& groups)
+    void Widget::drawRenderable (const RenderablePtr& renderable, const RenderableParameters& parameters)
     {
       renderable->bind ();
 
       _shader.bind ();
-      _shader.setUniformValue (_mvp_matrix_attr, _projection_matrix * _view_matrix * _model_matrix);
-      _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _model_matrix);
-      _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _model_matrix).normalMatrix ());
+      _shader.setUniformValue (_mvp_matrix_attr, _projection_matrix * _view_matrix * _camera_matrix);
+      _shader.setUniformValue (_mv_matrix_attr, _view_matrix * _camera_matrix);
+      _shader.setUniformValue (_n_matrix_attr, (_view_matrix * _camera_matrix).normalMatrix ());
       _shader.setUniformValue ("in_texture", 0);
 
       int offset = 0;
@@ -274,7 +278,10 @@ namespace HIP {
       _shader.setAttributeBuffer (_texture_attr, GL_FLOAT, offset, 2, renderable->getElementSize ());
       _shader.setUniformValue ("has_texture", renderable->hasTexture ());
 
-      renderable->paint (_projection_matrix * _view_matrix, groups);
+      QMatrix4x4 model_matrix;
+      model_matrix.translate (parameters.getPosition ());
+
+      renderable->paint (_projection_matrix * _view_matrix * model_matrix, parameters);
 
       _shader.disableAttributeArray (_texture_attr);
       _shader.disableAttributeArray (_normal_attr);
@@ -292,15 +299,15 @@ namespace HIP {
       else if (event->key () == Qt::Key_Minus)
         _view_matrix.translate (0, 0, +0.1f);
       else if (event->key () == Qt::Key_Up)
-        _model_matrix.rotate (+5, _model_matrix.inverted () * QVector3D (1, 0, 0));
+        _camera_matrix.rotate (+5, _camera_matrix.inverted () * QVector3D (1, 0, 0));
       else if (event->key () == Qt::Key_Down)
-        _model_matrix.rotate (-5, _model_matrix.inverted () * QVector3D (1, 0, 0));
+        _camera_matrix.rotate (-5, _camera_matrix.inverted () * QVector3D (1, 0, 0));
       else if (event->key () == Qt::Key_Left)
-        _model_matrix.rotate (+5, _model_matrix.inverted () * QVector3D (0, 1, 0));
+        _camera_matrix.rotate (+5, _camera_matrix.inverted () * QVector3D (0, 1, 0));
       else if (event->key () == Qt::Key_Right)
-        _model_matrix.rotate (-5, _model_matrix.inverted () * QVector3D (0, 1, 0));
+        _camera_matrix.rotate (-5, _camera_matrix.inverted () * QVector3D (0, 1, 0));
 
-      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _camera_matrix));
 
       update ();
     }
@@ -319,12 +326,12 @@ namespace HIP {
         {
           if (event->modifiers ().testFlag (Qt::ControlModifier))
             {
-              _model_matrix.rotate (-delta.x (), _model_matrix.inverted () * QVector3D (0, 0, 1));
+              _camera_matrix.rotate (-delta.x (), _camera_matrix.inverted () * QVector3D (0, 0, 1));
             }
           else
             {
-              _model_matrix.rotate (delta.y (), _model_matrix.inverted () * QVector3D (1, 0, 0));
-              _model_matrix.rotate (delta.x (), _model_matrix.inverted () * QVector3D (0, 1, 0));
+              _camera_matrix.rotate (delta.y (), _camera_matrix.inverted () * QVector3D (1, 0, 0));
+              _camera_matrix.rotate (delta.x (), _camera_matrix.inverted () * QVector3D (0, 1, 0));
             }
         }
       else if (event->buttons ().testFlag (Qt::MidButton))
@@ -332,10 +339,10 @@ namespace HIP {
           QVector3D translation (static_cast<float> (delta.x ()) / width (),
                                  static_cast<float> (-delta.y ()) / height (),
                                  0.0f);
-          _model_matrix.translate (translation);
+          _camera_matrix.translate (translation);
         }
 
-      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _camera_matrix));
 
       update ();
     }
@@ -349,7 +356,7 @@ namespace HIP {
     {
       _view_matrix.translate (0, 0, (event->delta () / 120.0) * 0.1);
 
-      _database->emitViewChanged (qVariantFromValue (_view_matrix * _model_matrix));
+      _database->emitViewChanged (qVariantFromValue (_view_matrix * _camera_matrix));
 
       update ();
     }

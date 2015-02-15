@@ -440,7 +440,6 @@ namespace HIP {
         }
 
       updateBoundingBox ();
-      normalize ();
     }
 
     /*
@@ -459,6 +458,17 @@ namespace HIP {
           _vertices[i] -= center;
           _vertices[i] /= max_axis;
         }
+
+      updateBoundingBox ();
+    }
+
+    /*
+     * Scale model by a given factor
+     */
+    void Data::scale (double factor)
+    {
+      for (int i=0; i < _vertices.size (); ++i)
+        _vertices[i] *= factor;
 
       updateBoundingBox ();
     }
