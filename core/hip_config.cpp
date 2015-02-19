@@ -21,6 +21,7 @@ namespace HIP {
     //const char* const DATABASE_FILE = "assets/models/tie/tie.xml";
 
     const char* const PIN_MODEL_FILE = "assets/models/pin/pin.obj";
+    const char* const CURSOR_ROTATE_Y = ":assets/cursors/cursor_rotate_y.ico";
 
   }
 }

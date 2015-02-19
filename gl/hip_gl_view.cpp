@@ -15,6 +15,7 @@
 #include "core/HIPTools.h"
 
 #include <QActionGroup>
+#include <QCursor>
 #include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QMouseEvent>
@@ -68,6 +69,8 @@ namespace HIP {
       const Data* _data;
       Data _pin_data;
 
+      QCursor _rotate_y_cursor;
+
       QOpenGLShaderProgram _shader;
 
       RenderablePtr _model;
@@ -96,6 +99,7 @@ namespace HIP {
         _shader            (),
         _model             (),
         _pin_data          (Config::PIN_MODEL_FILE),
+        _rotate_y_cursor   (QPixmap (Config::CURSOR_ROTATE_Y)),
         _pin               (),
         _vertex_attr       (-1),
         _normal_attr       (-1),
@@ -315,6 +319,11 @@ namespace HIP {
     void Widget::mousePressEvent (QMouseEvent* event)
     {
       _last_pos = event->pos ();
+
+      if (event->buttons ().testFlag (Qt::LeftButton))
+        setCursor (_rotate_y_cursor);
+      else if (event->buttons ().testFlag (Qt::MidButton))
+        setCursor (Qt::SizeAllCursor);
     }
 
     void Widget::mouseMoveEvent (QMouseEvent* event)
@@ -350,6 +359,7 @@ namespace HIP {
     void Widget::mouseReleaseEvent (QMouseEvent* event)
     {
       Q_UNUSED (event);
+      unsetCursor ();
     }
 
     void Widget::wheelEvent (QWheelEvent* event)

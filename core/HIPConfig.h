@@ -14,6 +14,7 @@ namespace HIP {
     extern const char* const DATABASE_FILE;
     extern const char* const PIN_MODEL_FILE;
 
+    extern const char* const CURSOR_ROTATE_Y;
   }
 }
 
