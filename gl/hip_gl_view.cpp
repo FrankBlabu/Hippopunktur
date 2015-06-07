@@ -69,6 +69,7 @@ namespace HIP {
       const Data* _data;
       Data _pin_data;
 
+      QCursor _rotate_cursor;
       QCursor _rotate_y_cursor;
 
       QOpenGLShaderProgram _shader;
@@ -99,7 +100,8 @@ namespace HIP {
         _shader            (),
         _model             (),
         _pin_data          (Config::PIN_MODEL_FILE),
-        _rotate_y_cursor   (QPixmap (Config::CURSOR_ROTATE)),
+        _rotate_cursor     (QPixmap (Config::CURSOR_ROTATE)),
+        _rotate_y_cursor   (QPixmap (Config::CURSOR_ROTATE_Y)),
         _pin               (),
         _vertex_attr       (-1),
         _normal_attr       (-1),
@@ -321,7 +323,12 @@ namespace HIP {
       _last_pos = event->pos ();
 
       if (event->buttons ().testFlag (Qt::LeftButton))
-        setCursor (_rotate_y_cursor);
+        {
+          if (event->modifiers ().testFlag (Qt::ControlModifier))
+            setCursor (_rotate_y_cursor);
+          else
+            setCursor (_rotate_cursor);
+        }
       else if (event->buttons ().testFlag (Qt::MidButton))
         setCursor (Qt::SizeAllCursor);
     }

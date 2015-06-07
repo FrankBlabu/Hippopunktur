@@ -34,7 +34,8 @@ namespace HIP {
     //
     // Cursors
     //
-    const char* const CURSOR_ROTATE  = ":assets/cursors/cursor_rotate.ico";
+    const char* const CURSOR_ROTATE   = ":assets/cursors/cursor_rotate.png";
+    const char* const CURSOR_ROTATE_Y = ":assets/cursors/cursor_rotate_y.png";
 
   }
 }
