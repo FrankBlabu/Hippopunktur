@@ -9,8 +9,14 @@
 namespace HIP {
   namespace Config {
 
+    //
+    // CSS file
+    //
     const char* const CSS_FILE = ":/assets/style/hippopunktur.css";
 
+    //
+    // Database to display
+    //
     //const char* const DATABASE_FILE = ":/assets/models/horse/horse.xml";
     const char* const DATABASE_FILE = "assets/models/horse/horse.xml";
     //const char* const DATABASE_FILE = "assets/models/elephant/elephant.xml";
@@ -20,8 +26,15 @@ namespace HIP {
     //const char* const DATABASE_FILE = "assets/models/goose/goose.xml";
     //const char* const DATABASE_FILE = "assets/models/tie/tie.xml";
 
+    //
+    // Model modeling the pin
+    //
     const char* const PIN_MODEL_FILE = "assets/models/pin/pin.obj";
-    const char* const CURSOR_ROTATE_Y = ":assets/cursors/cursor_rotate_y.ico";
+
+    //
+    // Cursors
+    //
+    const char* const CURSOR_ROTATE  = ":assets/cursors/cursor_rotate.ico";
 
   }
 }

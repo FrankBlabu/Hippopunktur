@@ -42,6 +42,6 @@
         <file>assets/models/pin/pin.mtl</file>
         <file>gl/PinVertexShader.glsl</file>
         <file>gl/PinFragmentShader.glsl</file>
-        <file>assets/cursors/cursor_rotate_y.ico</file>
+        <file>assets/cursors/cursor_rotate.ico</file>
     </qresource>
 </RCC>

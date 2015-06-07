@@ -99,7 +99,7 @@ namespace HIP {
         _shader            (),
         _model             (),
         _pin_data          (Config::PIN_MODEL_FILE),
-        _rotate_y_cursor   (QPixmap (Config::CURSOR_ROTATE_Y)),
+        _rotate_y_cursor   (QPixmap (Config::CURSOR_ROTATE)),
         _pin               (),
         _vertex_attr       (-1),
         _normal_attr       (-1),
