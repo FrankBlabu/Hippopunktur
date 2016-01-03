@@ -15,8 +15,10 @@
 namespace HIP {
   namespace Database {
 
-    /*
+    /*!
      * Proxy model for filtered database access
+     *
+     * The sorting model will connect to the database and react on changes in the filter tag setup
      */
     class DatabaseFilterProxyModel : public QSortFilterProxyModel
     {
@@ -27,7 +29,7 @@ namespace HIP {
       virtual ~DatabaseFilterProxyModel ();
 
     protected:
-      virtual bool	filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
+      virtual bool filterAcceptsRow (int source_row, const QModelIndex & source_parent) const;
 
     private slots:
       void onDatabaseChanged (Database::Reason_t reason, const QVariant& data);
@@ -36,8 +38,8 @@ namespace HIP {
       QString _tag;
     };
 
-    /*
-     * Model for database access
+    /*!
+     * Model for displaying the database content
      */
     class DatabaseModel : public QAbstractItemModel
     {

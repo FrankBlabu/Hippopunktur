@@ -19,6 +19,9 @@ namespace HIP {
 
     /*!
      * Explorer for the model anatomy
+     *
+     * This explorer lists the various parts of the model which can be selected or
+     * switched visible independently from each other.
      */
     class AnatomyExplorerView : public QWidget
     {

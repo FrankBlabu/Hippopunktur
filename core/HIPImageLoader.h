@@ -14,7 +14,10 @@ namespace HIP {
   namespace Tools {
 
     /*!
-     * Non memory static Image
+     * Class for loading an image threaded in the background
+     *
+     * The image can be accessed as soon as it has been loaded completely.
+     * If the loading is not completed, an assert is thrown.
      */
     class ImageLoader : public QObject
     {

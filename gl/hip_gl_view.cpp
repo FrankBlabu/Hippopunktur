@@ -147,12 +147,7 @@ namespace HIP {
       Q_ASSERT (data != 0);
 
       _model = RenderablePtr (new Renderable (data));
-
-      Data::Cube cube = _model->getBoundingBox ();
-      _view_matrix.setToIdentity ();
-      _view_matrix.translate (0, 0, (cube.first + cube.second).z () / 2);
-
-      _camera_matrix.setToIdentity ();
+      resetView ();
     }
 
     /*! Reset view */

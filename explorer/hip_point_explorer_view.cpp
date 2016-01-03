@@ -119,8 +119,7 @@ namespace HIP {
         _ui                 (new Ui::HIP_Explorer_PointExplorerView),
         _database           (database),
         _model              (new Database::DatabaseModel (database, this)),
-        _filter             (new Database::DatabaseFilterProxyModel (database, this)),
-        _update_in_progress (false)
+        _filter             (new Database::DatabaseFilterProxyModel (database, this))
     {
       _ui->setupUi (this);
 
@@ -139,66 +138,66 @@ namespace HIP {
       delete _ui;
     }
 
+    /*!
+     * Function called when points have been selected / deselected by the user
+     *
+     * @param selected   Set of selected model indices
+     * @param deselected Set of deselected model indices
+     */
     void PointExplorerView::onSelectionChanged (const QItemSelection& selected, const QItemSelection& deselected)
     {
-      if (!_update_in_progress)
+      foreach (QModelIndex index, selected.indexes ())
         {
-          _update_in_progress = true;
+          QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
 
-          foreach (QModelIndex index, selected.indexes ())
-            {
-              QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
+          if (!_database->getPoint (id).getSelected ())
+            _database->select (id);
+        }
 
-              if (!_database->getPoint (id).getSelected ())
-                _database->select (id);
-            }
+      foreach (QModelIndex index, deselected.indexes ())
+        {
+          QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
 
-          foreach (QModelIndex index, deselected.indexes ())
-            {
-              QString id = _filter->data (index, Database::DatabaseModel::Role::ID).toString ();
-
-              if (_database->getPoint (id).getSelected ())
-                _database->deselect (id);
-            }
-
-          _update_in_progress = false;
+          if (_database->getPoint (id).getSelected ())
+            _database->deselect (id);
         }
     }
 
+    /*!
+     * Function called when the database has been changed by some event and the view has to be updated
+     *
+     * \param reason Reason of database change
+     * \param data   Data associated with th change
+     */
     void PointExplorerView::onDatabaseChanged (Database::Database::Reason_t reason, const QVariant& data)
     {
-      if (!_update_in_progress)
-        {
-          _update_in_progress = true;
+      QSignalBlocker blocker (_ui->_tree_w->selectionModel ());
 
-          switch (reason)
-            {
-            case Database::Database::Reason::SELECTION:
-              {
-                Q_ASSERT (data.type () == QVariant::String);
+      switch (reason)
+      {
+        case Database::Database::Reason::SELECTION:
+          {
+            Q_ASSERT (data.type () == QVariant::String);
 
-                QString id = data.toString ();
-                Q_ASSERT (!id.isEmpty ());
+            QString id = data.toString ();
+            Q_ASSERT (!id.isEmpty ());
 
-                QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
-                Q_ASSERT (index.isValid ());
+            QModelIndex index = _filter->mapFromSource (_model->getIndex (id));
+            Q_ASSERT (index.isValid ());
 
-                if (_database->getPoint (id).getSelected ())
-                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-                else
-                  _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
-              }
-              break;
+            if (_database->getPoint (id).getSelected ())
+              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+            else
+              _ui->_tree_w->selectionModel ()->select (index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
+          }
+          break;
 
-            case Database::Database::Reason::DATA:
-            case Database::Database::Reason::POINT:
-            case Database::Database::Reason::FILTER:
-            case Database::Database::Reason::VIEW:
-              break;
-            }
-
-          _update_in_progress = false;
-        }
+        case Database::Database::Reason::DATA:
+        case Database::Database::Reason::POINT:
+        case Database::Database::Reason::FILTER:
+        case Database::Database::Reason::VIEW:
+          break;
+      }
     }
 
   }

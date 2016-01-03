@@ -23,7 +23,8 @@ namespace HIP {
     namespace {
 
       /*
-       * Return resolved file name
+       * Return file name resolved to access either an resource file or some file
+       * from the local file system
        */
       QString getResolvedFileName (const QString& name)
       {
@@ -47,20 +48,20 @@ namespace HIP {
     // CLASS HIP::Tools
     //#************************************************************************
 
-    /* Convert QQmlError to string */
+    /*! Convert QQmlError to string */
     QString toString (const QQmlError& error)
     {
       return error.toString ();
     }
 
-    /* Load string resource */
+    /*! Load string resource either from resource file or from the local file system */
     template <>
     QString loadResource<QString> (const QString& name)
     {
       QFile file (getResolvedFileName (name));
 
       if (!file.open (QFile::ReadOnly | QFile::Text))
-        throw Exception (QObject::tr ("Unable to open resource file %1").arg (name));
+        throw Exception (QObject::tr ("Unable to open resource file '%1'").arg (name));
 
       QTextStream in (&file);
       QString text = in.readAll ();
@@ -69,7 +70,7 @@ namespace HIP {
       return text;
     }
 
-    /* Load image resource */
+    /*! Load image resource either from resource file or from the local file system*/
     template <>
     QImage loadResource<QImage> (const QString& name)
     {
@@ -77,7 +78,7 @@ namespace HIP {
     }
 
 
-    /* Quote string for HTML output */
+    /*! Quote string for HTML output */
     QString quoteHTML (const QString& text)
     {
       QString quoted;

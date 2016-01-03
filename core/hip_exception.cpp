@@ -12,7 +12,11 @@ namespace HIP {
   // CLASS HIP::Exception
   //#************************************************************************
 
-  /*! Constructor */
+  /*!
+   * Constructor
+   *
+   * @param text Exception message text
+   */
   Exception::Exception (const QString& text)
     : _text (text)
   {

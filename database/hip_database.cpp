@@ -191,10 +191,21 @@ namespace HIP {
     {
       bool match = false;
 
+      //
+      // Case 1: No tag has been set. Point matches by default
+      //
       if (tag.isEmpty ())
         match = true;
+
+      //
+      // Case 2: Check if the tag matches the points name
+      //
       else if (_id.startsWith (tag, Qt::CaseInsensitive))
         match = true;
+
+      //
+      // Case 3: Check if the tag matches any of the points tags
+      //
       else
         {
           foreach (const QString& t, _tags)
@@ -205,36 +216,19 @@ namespace HIP {
       return match;
     }
 
+    const QString&        Point::getId ()          const { return _id; }
+    const QString&        Point::getDescription () const { return _description; }
+    const QList<QString>& Point::getTags ()        const { return _tags; }
+    const QVector3D&      Point::getPosition ()    const { return _position; }
+    const QColor&         Point::getColor ()       const { return _color; }
+    bool                  Point::getSelected ()    const { return _selected; }
 
-    void Point::setId (const QString& id)
-    {
-      _id = id;
-    }
-
-    void Point::setDescription (const QString& description)
-    {
-      _description = description;
-    }
-
-    void Point::setTags (const QList<QString>& tags)
-    {
-      _tags = tags;
-    }
-
-    void Point::setPosition (const QVector3D& position)
-    {
-      _position = position;
-    }
-
-    void Point::setColor (const QColor& color)
-    {
-      _color = color;
-    }
-
-    void Point::setSelected (bool state)
-    {
-      _selected = state;
-    }
+    void Point::setId          (const QString& id)          { _id = id; }
+    void Point::setDescription (const QString& description) { _description = description; }
+    void Point::setTags        (const QList<QString>& tags) { _tags = tags; }
+    void Point::setPosition    (const QVector3D& position)  { _position = position; }
+    void Point::setColor       (const QColor& color)        { _color = color; }
+    void Point::setSelected    (bool state)                 { _selected = state; }
 
     Point& Point::operator= (const Point& toCopy)
     {
@@ -262,6 +256,12 @@ namespace HIP {
     {
     }
 
+    const QString&        View::getName ()   const { return _name; }
+    const QList<QString>& View::getGroups () const { return _groups; }
+
+    void View::setName  (const QString& name)  { _name = name; }
+    void View::addGroup (const QString& group) { _groups.push_back (group); }
+
 
     //#**********************************************************************
     // CLASS HIP::Database::Database
@@ -279,7 +279,16 @@ namespace HIP {
     {
     }
 
-    /*! Load XML based database */
+    const QList<Point>&   Database::getPoints () const { return _points; }
+    const QList<QString>& Database::getTags ()   const { return _tags; }
+    const QList<View>&    Database::getViews ()  const { return _views; }
+    const GL::Data*       Database::getModel ()  const { return _model; }
+
+    /*!
+     * Load XML based database
+     *
+     * @param data XML test containing the database information
+     */
     void Database::load (const QString& data)
     {
       QString database_name;
@@ -361,7 +370,7 @@ namespace HIP {
                 }
 
               //
-              // Load points database
+              // Load points
               //
               else if (top_e.tagName () == Tags::POINTS)
                 {
@@ -499,9 +508,6 @@ namespace HIP {
     /* Access point with the given id */
     const Point& Database::getPoint (const QString& id) const
     {
-      if (!_point_indices.contains (id))
-        qWarning () << "ERROR !";
-
       Q_ASSERT (_point_indices.contains (id));
       return _points.at (_point_indices.value (id));
     }

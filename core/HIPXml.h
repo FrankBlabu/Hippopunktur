@@ -19,7 +19,6 @@ namespace HIP {
       XML () {}
 
     public:
-
     };
 
   }

@@ -25,8 +25,11 @@ namespace HIP {
 
   namespace Database {
 
-    /*
+    /*!
      * Object keeping the data of a single point
+     *
+     * A point resembles a complete accupuncture point including the location,
+     * description, visualization and state (selection, ...)
      */
     class Point : public QObject
     {
@@ -40,22 +43,22 @@ namespace HIP {
       bool isValid () const;
       bool matches (const QString& tag) const;
 
-      const QString& getId () const { return _id; }
+      const QString& getId () const;
       void setId (const QString& id);
 
-      const QString& getDescription () const { return _description; }
+      const QString& getDescription () const;
       void setDescription (const QString& description);
 
-      const QList<QString>& getTags () const { return _tags; }
+      const QList<QString>& getTags () const;
       void setTags (const QList<QString>& tags);
 
-      const QVector3D& getPosition () const { return _position; }
+      const QVector3D& getPosition () const;
       void setPosition (const QVector3D& position);
 
-      const QColor& getColor () const { return _color; }
+      const QColor& getColor () const;
       void setColor (const QColor& color);
 
-      bool getSelected () const { return _selected; }
+      bool getSelected () const;
       void setSelected (bool state);
 
       Point& operator= (const Point& toCopy);
@@ -72,6 +75,9 @@ namespace HIP {
 
     /*!
      * Single view of the object consisting of multiple object groups
+     *
+     * A view is the semantic grouping of multiple object groups. It has a
+     * meaning to the user like 'front', 'legs', ...
      */
     class View
     {
@@ -79,19 +85,19 @@ namespace HIP {
       View ();
       ~View ();
 
-      const QString& getName () const          { return _name; }
-      const QList<QString>& getGroups () const { return _groups; }
+      const QString& getName () const;
+      const QList<QString>& getGroups () const;
 
-      void setName (const QString& name)   { _name = name; }
-      void addGroup (const QString& group) { _groups.push_back (group); }
+      void setName (const QString& name);
+      void addGroup (const QString& group);
 
     private:
       QString _name;
       QList<QString> _groups;
     };
 
-    /*
-     * Database keeping all relevant data structures
+    /*!
+     * Database keeping all relevant data structures and the related states
      */
     class Database : public QObject
     {
@@ -110,10 +116,10 @@ namespace HIP {
 
       void load (const QString& data); // throws Exception
 
-      const QList<Point>& getPoints () const { return _points; }
-      const QList<QString>& getTags () const { return _tags; }
-      const QList<View>& getViews () const   { return _views; }
-      const GL::Data* getModel () const      { return _model; }
+      const QList<Point>& getPoints () const;
+      const QList<QString>& getTags () const;
+      const QList<View>& getViews () const;
+      const GL::Data* getModel () const;
 
       const Point& getPoint (const QString& id) const;
       void setPoint (const Point& point);

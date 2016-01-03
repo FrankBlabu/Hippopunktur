@@ -14,8 +14,8 @@
 #include <QActionGroup>
 #include <QKeyEvent>
 #include <QOpenGLBuffer>
-#include <QOpenGLWidget>
 #include <QOpenGLFunctions>
+#include <QOpenGLWidget>
 #include <QOpenGLTexture>
 
 
@@ -200,6 +200,10 @@ namespace HIP {
     /*! Paint renderable */
     void Renderable::paint (const QMatrix4x4& mvp, const RenderableParameters& parameters)
     {
+      Q_UNUSED (mvp);
+
+      QOpenGLFunctions gl (QOpenGLContext::currentContext ());
+
       int point_offset = 0;
       foreach (const GroupPtr& group, _data->getGroups ())
         {
@@ -212,20 +216,22 @@ namespace HIP {
                   if (pos != _textures.end ())
                     texture = pos.value ();
 
+#if 0
                   const Material& material = _data->getMaterial (group->getMaterial ());
 
                   setLightParameter (GL_AMBIENT, material.getAmbient ());
                   setLightParameter (GL_DIFFUSE, material.getDiffuse ());
                   setLightParameter (GL_SPECULAR, material.getSpecular ());
                   setLightParameter (GL_POSITION, mvp * QVector3D (0, 0, 100));
-                  glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
-                  glEnable (GL_LIGHT0);
+                  gl.glLightf (GL_LIGHT0, GL_SPOT_EXPONENT, material.getSpecularExponent ());
+                  gl.glEnable (GL_LIGHT0);
+#endif
                 }
 
               if (texture != 0)
                 texture->bind ();
 
-              glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_INT, (void*)(point_offset * sizeof (GLuint)));
+              gl.glDrawElements (GL_TRIANGLES, group->getFaces ().size () * 3, GL_UNSIGNED_INT, (void*)(point_offset * sizeof (GLuint)));
 
               if (texture != 0)
                 texture->release ();
@@ -270,8 +276,12 @@ namespace HIP {
      */
     void Renderable::setLightParameter (uint parameter, const QVector3D& value)
     {
+      Q_UNUSED (parameter);
+      Q_UNUSED (value);
+#if 0
       float array[] = {value.x (), value.y (), value.z (), 1.0f};
       glLightfv (GL_LIGHT0, parameter, array);
+#endif
     }
 
 

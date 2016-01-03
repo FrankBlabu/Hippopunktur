@@ -12,8 +12,6 @@
 #include <QSharedPointer>
 #include <QVector3D>
 
-class QOpenGLFunctions;
-
 namespace HIP {
   namespace GL {
 

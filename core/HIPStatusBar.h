@@ -16,6 +16,8 @@ namespace HIP {
 
     /*
      * Status bar handler
+     *
+     * Singleton class providing global access to the applications status bar.
      */
     class StatusBar : public QObject
     {

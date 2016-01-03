@@ -10,10 +10,16 @@
 namespace HIP {
   namespace Config {
 
+    //
+    // Model and database related paths
+    //
     extern const char* const CSS_FILE;
     extern const char* const DATABASE_FILE;
     extern const char* const PIN_MODEL_FILE;
 
+    //
+    // Cursors
+    //
     extern const char* const CURSOR_ROTATE;
     extern const char* const CURSOR_ROTATE_Y;
   }

@@ -26,6 +26,9 @@ namespace HIP {
 
     /*
      * Model for the tag selector
+     *
+     * This model provides the selectable names of the tags used to filter
+     * the various point types
      */
     class TagSelectorModel : public QAbstractItemModel
     {

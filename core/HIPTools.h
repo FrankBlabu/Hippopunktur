@@ -17,6 +17,9 @@ namespace HIP {
     // Layout functions
     //#**********************************************************************
 
+    /*!
+     * Add widget to its parent in a simple borderless layout
+     */
     template<class T>
     T* addToParent (T* widget)
     {

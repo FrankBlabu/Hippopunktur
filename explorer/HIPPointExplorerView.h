@@ -27,8 +27,10 @@ namespace HIP {
 
   namespace Explorer {
 
-    /*
+    /*!
      * Point list explorer
+     *
+     * This explorer displays the complete or filtered list of accupuncture points
      */
     class PointExplorerView : public QWidget
     {
@@ -48,8 +50,6 @@ namespace HIP {
       Database::Database* _database;
       Database::DatabaseModel* _model;
       Database::DatabaseFilterProxyModel* _filter;
-
-      bool _update_in_progress;
     };
 
   }

@@ -12,6 +12,10 @@
 namespace HIP {
   namespace Tools {
 
+    //#**********************************************************************
+    // CLASS HIP::Tools::ImageLoader
+    //#**********************************************************************
+
     /*! Constructor */
     ImageLoader::ImageLoader (const QString& path, QObject* parent)
       : QObject (parent)
@@ -37,14 +41,23 @@ namespace HIP {
       return _image.isFinished ();
     }
 
-    /*! Access to the loaded Image */
+    /*!
+     * Access to the loaded Image
+     *
+     * This is legal only if the image already has been loaded completely by the thread. The function
+     * will *not* stall and wait for it, but throw an assert otherwise.
+     */
     QImage ImageLoader::getImage () const
     {
       Q_ASSERT (_image.isFinished ());
       return _image.result ();
     }
 
-    /*! Load single Image [STATIC] */
+    /*!
+     * Load single Image [STATIC]
+     *
+     * This function is called from within the QFuture thread to perform the image loading
+     */
     QImage ImageLoader::loadImage (const QString& path)
     {
       return QImage (path);

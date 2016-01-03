@@ -17,8 +17,8 @@ namespace HIP {
     //
     // Database to display
     //
-    //const char* const DATABASE_FILE = ":/assets/models/horse/horse.xml";
-    const char* const DATABASE_FILE = "assets/models/horse/horse.xml";
+    const char* const DATABASE_FILE = ":/assets/models/horse/horse.xml";
+    //const char* const DATABASE_FILE = "assets/models/horse/horse.xml";
     //const char* const DATABASE_FILE = "assets/models/elephant/elephant.xml";
     //const char* const DATABASE_FILE = "assets/models/mandible/mandible.xml";
     //const char* const DATABASE_FILE = "assets/models/max/max.xml";
@@ -29,7 +29,7 @@ namespace HIP {
     //
     // Model modeling the pin
     //
-    const char* const PIN_MODEL_FILE = "assets/models/pin/pin.obj";
+    const char* const PIN_MODEL_FILE = ":/assets/models/pin/pin.obj";
 
     //
     // Cursors
